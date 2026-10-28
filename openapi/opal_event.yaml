@@ -134,17 +134,17 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '413':
-          $ref: '#/components/responses/Error413'
+          $ref: '#/components/responses/PayloadTooLarge'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '503':
-          $ref: '#/components/responses/Error503'
+          $ref: '#/components/responses/ServiceUnavailable'
       requestBody:
         required: true
         content:
@@ -174,19 +174,19 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
       parameters:
       - name: cursor
         in: query
@@ -234,19 +234,19 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
     parameters:
     - $ref: '#/components/parameters/OpalSessionIdHeader'
     - $ref: '#/components/parameters/OpalTransactionIdHeader'
@@ -276,19 +276,19 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
       parameters:
       - name: event_id
         in: path
@@ -315,19 +315,19 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
       parameters:
       - name: event_id
         in: path
@@ -373,19 +373,19 @@ paths:
               schema:
                 type: string
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
       parameters: []
     parameters:
     - $ref: '#/components/parameters/OpalSessionIdHeader'
@@ -425,19 +425,19 @@ paths:
               schema:
                 type: string
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
       parameters: []
     post:
       tags:
@@ -466,19 +466,19 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
       requestBody:
         required: true
         content:
@@ -518,19 +518,19 @@ paths:
               schema:
                 type: string
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
       parameters:
       - name: rule_id
         in: path
@@ -557,19 +557,19 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -614,19 +614,19 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -681,19 +681,19 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
       requestBody:
         required: true
         content:
@@ -745,19 +745,19 @@ paths:
               schema:
                 type: string
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
       parameters: []
     post:
       tags:
@@ -786,19 +786,19 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
       requestBody:
         required: true
         content:
@@ -838,19 +838,19 @@ paths:
               schema:
                 type: string
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
       parameters:
       - name: action_id
         in: path
@@ -877,19 +877,19 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -934,19 +934,19 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -1002,19 +1002,19 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '429':
-          $ref: '#/components/responses/Error429'
+          $ref: '#/components/responses/TooManyRequests'
         '503':
-          $ref: '#/components/responses/Error503'
+          $ref: '#/components/responses/ServiceUnavailable'
       requestBody:
         required: true
         content:
@@ -1062,19 +1062,19 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
       parameters:
       - name: status
         in: query
@@ -1137,19 +1137,19 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
       parameters:
       - name: execution_id
         in: path
@@ -1186,9 +1186,9 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
         '503':
-          $ref: '#/components/responses/Error503'
+          $ref: '#/components/responses/ServiceUnavailable'
         '422':
           $ref: '#/components/responses/OpalError422'
       security: []
@@ -1221,19 +1221,19 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '400':
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Error404'
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500':
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
     parameters:
     - $ref: '#/components/parameters/OpalSessionIdHeader'
     - $ref: '#/components/parameters/OpalTransactionIdHeader'
@@ -1269,17 +1269,17 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '400': &id001
-          $ref: '#/components/responses/Error400'
+          $ref: '#/components/responses/BadRequest'
         '401': &id002
-          $ref: '#/components/responses/Error401'
+          $ref: '#/components/responses/Unauthorized'
         '403': &id003
-          $ref: '#/components/responses/Error403'
+          $ref: '#/components/responses/Forbidden'
         '409': &id004
-          $ref: '#/components/responses/Error409'
+          $ref: '#/components/responses/Conflict'
         '422': &id005
-          $ref: '#/components/responses/Error422'
+          $ref: '#/components/responses/OpalError422'
         '500': &id006
-          $ref: '#/components/responses/Error500'
+          $ref: '#/components/responses/OperationFailed'
     patch:
       tags:
       - settings
@@ -1346,7 +1346,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthProbe'
+                $ref: '#/components/schemas/OpalHealthProbe'
           headers:
             X-Opal-Session-Id:
               $ref: '#/components/headers/OpalSessionIdHeader'
@@ -1357,7 +1357,20 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '503':
-          $ref: '#/components/responses/Error503'
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpalHealthProbe'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
     parameters:
@@ -1380,7 +1393,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthProbe'
+                $ref: '#/components/schemas/OpalHealthProbe'
           headers:
             X-Opal-Session-Id:
               $ref: '#/components/headers/OpalSessionIdHeader'
@@ -1391,7 +1404,20 @@ paths:
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '503':
-          $ref: '#/components/responses/Error503'
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpalHealthProbe'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
     parameters:
@@ -2005,25 +2031,6 @@ components:
       - matched
       - action_ids
       - checks
-    Problem:
-      type: object
-      description: Structured error response.
-      properties:
-        code:
-          type: string
-        message:
-          type: string
-        details:
-          type: array
-          items:
-            type: object
-            additionalProperties: true
-        request_id:
-          type: string
-      additionalProperties: false
-      required:
-      - code
-      - message
     ListEvents:
       type: object
       description: Paginated events from SQLite. No delivery guarantee or replay.
@@ -2562,22 +2569,6 @@ components:
           minimum: 1
           maximum: 1048576
           description: Event size ceiling, limited to 1024 KiB by v1 protocol.
-    HealthProbe:
-      type: object
-      additionalProperties: false
-      required:
-      - status
-      properties:
-        status:
-          type: string
-          enum:
-          - ok
-          - degraded
-          - unavailable
-        details:
-          type: object
-          additionalProperties:
-            type: string
     ConfigBackup:
       type: object
       additionalProperties: false
@@ -2640,31 +2631,6 @@ components:
           type: string
         pending_restart:
           type: boolean
-    HTTPValidationError:
-      type: object
-      additionalProperties: false
-      required:
-      - detail
-      properties:
-        detail:
-          type: array
-          items:
-            type: object
-            properties:
-              loc:
-                type: array
-                items:
-                  oneOf:
-                  - type: string
-                  - type: integer
-              msg:
-                type: string
-              type:
-                type: string
-            required:
-            - loc
-            - msg
-            - type
     OpalError:
       type: object
       additionalProperties: false
@@ -2727,111 +2693,186 @@ components:
           type: object
           additionalProperties: true
   responses:
-    Error400:
-      description: Malformed JSON or invalid query
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Problem'
-          example:
-            code: error
-            message: Malformed JSON or invalid query
-    Error401:
-      description: Missing/invalid bearer token
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Problem'
-          example:
-            code: error
-            message: Missing/invalid bearer token
-    Error403:
-      description: Forbidden by server policy
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Problem'
-          example:
-            code: error
-            message: Forbidden by server policy
-    Error404:
-      description: Resource not found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Problem'
-          example:
-            code: error
-            message: Resource not found
-    Error409:
-      description: Concurrent update or in-use resource
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Problem'
-          example:
-            code: error
-            message: Concurrent update or in-use resource
-    Error413:
-      description: Event too large
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Problem'
-          example:
-            code: error
-            message: Event too large
-    Error422:
-      description: Request validation error (shared OPAL HTTPValidationError shape)
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/HTTPValidationError'
-    Error429:
-      description: Rate or queue admission limit
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Problem'
-          example:
-            code: error
-            message: Rate or queue admission limit
-    Error500:
-      description: Unexpected service error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Problem'
-          example:
-            code: error
-            message: Unexpected service error
-    Error503:
-      description: Broker, persistence, or execution subsystem unavailable, or publisher queue is full
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Problem'
-          example:
-            code: error
-            message: Broker, persistence, or execution subsystem unavailable
-    OpalError412:
-      description: OPAL standard error
+    BadRequest:
+      description: Malformed JSON or invalid query.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/OpalError'
-    OpalError428:
-      description: OPAL standard error
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
+    Unauthorized:
+      description: Missing or invalid bearer token.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
+    Forbidden:
+      description: Forbidden by server policy.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
+    NotFound:
+      description: Requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
+    Conflict:
+      description: Request is structurally valid but conflicts with current configuration or resource state.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
+    PayloadTooLarge:
+      description: Event exceeds the configured maximum accepted size.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
     OpalError422:
       description: OPAL standard error
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
+    TooManyRequests:
+      description: Rate or queue admission limit.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
+    OperationFailed:
+      description: Unexpected service error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
+    ServiceUnavailable:
+      description: Broker, persistence, or execution subsystem unavailable, or publisher queue is full.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
+    OpalError412:
+      description: OPAL standard error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
+    OpalError428:
+      description: OPAL standard error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
   headers:
     OpalSessionIdHeader:
       description: Effective OPAL context for this response.

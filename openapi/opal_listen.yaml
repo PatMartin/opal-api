@@ -70,11 +70,7 @@ paths:
                 type: array
                 title: Response List Wakewords Api V1 Wakewords  Get
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
     post:
       tags:
       - wakewords
@@ -94,11 +90,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/WakewordRead'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/wakewords/{wakeword_id}:
     get:
       tags:
@@ -120,11 +112,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/WakewordRead'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
     patch:
       tags:
       - wakewords
@@ -158,23 +146,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/WakewordRead'
         '412':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError412'
         '428':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError428'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
     delete:
       tags:
       - wakewords
@@ -198,23 +174,11 @@ paths:
         '204':
           description: Successful Response
         '412':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError412'
         '428':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError428'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/intents/:
     get:
       tags:
@@ -232,11 +196,7 @@ paths:
                 type: array
                 title: Response List Intents Api V1 Intents  Get
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
     post:
       tags:
       - intents
@@ -256,11 +216,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/IntentReadWithPhrases'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/intents/{intent_id}:
     get:
       tags:
@@ -282,11 +238,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/IntentReadWithPhrases'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
     patch:
       tags:
       - intents
@@ -320,23 +272,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/IntentRead'
         '412':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError412'
         '428':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError428'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
     delete:
       tags:
       - intents
@@ -360,23 +300,11 @@ paths:
         '204':
           description: Successful Response
         '412':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError412'
         '428':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError428'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/intents/{intent_id}/phrases:
     get:
       tags:
@@ -401,11 +329,7 @@ paths:
                   $ref: '#/components/schemas/IntentPhraseRead'
                 title: Response List Phrases Api V1 Intents  Intent Id  Phrases Get
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
     post:
       tags:
       - intents
@@ -432,11 +356,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/IntentPhraseRead'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/intents/{intent_id}/phrases/{phrase_id}:
     delete:
       tags:
@@ -467,23 +387,11 @@ paths:
         '204':
           description: Successful Response
         '412':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError412'
         '428':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError428'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/slots/:
     get:
       tags:
@@ -501,11 +409,7 @@ paths:
                 type: array
                 title: Response List Slots Api V1 Slots  Get
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
     post:
       tags:
       - slots
@@ -525,11 +429,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SlotRead'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/slots/{slot_id}:
     get:
       tags:
@@ -551,11 +451,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SlotReadWithValues'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
     patch:
       tags:
       - slots
@@ -589,23 +485,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/SlotRead'
         '412':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError412'
         '428':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError428'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
     delete:
       tags:
       - slots
@@ -629,23 +513,11 @@ paths:
         '204':
           description: Successful Response
         '412':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError412'
         '428':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError428'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/slots/{slot_id}/values:
     get:
       tags:
@@ -670,11 +542,7 @@ paths:
                   $ref: '#/components/schemas/SlotValueReadWithAliases'
                 title: Response List Slot Values Api V1 Slots  Slot Id  Values Get
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
     post:
       tags:
       - slots
@@ -701,11 +569,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SlotValueRead'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/slots/{slot_id}/values/{value_id}:
     delete:
       tags:
@@ -736,23 +600,11 @@ paths:
         '204':
           description: Successful Response
         '412':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError412'
         '428':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError428'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/slots/{slot_id}/values/{value_id}/aliases:
     get:
       tags:
@@ -784,11 +636,7 @@ paths:
                 title: Response List Aliases Api V1 Slots  Slot Id  Values  Value
                   Id  Aliases Get
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
     post:
       tags:
       - slots
@@ -821,11 +669,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SlotAliasRead'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/slots/{slot_id}/values/{value_id}/aliases/{alias_id}:
     delete:
       tags:
@@ -862,23 +706,11 @@ paths:
         '204':
           description: Successful Response
         '412':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError412'
         '428':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError428'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/profiles/:
     get:
       tags:
@@ -896,11 +728,7 @@ paths:
                 type: array
                 title: Response List Profiles Api V1 Profiles  Get
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
     post:
       tags:
       - profiles
@@ -920,11 +748,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProfileRead'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/profiles/{profile_id}:
     get:
       tags:
@@ -946,11 +770,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProfileRead'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
     patch:
       tags:
       - profiles
@@ -984,23 +804,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProfileRead'
         '412':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError412'
         '428':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError428'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
     delete:
       tags:
       - profiles
@@ -1024,23 +832,11 @@ paths:
         '204':
           description: Successful Response
         '412':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError412'
         '428':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError428'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/profiles/{profile_id}/activate:
     post:
       tags:
@@ -1063,11 +859,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProfileRead'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/settings/:
     get:
       tags:
@@ -1085,11 +877,7 @@ paths:
                   type: string
                 title: Response Get All Settings Api V1 Settings  Get
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
     patch:
       tags:
       - settings
@@ -1124,23 +912,11 @@ paths:
                   type: string
                 title: Response Patch Listen Settings
         '412':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError412'
         '428':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError428'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/recognition/test_text:
     post:
       tags:
@@ -1171,11 +947,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RecognitionResult'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/recognition/test_audio:
     post:
       tags:
@@ -1216,11 +988,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RecognitionResult'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/recognition/start:
     post:
       tags:
@@ -1238,11 +1006,7 @@ paths:
                 type: object
                 title: Response Start Pipeline Api V1 Recognition Start Post
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/recognition/stop:
     post:
       tags:
@@ -1260,11 +1024,7 @@ paths:
                 type: object
                 title: Response Stop Pipeline Api V1 Recognition Stop Post
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/recognition/status:
     get:
       tags:
@@ -1279,11 +1039,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PipelineStatus'
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/recognition/stream:
     get:
       tags:
@@ -1308,11 +1064,7 @@ paths:
             application/json:
               schema: {}
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/logs/:
     get:
       tags:
@@ -1368,11 +1120,7 @@ paths:
                 additionalProperties: true
                 title: Response List Logs Api V1 Logs  Get
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/logs/count:
     get:
       tags:
@@ -1411,11 +1159,7 @@ paths:
                   type: integer
                 title: Response Count Logs Api V1 Logs Count Get
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/logs/{log_id}:
     get:
       tags:
@@ -1437,11 +1181,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RecognitionLogRead'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/failed_utterances/:
     get:
       tags:
@@ -1492,11 +1232,7 @@ paths:
                   $ref: '#/components/schemas/FailedUtteranceRead'
                 title: Response List Failed Utterances Api V1 Failed Utterances  Get
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
     post:
       tags:
       - failed_utterances
@@ -1516,11 +1252,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/FailedUtteranceRead'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/failed_utterances/{fu_id}:
     get:
       tags:
@@ -1542,11 +1274,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/FailedUtteranceRead'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
     patch:
       tags:
       - failed_utterances
@@ -1573,11 +1301,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/FailedUtteranceRead'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
     delete:
       tags:
       - failed_utterances
@@ -1594,11 +1318,7 @@ paths:
         '204':
           description: Successful Response
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/failed_utterances/{fu_id}/promote:
     post:
       tags:
@@ -1636,11 +1356,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PromoteResult'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/regression/:
     get:
       tags:
@@ -1658,11 +1374,7 @@ paths:
                 type: array
                 title: Response List Regression Tests Api V1 Regression  Get
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
     post:
       tags:
       - regression
@@ -1682,11 +1394,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RegressionTestRead'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/regression/run:
     post:
       tags:
@@ -1710,11 +1418,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RegressionRunResult'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/regression/{test_id}:
     get:
       tags:
@@ -1736,11 +1440,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RegressionTestRead'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
     patch:
       tags:
       - regression
@@ -1767,11 +1467,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RegressionTestRead'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
     delete:
       tags:
       - regression
@@ -1788,11 +1484,7 @@ paths:
         '204':
           description: Successful Response
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/performance/last:
     get:
       tags:
@@ -1811,11 +1503,7 @@ paths:
                 - type: 'null'
                 title: Response Get Last Performance Api V1 Performance Last Get
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/performance/summary:
     get:
       tags:
@@ -1840,11 +1528,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PerformanceSummary'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/performance/history:
     get:
       tags:
@@ -1885,11 +1569,7 @@ paths:
                 title: Response Get Performance History Api V1 Performance History
                   Get
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/health/:
     get:
       tags:
@@ -1904,11 +1584,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthReport'
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/health/audio_devices:
     get:
       tags:
@@ -1926,11 +1602,7 @@ paths:
                 type: array
                 title: Response Get Audio Devices Api V1 Health Audio Devices Get
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/health/live:
     get:
       tags:
@@ -1951,12 +1623,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OpalHealthProbe'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/health/ready:
     get:
       tags:
@@ -1978,12 +1655,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OpalHealthProbe'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/backup/list:
     get:
       tags:
@@ -2001,11 +1683,7 @@ paths:
                 type: array
                 title: Response List Backups Api V1 Backup List Get
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/backup/create:
     post:
       tags:
@@ -2023,11 +1701,7 @@ paths:
                 type: object
                 title: Response Create Backup Api V1 Backup Create Post
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/backup/download/{filename}:
     get:
       tags:
@@ -2045,11 +1719,7 @@ paths:
         '200':
           description: Successful Response
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/backup/restore/{filename}:
     post:
       tags:
@@ -2074,11 +1744,7 @@ paths:
                   type: string
                 title: Response Restore Backup Api V1 Backup Restore  Filename  Post
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/backup/{filename}:
     delete:
       tags:
@@ -2096,11 +1762,7 @@ paths:
         '204':
           description: Successful Response
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/backup/export:
     get:
       tags:
@@ -2116,11 +1778,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConfigBundle'
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/backup/import:
     post:
       tags:
@@ -2145,11 +1803,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConfigImportResult'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /api/v1/backup/validate:
     get:
       tags:
@@ -2164,11 +1818,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConfigValidationReport'
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
     post:
       tags:
       - backup
@@ -2190,11 +1840,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConfigValidationReport'
         '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+          $ref: '#/components/responses/OpalError422'
   /:
     get:
       summary: Root
@@ -2210,11 +1856,7 @@ paths:
                 type: object
                 title: Response Root  Get
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
   /healthz:
     get:
       summary: Healthz
@@ -2230,12 +1872,71 @@ paths:
                 type: object
                 title: Response Healthz Healthz Get
         '422':
-          description: OPAL standard error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
+          $ref: '#/components/responses/OpalError422'
 components:
+  headers:
+    OpalSessionIdHeader:
+      description: Effective OPAL context for this response.
+      schema:
+        type: string
+    OpalTransactionIdHeader:
+      description: Effective OPAL context for this response.
+      schema:
+        type: string
+    OpalRequestIdHeader:
+      description: Effective OPAL context for this response.
+      schema:
+        type: string
+    OpalCausationIdHeader:
+      description: Effective OPAL context for this response.
+      schema:
+        type: string
+  responses:
+    OpalError412:
+      description: OPAL standard error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
+    OpalError422:
+      description: OPAL standard error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
+    OpalError428:
+      description: OPAL standard error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
   schemas:
     AudioDevice:
       properties:
@@ -2493,15 +2194,6 @@ components:
           title: Promoted To Phrase
       type: object
       title: FailedUtteranceUpdate
-    HTTPValidationError:
-      properties:
-        detail:
-          items:
-            $ref: '#/components/schemas/ValidationError'
-          type: array
-          title: Detail
-      type: object
-      title: HTTPValidationError
     HealthCheckResult:
       properties:
         name:
@@ -2836,42 +2528,6 @@ components:
       type: object
       required:
       - error
-    OpalErrorBody:
-      properties:
-        code:
-          type: string
-          title: Code
-        message:
-          type: string
-          title: Message
-        details:
-          anyOf:
-          - {}
-          - type: 'null'
-          title: Details
-        request_id:
-          type: string
-          title: Request Id
-        transaction_id:
-          type: string
-          title: Transaction Id
-        session_id:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Session Id
-        causation_id:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Causation Id
-      type: object
-      required:
-      - code
-      - message
-      - request_id
-      - transaction_id
-      title: OpalErrorBody
     OpalHealthProbe:
       properties:
         status:
@@ -4044,32 +3700,6 @@ components:
       required:
       - text
       title: TextTestRequest
-    ValidationError:
-      properties:
-        loc:
-          items:
-            anyOf:
-            - type: string
-            - type: integer
-          type: array
-          title: Location
-        msg:
-          type: string
-          title: Message
-        type:
-          type: string
-          title: Error Type
-        input:
-          title: Input
-        ctx:
-          type: object
-          title: Context
-      type: object
-      required:
-      - loc
-      - msg
-      - type
-      title: ValidationError
     WakewordCreate:
       properties:
         name:
