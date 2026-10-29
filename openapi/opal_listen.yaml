@@ -70,6 +70,14 @@ paths:
                 type: array
                 title: Response List Wakewords Api V1 Wakewords  Get
           headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
             ETag:
               description: Strong revision of this collection's portable configuration.
               schema:
@@ -95,6 +103,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WakewordRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/wakewords/{wakeword_id}:
@@ -118,6 +135,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/WakewordRead'
           headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
             ETag:
               description: Strong revision of this resource's portable configuration; required as If-Match for its mutations.
               schema:
@@ -159,6 +184,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WakewordRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -189,6 +223,15 @@ paths:
       responses:
         '204':
           description: Successful Response
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -212,6 +255,14 @@ paths:
                 type: array
                 title: Response List Intents Api V1 Intents  Get
           headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
             ETag:
               description: Strong revision of this collection's portable configuration.
               schema:
@@ -237,6 +288,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IntentReadWithPhrases'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/intents/{intent_id}:
@@ -260,6 +320,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/IntentReadWithPhrases'
           headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
             ETag:
               description: Strong revision of this resource's portable configuration; required as If-Match for its mutations.
               schema:
@@ -301,6 +369,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IntentRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -331,6 +408,15 @@ paths:
       responses:
         '204':
           description: Successful Response
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -361,6 +447,14 @@ paths:
                   $ref: '#/components/schemas/IntentPhraseRead'
                 title: Response List Phrases Api V1 Intents  Intent Id  Phrases Get
           headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
             ETag:
               description: Strong revision of this collection; required as If-Match for member deletions.
               schema:
@@ -393,6 +487,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IntentPhraseRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/intents/{intent_id}/phrases/{phrase_id}:
@@ -426,6 +529,15 @@ paths:
       responses:
         '204':
           description: Successful Response
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -449,6 +561,14 @@ paths:
                 type: array
                 title: Response List Slots Api V1 Slots  Get
           headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
             ETag:
               description: Strong revision of this collection's portable configuration.
               schema:
@@ -474,6 +594,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SlotRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/slots/{slot_id}:
@@ -497,6 +626,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/SlotReadWithValues'
           headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
             ETag:
               description: Strong revision of this resource's portable configuration; required as If-Match for its mutations.
               schema:
@@ -538,6 +675,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SlotRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -568,6 +714,15 @@ paths:
       responses:
         '204':
           description: Successful Response
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -598,6 +753,14 @@ paths:
                   $ref: '#/components/schemas/SlotValueReadWithAliases'
                 title: Response List Slot Values Api V1 Slots  Slot Id  Values Get
           headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
             ETag:
               description: Strong revision of this collection; required as If-Match for member deletions.
               schema:
@@ -630,6 +793,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SlotValueRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/slots/{slot_id}/values/{value_id}:
@@ -663,6 +835,15 @@ paths:
       responses:
         '204':
           description: Successful Response
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -700,6 +881,14 @@ paths:
                 title: Response List Aliases Api V1 Slots  Slot Id  Values  Value
                   Id  Aliases Get
           headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
             ETag:
               description: Strong revision of this collection; required as If-Match for member deletions.
               schema:
@@ -738,6 +927,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SlotAliasRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/slots/{slot_id}/values/{value_id}/aliases/{alias_id}:
@@ -777,6 +975,15 @@ paths:
       responses:
         '204':
           description: Successful Response
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -800,6 +1007,14 @@ paths:
                 type: array
                 title: Response List Profiles Api V1 Profiles  Get
           headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
             ETag:
               description: Strong revision of this collection's portable configuration.
               schema:
@@ -825,6 +1040,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProfileRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/profiles/{profile_id}:
@@ -848,6 +1072,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProfileRead'
           headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
             ETag:
               description: Strong revision of this resource's portable configuration; required as If-Match for its mutations.
               schema:
@@ -889,6 +1121,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProfileRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -919,6 +1160,15 @@ paths:
       responses:
         '204':
           description: Successful Response
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -946,6 +1196,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProfileRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/settings/:
@@ -965,6 +1224,14 @@ paths:
                   type: string
                 title: Response Get All Settings Api V1 Settings  Get
           headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
             ETag:
               description: Strong revision of the whole settings map; required as If-Match for PATCH /api/v1/settings/.
               schema:
@@ -1008,6 +1275,14 @@ paths:
                   type: string
                 title: Response Patch Listen Settings
           headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
             ETag:
               description: Updated settings-map revision after the atomic patch.
               schema:
@@ -1048,6 +1323,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RecognitionResult'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/recognition/test_audio:
@@ -1089,6 +1373,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RecognitionResult'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/recognition/start:
@@ -1107,6 +1400,15 @@ paths:
                   type: string
                 type: object
                 title: Response Start Pipeline Api V1 Recognition Start Post
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/recognition/stop:
@@ -1125,6 +1427,15 @@ paths:
                   type: string
                 type: object
                 title: Response Stop Pipeline Api V1 Recognition Stop Post
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/recognition/status:
@@ -1140,6 +1451,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PipelineStatus'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/recognition/stream:
@@ -1281,6 +1601,15 @@ paths:
                 type: object
                 additionalProperties: true
                 title: Response List Logs Api V1 Logs  Get
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/logs/count:
@@ -1320,6 +1649,15 @@ paths:
                 additionalProperties:
                   type: integer
                 title: Response Count Logs Api V1 Logs Count Get
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/logs/{log_id}:
@@ -1342,6 +1680,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RecognitionLogRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/failed_utterances/:
@@ -1393,6 +1740,15 @@ paths:
                 items:
                   $ref: '#/components/schemas/FailedUtteranceRead'
                 title: Response List Failed Utterances Api V1 Failed Utterances  Get
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
     post:
@@ -1413,6 +1769,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FailedUtteranceRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/failed_utterances/{fu_id}:
@@ -1435,6 +1800,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FailedUtteranceRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
     patch:
@@ -1462,6 +1836,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FailedUtteranceRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
     delete:
@@ -1479,6 +1862,15 @@ paths:
       responses:
         '204':
           description: Successful Response
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/failed_utterances/{fu_id}/promote:
@@ -1517,6 +1909,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PromoteResult'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/regression/:
@@ -1535,6 +1936,15 @@ paths:
                   $ref: '#/components/schemas/RegressionTestRead'
                 type: array
                 title: Response List Regression Tests Api V1 Regression  Get
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
     post:
@@ -1555,6 +1965,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RegressionTestRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/regression/run:
@@ -1579,6 +1998,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RegressionRunResult'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/regression/{test_id}:
@@ -1601,6 +2029,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RegressionTestRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
     patch:
@@ -1628,6 +2065,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RegressionTestRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
     delete:
@@ -1645,6 +2091,15 @@ paths:
       responses:
         '204':
           description: Successful Response
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/performance/last:
@@ -1664,6 +2119,15 @@ paths:
                 - $ref: '#/components/schemas/PerformanceResultRead'
                 - type: 'null'
                 title: Response Get Last Performance Api V1 Performance Last Get
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/performance/summary:
@@ -1689,6 +2153,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PerformanceSummary'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/performance/history:
@@ -1730,6 +2203,15 @@ paths:
                 additionalProperties: true
                 title: Response Get Performance History Api V1 Performance History
                   Get
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/health/:
@@ -1745,6 +2227,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthReport'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/health/audio_devices:
@@ -1763,6 +2254,15 @@ paths:
                   $ref: '#/components/schemas/AudioDevice'
                 type: array
                 title: Response Get Audio Devices Api V1 Health Audio Devices Get
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/health/live:
@@ -1779,6 +2279,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OpalHealthProbe'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '503':
           description: Service unavailable
           content:
@@ -1811,6 +2320,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OpalHealthProbe'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '503':
           description: Service unavailable
           content:
@@ -1844,6 +2362,15 @@ paths:
                   $ref: '#/components/schemas/BackupInfo'
                 type: array
                 title: Response List Backups Api V1 Backup List Get
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/backup/create:
@@ -1862,6 +2389,15 @@ paths:
                   type: string
                 type: object
                 title: Response Create Backup Api V1 Backup Create Post
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/backup/download/{filename}:
@@ -1880,6 +2416,15 @@ paths:
       responses:
         '200':
           description: Successful Response
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/backup/restore/{filename}:
@@ -1905,6 +2450,15 @@ paths:
                 additionalProperties:
                   type: string
                 title: Response Restore Backup Api V1 Backup Restore  Filename  Post
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/backup/{filename}:
@@ -1923,6 +2477,15 @@ paths:
       responses:
         '204':
           description: Successful Response
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/backup/export:
@@ -1939,6 +2502,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConfigBundle'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/backup/import:
@@ -1964,6 +2536,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConfigImportResult'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/backup/validate:
@@ -1979,6 +2560,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConfigValidationReport'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
     post:
@@ -2001,6 +2591,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConfigValidationReport'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /:
@@ -2017,6 +2616,15 @@ paths:
                   type: string
                 type: object
                 title: Response Root  Get
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /healthz:
@@ -2033,24 +2641,37 @@ paths:
                   type: string
                 type: object
                 title: Response Healthz Healthz Get
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
 components:
   headers:
     OpalSessionIdHeader:
-      description: Effective OPAL context for this response.
+      description: Effective OPAL session context for this response. Returned when a session identifier is known; conditionally present.
+      required: false
       schema:
         type: string
     OpalTransactionIdHeader:
-      description: Effective OPAL context for this response.
+      description: Logical transaction identifier for this exchange. Always returned; generated when the inbound request lacks one.
+      required: true
       schema:
         type: string
     OpalRequestIdHeader:
-      description: Effective OPAL context for this response.
+      description: Identifier of this inbound HTTP exchange. Always returned; regenerated for each downstream hop.
+      required: true
       schema:
         type: string
     OpalCausationIdHeader:
-      description: Effective OPAL context for this response.
+      description: Immediate parent event/request identifier for this response. Returned when applicable; conditionally present.
+      required: false
       schema:
         type: string
   responses:

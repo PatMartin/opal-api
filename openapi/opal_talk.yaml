@@ -1878,19 +1878,23 @@ components:
         minimum: 1
       example: 1
     OpalSessionIdHeader:
-      description: Effective OPAL context for this response.
+      description: Effective OPAL session context for this response. Returned when a session identifier is known; conditionally present.
+      required: false
       schema:
         type: string
     OpalTransactionIdHeader:
-      description: Effective OPAL context for this response.
+      description: Logical transaction identifier for this exchange. Always returned; generated when the inbound request lacks one.
+      required: true
       schema:
         type: string
     OpalRequestIdHeader:
-      description: Effective OPAL context for this response.
+      description: Identifier of this inbound HTTP exchange. Always returned; regenerated for each downstream hop.
+      required: true
       schema:
         type: string
     OpalCausationIdHeader:
-      description: Effective OPAL context for this response.
+      description: Immediate parent event/request identifier for this response. Returned when applicable; conditionally present.
+      required: false
       schema:
         type: string
   responses:

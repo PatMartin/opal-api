@@ -9,10 +9,10 @@ rules:
   # (documented in each spec's "OPAL shared conventions").
   path-keys-no-trailing-slash: off
 
-  opal-error-correlation-headers:
-    description: Every 4xx/5xx response must return the four OPAL correlation headers.
+  opal-correlation-headers:
+    description: Every response must declare the four OPAL correlation headers (Request/Transaction required; Session/Causation conditionally present).
     severity: error
-    given: $.paths[*][*].responses[?(@property.match(/^[45]/))]
+    given: $.paths[*][*].responses[*]
     then:
       function: schema
       functionOptions:
