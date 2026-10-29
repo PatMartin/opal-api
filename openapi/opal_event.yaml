@@ -2912,6 +2912,7 @@ x-opal-context-standard:
     - causation_id
     metadata_schema_version: '1.0'
     zero_mq_frames: 2
+    compatibility: 'metadata_schema_version versions the optional data.metadata block only; the two-frame wire envelope (topic + JSON with topic/data) is unchanged across versions. Consumers extract known correlation keys (session_id, transaction_id, request_id, causation_id) and MUST ignore unknown metadata fields; producers may emit any metadata_schema_version without breaking the wire contract.'
   pagination:
     history: cursor
     configuration: none

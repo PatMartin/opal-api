@@ -56,6 +56,22 @@ rules:
                     - ready
                     - status
 
+  opal-zeromq-frame-count:
+    description: The shared ZeroMQ wire protocol is exactly two frames (topic + JSON envelope).
+    severity: error
+    given: $.x-opal-context-standard.events
+    then:
+      field: zero_mq_frames
+      function: truthy
+
+  opal-context-events-compatibility:
+    description: The events block must document cross-version metadata compatibility.
+    severity: warn
+    given: $.x-opal-context-standard.events
+    then:
+      field: compatibility
+      function: truthy
+
   opal-ifmatch-precondition-responses:
     description: Operations requiring If-Match should declare 412 (stale revision) and 428 (missing precondition) per the suite concurrency convention.
     severity: warn
