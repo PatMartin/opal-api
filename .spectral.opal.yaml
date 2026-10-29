@@ -56,6 +56,18 @@ rules:
                     - ready
                     - status
 
+  opal-item-op-404:
+    description: Operations under parameterized paths must declare a 404 (missing item or parent resource).
+    severity: error
+    given: $.paths[?(@property.match(/\{[^}]+\}/))][?(@property.match(/^(get|post|patch|delete)$/))].responses
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - '404'
+
   opal-201-location-header:
     description: Every 201 Created response must declare a Location header naming the created resource.
     severity: error

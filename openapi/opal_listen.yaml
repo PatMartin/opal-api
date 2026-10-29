@@ -116,6 +116,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/wakewords/{wakeword_id}:
@@ -152,6 +154,8 @@ paths:
               schema:
                 type: string
               example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
     patch:
@@ -197,6 +201,10 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -236,6 +244,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -305,6 +315,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/intents/{intent_id}:
@@ -341,6 +353,8 @@ paths:
               schema:
                 type: string
               example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
     patch:
@@ -386,6 +400,10 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -425,6 +443,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -468,6 +488,8 @@ paths:
               schema:
                 type: string
               example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
     post:
@@ -508,6 +530,10 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/intents/{intent_id}/phrases/{phrase_id}:
@@ -550,6 +576,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -619,6 +647,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/slots/{slot_id}:
@@ -655,6 +685,8 @@ paths:
               schema:
                 type: string
               example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
     patch:
@@ -700,6 +732,10 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -739,6 +775,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -782,6 +820,8 @@ paths:
               schema:
                 type: string
               example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
     post:
@@ -822,6 +862,10 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/slots/{slot_id}/values/{value_id}:
@@ -864,6 +908,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -914,6 +960,8 @@ paths:
               schema:
                 type: string
               example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
     post:
@@ -960,6 +1008,10 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/slots/{slot_id}/values/{value_id}/aliases/{alias_id}:
@@ -1008,6 +1060,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -1077,6 +1131,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/profiles/{profile_id}:
@@ -1113,6 +1169,8 @@ paths:
               schema:
                 type: string
               example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
     patch:
@@ -1158,6 +1216,10 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -1197,6 +1259,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
@@ -1233,6 +1297,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/settings/:
@@ -1717,6 +1783,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/failed_utterances/:
@@ -1841,6 +1909,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
     patch:
@@ -1877,6 +1947,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
     delete:
@@ -1903,6 +1975,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/failed_utterances/{fu_id}/promote:
@@ -1950,6 +2024,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/regression/:
@@ -2074,6 +2150,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
     patch:
@@ -2110,6 +2188,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
     delete:
@@ -2136,6 +2216,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/performance/last:
@@ -2461,6 +2543,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/backup/restore/{filename}:
@@ -2495,6 +2579,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/backup/{filename}:
@@ -2522,6 +2608,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/backup/export:
@@ -2711,6 +2799,36 @@ components:
       schema:
         type: string
   responses:
+    NotFound:
+      description: Requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
+    Conflict:
+      description: Request conflicts with the current state or an existing resource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
     OpalError412:
       description: OPAL standard error
       content:
