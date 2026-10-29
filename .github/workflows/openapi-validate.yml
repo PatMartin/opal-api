@@ -1,0 +1,37 @@
+name: Validate OpenAPI contracts
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Structural validation of every spec in openapi/: parsing,
+      # $ref resolution, and OpenAPI 3.1 correctness (redocly.yaml).
+      - name: Validate specs
+        run: npm run validate
+
+      # Generic OpenAPI lint rules (.spectral.yaml).
+      - name: Lint specs
+        run: npm run lint
+
+      # OPAL suite conventions, kept separate from generic rules
+      # (.spectral.opal.yaml).
+      - name: Lint OPAL conventions
+        run: npm run lint:opal

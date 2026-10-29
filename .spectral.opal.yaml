@@ -1,0 +1,113 @@
+# OPAL suite conventions, layered on top of the generic OpenAPI ruleset.
+# These rules encode the normative "OPAL SUITE STANDARD" text shared by
+# the specs in openapi/ — not general OpenAPI style.
+extends:
+  - - spectral:oas
+    - recommended
+rules:
+  # OPAL convention REQUIRES a trailing slash on collection roots
+  # (documented in each spec's "OPAL shared conventions").
+  path-keys-no-trailing-slash: off
+
+  opal-error-correlation-headers:
+    description: Every 4xx/5xx response must return the four OPAL correlation headers.
+    severity: error
+    given: $.paths[*][*].responses[?(@property.match(/^[45]/))]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - headers
+          properties:
+            headers:
+              type: object
+              required:
+                - X-Opal-Session-Id
+                - X-Opal-Transaction-Id
+                - X-Opal-Request-Id
+                - X-Opal-Causation-Id
+
+  opal-standard-error-body:
+    description: 4xx/5xx JSON bodies must be OpalError-shaped (error object) or OpalHealthProbe-shaped (ready/status) on health probes.
+    severity: error
+    given: $.paths[*][*].responses[?(@property.match(/^[45]/))].content['application/json'].schema
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          anyOf:
+            - type: object
+              required:
+                - properties
+              properties:
+                properties:
+                  type: object
+                  required:
+                    - error
+            - type: object
+              required:
+                - properties
+              properties:
+                properties:
+                  type: object
+                  required:
+                    - ready
+                    - status
+
+  opal-context-params:
+    description: Every path item should declare the four X-Opal-* correlation header parameters (suite standard request context).
+    severity: warn
+    given: $.paths[*]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - parameters
+          properties:
+            parameters:
+              type: array
+              allOf:
+                - contains:
+                    type: object
+                    required:
+                      - name
+                      - in
+                    properties:
+                      name:
+                        const: X-Opal-Session-Id
+                      in:
+                        const: header
+                - contains:
+                    type: object
+                    required:
+                      - name
+                      - in
+                    properties:
+                      name:
+                        const: X-Opal-Transaction-Id
+                      in:
+                        const: header
+                - contains:
+                    type: object
+                    required:
+                      - name
+                      - in
+                    properties:
+                      name:
+                        const: X-Opal-Request-Id
+                      in:
+                        const: header
+                - contains:
+                    type: object
+                    required:
+                      - name
+                      - in
+                    properties:
+                      name:
+                        const: X-Opal-Causation-Id
+                      in:
+                        const: header

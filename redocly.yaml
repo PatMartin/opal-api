@@ -1,0 +1,14 @@
+# Redocly lint configuration for OPAL OpenAPI contract validation.
+# Generic OpenAPI correctness only. OPAL suite conventions live in
+# .spectral.opal.yaml so custom rules stay separate from generic checks.
+extends:
+  - recommended
+rules:
+  # OPAL convention REQUIRES a trailing slash on collection roots
+  # (documented in each spec's "OPAL shared conventions").
+  no-path-trailing-slash: off
+  # Bearer auth declarations are intentionally deferred across the suite.
+  security-defined: off
+  # Real metadata gaps, reported separately; kept visible but non-blocking.
+  operation-summary: warn
+  no-empty-servers: warn

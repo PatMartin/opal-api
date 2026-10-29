@@ -1,0 +1,9 @@
+# Generic OpenAPI lint rules (base ruleset).
+# OPAL suite conventions are kept separate in .spectral.opal.yaml.
+extends:
+  - - spectral:oas
+    - recommended
+rules:
+  # OPAL convention REQUIRES a trailing slash on collection roots
+  # (documented in each spec's "OPAL shared conventions").
+  path-keys-no-trailing-slash: off

@@ -1,0 +1,27 @@
+{
+  "name": "opal-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OPAL suite OpenAPI contracts (event, listen, talk) and their validation tooling.",
+  "scripts": {
+    "validate": "redocly lint \"openapi/*.yaml\"",
+    "lint": "spectral lint -r .spectral.yaml \"openapi/*.yaml\"",
+    "lint:opal": "spectral lint -r .spectral.opal.yaml \"openapi/*.yaml\"",
+    "check": "npm run validate && npm run lint && npm run lint:opal"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PatMartin/opal-api.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PatMartin/opal-api/issues"
+  },
+  "homepage": "https://github.com/PatMartin/opal-api#readme",
+  "devDependencies": {
+    "@redocly/cli": "2.66.1",
+    "@stoplight/spectral-cli": "6.17.0"
+  }
+}
