@@ -1045,7 +1045,56 @@ paths:
       tags:
       - recognition
       summary: Stream Results
-      description: Server-Sent Events stream for live recognition results.
+      description: 'Server-Sent Events stream for live recognition results.
+
+
+        Wire framing: each message is sent as an `event: <name>` line and one `data:`
+        line containing a single-line JSON object, followed by a blank line. No `id:`
+        or `retry:` fields are sent.
+
+
+        On connect the server immediately emits a `status` event carrying the current
+        `PipelineStatus` object. Subsequent events are fanned out from the live pipeline
+        as they occur.
+
+
+        Event types and payload schemas:
+
+
+        - `status` - `PipelineStatus` object; sent on connect and when pipeline status changes.
+
+        - `result` - `RecognitionResult` object; emitted for every finalized recognition.
+
+        - `wakeword_candidate` - `{session_id, wakeword}`; a candidate wakeword hit opened a command session.
+
+        - `wakeword_confirmed` - `{session_id, wakeword, confidence}`; the candidate was confirmed.
+
+        - `wakeword_rejected` - `{session_id, wakeword, reason}`; reason is `below_threshold`,
+        `not_confirmed`, or `unresolved`.
+
+        - `speech_start` - `{session_id}`.
+
+        - `speech_end` - `{session_id, reason}`; reason is `speech_end`, `max_length`,
+        `no_speech`, `stt_endpoint`, or `end_of_audio`.
+
+        - `session_end` - `{session_id}`.
+
+        - `audio_level` - `{dbfs, state}`; only delivered when `debug=true`.
+
+        - `partial` - `{session_id, text}`; only delivered when `debug=true`.
+
+
+        Connection semantics: the server sends a keep-alive comment frame every 15
+        seconds. Each subscriber has a bounded queue; a consumer that falls behind
+        silently loses its oldest queued events. When the client disconnects the server
+        unsubscribes and ends the stream. If the stream fails after response headers are
+        sent, the connection simply terminates; no terminal event is guaranteed.
+
+
+        Replay and reconnection: the stream is live-only. No event ids are issued,
+        `Last-Event-ID` is not honored, and missed events are never replayed. A
+        reconnecting client receives a fresh `status` snapshot followed only by new
+        events.'
       operationId: stream_results_api_v1_recognition_stream_get
       parameters:
       - name: debug
@@ -1059,10 +1108,21 @@ paths:
         description: Include audio levels and partial transcripts
       responses:
         '200':
-          description: Successful Response
+          description: SSE stream of live recognition events.
           content:
-            application/json:
-              schema: {}
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE frame sequence; each frame is `event:` plus single-line JSON `data:`.
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/OpalError422'
   /api/v1/logs/:

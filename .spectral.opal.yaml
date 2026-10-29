@@ -56,6 +56,18 @@ rules:
                     - ready
                     - status
 
+  opal-recognition-stream-sse:
+    description: GET /api/v1/recognition/stream is an SSE endpoint; its 200 response must declare text/event-stream, not application/json.
+    severity: error
+    given: $.paths['/api/v1/recognition/stream'].get.responses['200'].content
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - text/event-stream
+
   opal-context-params:
     description: Every path item should declare the four X-Opal-* correlation header parameters (suite standard request context).
     severity: warn
