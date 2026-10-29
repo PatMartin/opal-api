@@ -69,6 +69,12 @@ paths:
                   $ref: '#/components/schemas/WakewordRead'
                 type: array
                 title: Response List Wakewords Api V1 Wakewords  Get
+          headers:
+            ETag:
+              description: Strong revision of this collection's portable configuration.
+              schema:
+                type: string
+              example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
         '422':
           $ref: '#/components/responses/OpalError422'
     post:
@@ -111,6 +117,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WakewordRead'
+          headers:
+            ETag:
+              description: Strong revision of this resource's portable configuration; required as If-Match for its mutations.
+              schema:
+                type: string
+              example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
         '422':
           $ref: '#/components/responses/OpalError422'
     patch:
@@ -132,6 +144,8 @@ paths:
           type: string
           minLength: 1
           title: If-Match
+        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the resource's ETag returned by GET /api/v1/wakewords/{wakeword_id}.
+        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       requestBody:
         required: true
         content:
@@ -170,6 +184,8 @@ paths:
           type: string
           minLength: 1
           title: If-Match
+        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the resource's ETag returned by GET /api/v1/wakewords/{wakeword_id}.
+        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       responses:
         '204':
           description: Successful Response
@@ -195,6 +211,12 @@ paths:
                   $ref: '#/components/schemas/IntentReadWithPhrases'
                 type: array
                 title: Response List Intents Api V1 Intents  Get
+          headers:
+            ETag:
+              description: Strong revision of this collection's portable configuration.
+              schema:
+                type: string
+              example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
         '422':
           $ref: '#/components/responses/OpalError422'
     post:
@@ -237,6 +259,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IntentReadWithPhrases'
+          headers:
+            ETag:
+              description: Strong revision of this resource's portable configuration; required as If-Match for its mutations.
+              schema:
+                type: string
+              example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
         '422':
           $ref: '#/components/responses/OpalError422'
     patch:
@@ -258,6 +286,8 @@ paths:
           type: string
           minLength: 1
           title: If-Match
+        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the resource's ETag returned by GET /api/v1/intents/{intent_id}.
+        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       requestBody:
         required: true
         content:
@@ -296,6 +326,8 @@ paths:
           type: string
           minLength: 1
           title: If-Match
+        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the resource's ETag returned by GET /api/v1/intents/{intent_id}.
+        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       responses:
         '204':
           description: Successful Response
@@ -328,6 +360,12 @@ paths:
                 items:
                   $ref: '#/components/schemas/IntentPhraseRead'
                 title: Response List Phrases Api V1 Intents  Intent Id  Phrases Get
+          headers:
+            ETag:
+              description: Strong revision of this collection; required as If-Match for member deletions.
+              schema:
+                type: string
+              example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
         '422':
           $ref: '#/components/responses/OpalError422'
     post:
@@ -383,6 +421,8 @@ paths:
           type: string
           minLength: 1
           title: If-Match
+        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the phrase collection's ETag returned by GET /api/v1/intents/{intent_id}/phrases.
+        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       responses:
         '204':
           description: Successful Response
@@ -408,6 +448,12 @@ paths:
                   $ref: '#/components/schemas/SlotReadWithValues'
                 type: array
                 title: Response List Slots Api V1 Slots  Get
+          headers:
+            ETag:
+              description: Strong revision of this collection's portable configuration.
+              schema:
+                type: string
+              example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
         '422':
           $ref: '#/components/responses/OpalError422'
     post:
@@ -450,6 +496,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SlotReadWithValues'
+          headers:
+            ETag:
+              description: Strong revision of this resource's portable configuration; required as If-Match for its mutations.
+              schema:
+                type: string
+              example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
         '422':
           $ref: '#/components/responses/OpalError422'
     patch:
@@ -471,6 +523,8 @@ paths:
           type: string
           minLength: 1
           title: If-Match
+        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the resource's ETag returned by GET /api/v1/slots/{slot_id}.
+        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       requestBody:
         required: true
         content:
@@ -509,6 +563,8 @@ paths:
           type: string
           minLength: 1
           title: If-Match
+        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the resource's ETag returned by GET /api/v1/slots/{slot_id}.
+        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       responses:
         '204':
           description: Successful Response
@@ -541,6 +597,12 @@ paths:
                 items:
                   $ref: '#/components/schemas/SlotValueReadWithAliases'
                 title: Response List Slot Values Api V1 Slots  Slot Id  Values Get
+          headers:
+            ETag:
+              description: Strong revision of this collection; required as If-Match for member deletions.
+              schema:
+                type: string
+              example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
         '422':
           $ref: '#/components/responses/OpalError422'
     post:
@@ -596,6 +658,8 @@ paths:
           type: string
           minLength: 1
           title: If-Match
+        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the slot-value collection's ETag returned by GET /api/v1/slots/{slot_id}/values.
+        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       responses:
         '204':
           description: Successful Response
@@ -635,6 +699,12 @@ paths:
                   $ref: '#/components/schemas/SlotAliasRead'
                 title: Response List Aliases Api V1 Slots  Slot Id  Values  Value
                   Id  Aliases Get
+          headers:
+            ETag:
+              description: Strong revision of this collection; required as If-Match for member deletions.
+              schema:
+                type: string
+              example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
         '422':
           $ref: '#/components/responses/OpalError422'
     post:
@@ -702,6 +772,8 @@ paths:
           type: string
           minLength: 1
           title: If-Match
+        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the alias collection's ETag returned by GET /api/v1/slots/{slot_id}/values/{value_id}/aliases.
+        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       responses:
         '204':
           description: Successful Response
@@ -727,6 +799,12 @@ paths:
                   $ref: '#/components/schemas/ProfileRead'
                 type: array
                 title: Response List Profiles Api V1 Profiles  Get
+          headers:
+            ETag:
+              description: Strong revision of this collection's portable configuration.
+              schema:
+                type: string
+              example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
         '422':
           $ref: '#/components/responses/OpalError422'
     post:
@@ -769,6 +847,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProfileRead'
+          headers:
+            ETag:
+              description: Strong revision of this resource's portable configuration; required as If-Match for its mutations.
+              schema:
+                type: string
+              example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
         '422':
           $ref: '#/components/responses/OpalError422'
     patch:
@@ -790,6 +874,8 @@ paths:
           type: string
           minLength: 1
           title: If-Match
+        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the resource's ETag returned by GET /api/v1/profiles/{profile_id}.
+        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       requestBody:
         required: true
         content:
@@ -828,6 +914,8 @@ paths:
           type: string
           minLength: 1
           title: If-Match
+        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the resource's ETag returned by GET /api/v1/profiles/{profile_id}.
+        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       responses:
         '204':
           description: Successful Response
@@ -876,6 +964,12 @@ paths:
                 additionalProperties:
                   type: string
                 title: Response Get All Settings Api V1 Settings  Get
+          headers:
+            ETag:
+              description: Strong revision of the whole settings map; required as If-Match for PATCH /api/v1/settings/.
+              schema:
+                type: string
+              example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
         '422':
           $ref: '#/components/responses/OpalError422'
     patch:
@@ -893,6 +987,8 @@ paths:
           type: string
           minLength: 1
           title: If-Match
+        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the settings map's ETag returned by GET /api/v1/settings/.
+        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       requestBody:
         required: true
         content:
@@ -911,6 +1007,12 @@ paths:
                 additionalProperties:
                   type: string
                 title: Response Patch Listen Settings
+          headers:
+            ETag:
+              description: Updated settings-map revision after the atomic patch.
+              schema:
+                type: string
+              example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
         '412':
           $ref: '#/components/responses/OpalError412'
         '428':
