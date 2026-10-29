@@ -104,6 +104,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/WakewordRead'
           headers:
+            Location:
+              description: Resource URL
+              schema:
+                type: string
             X-Opal-Session-Id:
               $ref: '#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
@@ -289,6 +293,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/IntentReadWithPhrases'
           headers:
+            Location:
+              description: Resource URL
+              schema:
+                type: string
             X-Opal-Session-Id:
               $ref: '#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
@@ -488,6 +496,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/IntentPhraseRead'
           headers:
+            Location:
+              description: Resource URL
+              schema:
+                type: string
             X-Opal-Session-Id:
               $ref: '#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
@@ -595,6 +607,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/SlotRead'
           headers:
+            Location:
+              description: Resource URL
+              schema:
+                type: string
             X-Opal-Session-Id:
               $ref: '#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
@@ -794,6 +810,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/SlotValueRead'
           headers:
+            Location:
+              description: Resource URL
+              schema:
+                type: string
             X-Opal-Session-Id:
               $ref: '#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
@@ -928,6 +948,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/SlotAliasRead'
           headers:
+            Location:
+              description: Resource URL
+              schema:
+                type: string
             X-Opal-Session-Id:
               $ref: '#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
@@ -1041,6 +1065,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProfileRead'
           headers:
+            Location:
+              description: Resource URL
+              schema:
+                type: string
             X-Opal-Session-Id:
               $ref: '#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
@@ -1770,6 +1798,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/FailedUtteranceRead'
           headers:
+            Location:
+              description: Resource URL
+              schema:
+                type: string
             X-Opal-Session-Id:
               $ref: '#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
@@ -1966,6 +1998,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/RegressionTestRead'
           headers:
+            Location:
+              description: Resource URL
+              schema:
+                type: string
             X-Opal-Session-Id:
               $ref: '#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:

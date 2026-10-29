@@ -56,6 +56,23 @@ rules:
                     - ready
                     - status
 
+  opal-201-location-header:
+    description: Every 201 Created response must declare a Location header naming the created resource.
+    severity: error
+    given: $.paths[*][*].responses[?(@property === '201')]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - headers
+          properties:
+            headers:
+              type: object
+              required:
+                - Location
+
   opal-recognition-stream-sse:
     description: GET /api/v1/recognition/stream is an SSE endpoint; its 200 response must declare text/event-stream, not application/json.
     severity: error
