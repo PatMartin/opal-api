@@ -56,6 +56,33 @@ rules:
                     - ready
                     - status
 
+  opal-ifmatch-precondition-responses:
+    description: Operations requiring If-Match should declare 412 (stale revision) and 428 (missing precondition) per the suite concurrency convention.
+    severity: warn
+    given: $.paths[*][*]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          anyOf:
+            - properties:
+                parameters:
+                  not:
+                    contains:
+                      type: object
+                      required:
+                        - name
+                      properties:
+                        name:
+                          const: If-Match
+            - required:
+                - responses
+              properties:
+                responses:
+                  required:
+                    - '412'
+                    - '428'
+
   opal-item-op-404:
     description: Operations under parameterized paths must declare a 404 (missing item or parent resource).
     severity: error
