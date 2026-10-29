@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Opal Event API
-  version: 1.2.0
+  version: 1.4.0
   description: 'REST management and HTTP event ingress for opal-event-svc. API-first contract, release v1.
 
 

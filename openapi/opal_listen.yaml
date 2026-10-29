@@ -1,6 +1,7 @@
 openapi: 3.1.0
 info:
   title: Voice Intent API
+  version: 1.4.0
   description: "Wakeword, STT, intent recognition, and slot extraction engine\n\n\
     OPAL SUITE STANDARD v1.3 (normative)\nX-Opal-Session-Id is an optional logical\
     \ context identifier; it does not create a server-managed session or grant authorization.\
@@ -51,7 +52,6 @@ info:
     \ is now a configuration error;\n    external intent-match publication is disabled\
     \ by default (event_publication_enabled); a pending\n    wakeword candidate no\
     \ longer produces a command outcome without confirmation.\n    "
-  version: 1.3.0
 paths:
   /api/v1/wakewords/:
     get:
