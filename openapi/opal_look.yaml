@@ -2114,7 +2114,9 @@ paths:
           minimum: 1
           maximum: 500
           default: 100
-        description: Maximum items per page.
+        description: Maximum items per page (suite max_limit 500). The configured
+          max_result_query_limit bounds the total result set a query may scan, not the
+          page size.
       - name: cursor
         in: query
         required: false
@@ -4969,6 +4971,9 @@ components:
         max_result_query_limit:
           type: integer
           minimum: 1
+          description: Server-side cap on the total stored results a single query scans or returns. Independent of
+            the per-request limit page size, which stays capped at the documented maximum (500); lowering this
+            setting does not change the 500 request schema bound, and raising it cannot exceed it.
           default: 1000
         events_enabled:
           type: boolean
@@ -5332,6 +5337,9 @@ components:
         max_result_query_limit:
           type: integer
           minimum: 1
+          description: Server-side cap on the total stored results a single query scans or returns. Independent of
+            the per-request limit page size, which stays capped at the documented maximum (500); lowering this
+            setting does not change the 500 request schema bound, and raising it cannot exceed it.
         events_enabled:
           type: boolean
         event_topics_allowlist:
