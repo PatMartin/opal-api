@@ -304,11 +304,13 @@ paths:
       parameters:
       - name: If-Match
         in: header
-        required: false
+        required: true
         schema:
           type: string
-        description: Optional current strong configuration ETag or *. Checked atomically; stale/nonmatching revision
-          returns 412. Omission permits unconditional mutation.
+        description: Required strong ETag of the complete logical configuration, or '*' to bypass the check explicitly.
+          Checked atomically against the current global revision; missing returns 428, stale or
+          nonmatching returns 412, malformed returns 422. Obtain the revision from GET
+          /api/v1/settings/, the relevant collection GET, or the resource GET.
     parameters:
     - name: engine_id
       in: path
@@ -443,6 +445,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '428':
+          $ref: '#/components/responses/OpalError428'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
@@ -460,11 +464,13 @@ paths:
       parameters:
       - name: If-Match
         in: header
-        required: false
+        required: true
         schema:
           type: string
-        description: Optional current strong configuration ETag or *. Checked atomically; stale/nonmatching revision
-          returns 412. Omission permits unconditional mutation.
+        description: Required strong ETag of the complete logical configuration, or '*' to bypass the check explicitly.
+          Checked atomically against the current global revision; missing returns 428, stale or
+          nonmatching returns 412, malformed returns 422. Obtain the revision from GET
+          /api/v1/settings/, the relevant collection GET, or the resource GET.
     parameters:
     - $ref: '#/components/parameters/OpalSessionIdHeader'
     - $ref: '#/components/parameters/OpalTransactionIdHeader'
@@ -547,11 +553,13 @@ paths:
       parameters:
       - name: If-Match
         in: header
-        required: false
+        required: true
         schema:
           type: string
-        description: Optional current strong configuration ETag or *. Checked atomically; stale/nonmatching revision
-          returns 412. Omission permits unconditional mutation.
+        description: Required strong ETag of the complete logical configuration, or '*' to bypass the check explicitly.
+          Checked atomically against the current global revision; missing returns 428, stale or
+          nonmatching returns 412, malformed returns 422. Obtain the revision from GET
+          /api/v1/settings/, the relevant collection GET, or the resource GET.
     delete:
       tags:
       - models
@@ -589,11 +597,13 @@ paths:
       parameters:
       - name: If-Match
         in: header
-        required: false
+        required: true
         schema:
           type: string
-        description: Optional current strong configuration ETag or *. Checked atomically; stale/nonmatching revision
-          returns 412. Omission permits unconditional mutation.
+        description: Required strong ETag of the complete logical configuration, or '*' to bypass the check explicitly.
+          Checked atomically against the current global revision; missing returns 428, stale or
+          nonmatching returns 412, malformed returns 422. Obtain the revision from GET
+          /api/v1/settings/, the relevant collection GET, or the resource GET.
     parameters:
     - name: model_id
       in: path
@@ -718,6 +728,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '428':
+          $ref: '#/components/responses/OpalError428'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
@@ -735,11 +747,13 @@ paths:
       parameters:
       - name: If-Match
         in: header
-        required: false
+        required: true
         schema:
           type: string
-        description: Optional current strong configuration ETag or *. Checked atomically; stale/nonmatching revision
-          returns 412. Omission permits unconditional mutation.
+        description: Required strong ETag of the complete logical configuration, or '*' to bypass the check explicitly.
+          Checked atomically against the current global revision; missing returns 428, stale or
+          nonmatching returns 412, malformed returns 422. Obtain the revision from GET
+          /api/v1/settings/, the relevant collection GET, or the resource GET.
     parameters:
     - $ref: '#/components/parameters/OpalSessionIdHeader'
     - $ref: '#/components/parameters/OpalTransactionIdHeader'
@@ -822,11 +836,13 @@ paths:
       parameters:
       - name: If-Match
         in: header
-        required: false
+        required: true
         schema:
           type: string
-        description: Optional current strong configuration ETag or *. Checked atomically; stale/nonmatching revision
-          returns 412. Omission permits unconditional mutation.
+        description: Required strong ETag of the complete logical configuration, or '*' to bypass the check explicitly.
+          Checked atomically against the current global revision; missing returns 428, stale or
+          nonmatching returns 412, malformed returns 422. Obtain the revision from GET
+          /api/v1/settings/, the relevant collection GET, or the resource GET.
     delete:
       tags:
       - sources
@@ -864,11 +880,13 @@ paths:
       parameters:
       - name: If-Match
         in: header
-        required: false
+        required: true
         schema:
           type: string
-        description: Optional current strong configuration ETag or *. Checked atomically; stale/nonmatching revision
-          returns 412. Omission permits unconditional mutation.
+        description: Required strong ETag of the complete logical configuration, or '*' to bypass the check explicitly.
+          Checked atomically against the current global revision; missing returns 428, stale or
+          nonmatching returns 412, malformed returns 422. Obtain the revision from GET
+          /api/v1/settings/, the relevant collection GET, or the resource GET.
     parameters:
     - name: source_id
       in: path
@@ -988,6 +1006,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '428':
+          $ref: '#/components/responses/OpalError428'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
@@ -1005,11 +1025,13 @@ paths:
       parameters:
       - name: If-Match
         in: header
-        required: false
+        required: true
         schema:
           type: string
-        description: Optional current strong configuration ETag or *. Checked atomically; stale/nonmatching revision
-          returns 412. Omission permits unconditional mutation.
+        description: Required strong ETag of the complete logical configuration, or '*' to bypass the check explicitly.
+          Checked atomically against the current global revision; missing returns 428, stale or
+          nonmatching returns 412, malformed returns 422. Obtain the revision from GET
+          /api/v1/settings/, the relevant collection GET, or the resource GET.
     parameters:
     - $ref: '#/components/parameters/OpalSessionIdHeader'
     - $ref: '#/components/parameters/OpalTransactionIdHeader'
@@ -1092,11 +1114,13 @@ paths:
       parameters:
       - name: If-Match
         in: header
-        required: false
+        required: true
         schema:
           type: string
-        description: Optional current strong configuration ETag or *. Checked atomically; stale/nonmatching revision
-          returns 412. Omission permits unconditional mutation.
+        description: Required strong ETag of the complete logical configuration, or '*' to bypass the check explicitly.
+          Checked atomically against the current global revision; missing returns 428, stale or
+          nonmatching returns 412, malformed returns 422. Obtain the revision from GET
+          /api/v1/settings/, the relevant collection GET, or the resource GET.
     delete:
       tags:
       - profiles
@@ -1134,11 +1158,13 @@ paths:
       parameters:
       - name: If-Match
         in: header
-        required: false
+        required: true
         schema:
           type: string
-        description: Optional current strong configuration ETag or *. Checked atomically; stale/nonmatching revision
-          returns 412. Omission permits unconditional mutation.
+        description: Required strong ETag of the complete logical configuration, or '*' to bypass the check explicitly.
+          Checked atomically against the current global revision; missing returns 428, stale or
+          nonmatching returns 412, malformed returns 422. Obtain the revision from GET
+          /api/v1/settings/, the relevant collection GET, or the resource GET.
     parameters:
     - name: profile_id
       in: path
@@ -1220,6 +1246,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '428':
+          $ref: '#/components/responses/OpalError428'
         '404':
           $ref: '#/components/responses/NotFound'
         '422':
@@ -1229,11 +1257,13 @@ paths:
       parameters:
       - name: If-Match
         in: header
-        required: false
+        required: true
         schema:
           type: string
-        description: Optional current strong configuration ETag or *. Checked atomically; stale/nonmatching revision
-          returns 412. Omission permits unconditional mutation.
+        description: Required strong ETag of the complete logical configuration, or '*' to bypass the check explicitly.
+          Checked atomically against the current global revision; missing returns 428, stale or
+          nonmatching returns 412, malformed returns 422. Obtain the revision from GET
+          /api/v1/settings/, the relevant collection GET, or the resource GET.
     parameters:
     - name: profile_id
       in: path
@@ -2488,11 +2518,13 @@ paths:
       parameters:
       - name: If-Match
         in: header
-        required: false
+        required: true
         schema:
           type: string
-        description: Optional current strong configuration ETag or *. Checked atomically; stale/nonmatching revision
-          returns 412. Omission permits unconditional mutation.
+        description: Required strong ETag of the complete logical configuration, or '*' to bypass the check explicitly.
+          Checked atomically against the current global revision; missing returns 428, stale or
+          nonmatching returns 412, malformed returns 422. Obtain the revision from GET
+          /api/v1/settings/, the relevant collection GET, or the resource GET.
     parameters:
     - $ref: '#/components/parameters/OpalSessionIdHeader'
     - $ref: '#/components/parameters/OpalTransactionIdHeader'
@@ -2656,6 +2688,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '428':
+          $ref: '#/components/responses/OpalError428'
         '409':
           $ref: '#/components/responses/Conflict'
         '422':
@@ -2673,11 +2707,13 @@ paths:
       parameters:
       - name: If-Match
         in: header
-        required: false
+        required: true
         schema:
           type: string
-        description: Optional current strong configuration ETag or *. Checked atomically; stale/nonmatching revision
-          returns 412. Omission permits unconditional mutation.
+        description: Required strong ETag of the complete logical configuration, or '*' to bypass the check explicitly.
+          Checked atomically against the current global revision; missing returns 428, stale or
+          nonmatching returns 412, malformed returns 422. Obtain the revision from GET
+          /api/v1/settings/, the relevant collection GET, or the resource GET.
     parameters:
     - $ref: '#/components/parameters/OpalSessionIdHeader'
     - $ref: '#/components/parameters/OpalTransactionIdHeader'
@@ -2886,6 +2922,8 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '428':
+          $ref: '#/components/responses/OpalError428'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
@@ -2899,11 +2937,13 @@ paths:
       parameters:
       - name: If-Match
         in: header
-        required: false
+        required: true
         schema:
           type: string
-        description: Optional current strong configuration ETag or *. Checked atomically; stale/nonmatching revision
-          returns 412. Omission permits unconditional mutation.
+        description: Required strong ETag of the complete logical configuration, or '*' to bypass the check explicitly.
+          Checked atomically against the current global revision; missing returns 428, stale or
+          nonmatching returns 412, malformed returns 422. Obtain the revision from GET
+          /api/v1/settings/, the relevant collection GET, or the resource GET.
     parameters:
     - name: filename
       in: path
@@ -3129,7 +3169,7 @@ paths:
         schema:
           type: string
           minLength: 1
-        description: Strong ETag from GET /api/v1/settings/ or GET this setting.
+        description: Required strong ETag or '*' from GET /api/v1/settings/ or GET this setting; missing 428, stale 412, malformed 422.
       requestBody:
         required: true
         content:
@@ -3195,7 +3235,7 @@ paths:
         schema:
           type: string
           minLength: 1
-        description: Strong ETag from GET /api/v1/settings/ or GET this setting.
+        description: Required strong ETag or '*' from GET /api/v1/settings/ or GET this setting; missing 428, stale 412, malformed 422.
       responses:
         '204':
           description: Override removed; default applies.
