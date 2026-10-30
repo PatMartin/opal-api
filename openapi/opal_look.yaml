@@ -2839,6 +2839,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/BackupCreateResponse'
           headers:
+            Location:
+              description: URI of the created backup (/api/v1/backup/download/{filename}).
+              schema:
+                type: string
             X-Opal-Session-Id:
               $ref: '#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
