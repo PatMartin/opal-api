@@ -3087,7 +3087,7 @@ paths:
     - name: key
       in: path
       required: true
-      description: Dotted path to a single leaf setting (e.g., events.enabled).
+      description: Single leaf setting key from ServiceSettings (e.g., events_enabled).
       schema:
         type: string
         pattern: ^[A-Za-z_][A-Za-z0-9_-]*(\.[A-Za-z_][A-Za-z0-9_-]*)*$
@@ -3101,9 +3101,9 @@ paths:
       - settings
       operationId: get_look_setting
       summary: Get one setting
-      description: 'Access one editable setting using a dotted key path, such as `events.enabled` or
+      description: 'Access one editable setting using a key path, such as `events_enabled` or
 
-        `queue.capacity`. A key path addresses one leaf setting, never an entire
+        `event_queue_capacity`. A key path addresses one leaf setting, never an entire
 
         object or array; dots in individual setting names are reserved as separators.
 
@@ -3147,9 +3147,9 @@ paths:
       - settings
       operationId: put_look_setting
       summary: Set or update one setting
-      description: 'Access one editable setting using a dotted key path, such as `events.enabled` or
+      description: 'Access one editable setting using a key path, such as `events_enabled` or
 
-        `queue.capacity`. A key path addresses one leaf setting, never an entire
+        `event_queue_capacity`. A key path addresses one leaf setting, never an entire
 
         object or array; dots in individual setting names are reserved as separators.
 
@@ -3212,9 +3212,9 @@ paths:
       - settings
       operationId: delete_look_setting
       summary: Remove one setting override
-      description: 'Access one editable setting using a dotted key path, such as `events.enabled` or
+      description: 'Access one editable setting using a key path, such as `events_enabled` or
 
-        `queue.capacity`. A key path addresses one leaf setting, never an entire
+        `event_queue_capacity`. A key path addresses one leaf setting, never an entire
 
         object or array; dots in individual setting names are reserved as separators.
 
@@ -5001,19 +5001,6 @@ components:
         must handle frame_unavailable. Replay is bounded by both age and event count. Lowering session capacity
         does not terminate existing sessions. Decoder/network limits may additionally be implementation-enforced.
         No automatic video recording or snapshots.
-    SettingValue:
-      type: object
-      additionalProperties: false
-      properties:
-        value:
-          type: string
-          description: 'String representation of the typed setting: decimal integers/numbers, lowercase true/false
-            for booleans, JSON array text for event_topics_allowlist. Unknown key or invalid representation returns
-            422. Prefer typed settings PATCH for structured values.'
-      required:
-      - value
-      description: Matches OPAL sister-service key/value update style. DELETE resets to documented default; it does
-        not remove mandatory settings.
     HealthRead:
       type: object
       additionalProperties: false
