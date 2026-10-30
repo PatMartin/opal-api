@@ -3005,7 +3005,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthProbe'
+                $ref: '#/components/schemas/OpalHealthProbe'
           headers:
             X-Opal-Session-Id:
               $ref: '#/components/headers/OpalSessionIdHeader'
@@ -3020,7 +3020,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthProbe'
+                $ref: '#/components/schemas/OpalHealthProbe'
           headers:
             X-Opal-Session-Id:
               $ref: '#/components/headers/OpalSessionIdHeader'
@@ -3051,7 +3051,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthProbe'
+                $ref: '#/components/schemas/OpalHealthProbe'
           headers:
             X-Opal-Session-Id:
               $ref: '#/components/headers/OpalSessionIdHeader'
@@ -3066,7 +3066,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthProbe'
+                $ref: '#/components/schemas/OpalHealthProbe'
           headers:
             X-Opal-Session-Id:
               $ref: '#/components/headers/OpalSessionIdHeader'
@@ -5066,10 +5066,12 @@ components:
           example: opal-look-svc
         version:
           type: string
-          example: 1.1.0
+          description: Deployed application release version.
+          example: 2.3.0
         api_version:
           type: string
-          example: v1
+          description: REST contract version (this document's info.version).
+          example: 1.4.0
         description:
           type: string
       required:
@@ -5353,22 +5355,6 @@ components:
         422. Event enablement requires provisioned transport; invalid configuration returns 422 without mutation.
         Disabling publication drops queued unpublished notifications. Retention changes affect new records only.
         Empty patches are rejected.
-    HealthProbe:
-      type: object
-      additionalProperties: false
-      properties:
-        status:
-          type: string
-          enum:
-          - ok
-          - unavailable
-        ready:
-          type: boolean
-      required:
-      - status
-      - ready
-      description: Probe response. Liveness ready means able to answer HTTP; readiness ready uses the existing HealthRead
-        vision-readiness definition.
     BusEvent:
       type: object
       additionalProperties: false
