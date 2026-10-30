@@ -1510,7 +1510,7 @@ paths:
       operationId: get_api_v1_media_media_id_content
       responses:
         '200':
-          description: Successful response.
+          description: Streamed binary media bytes. X-Opal-* correlation headers are sent before any bytes; failures after headers are sent terminate the response without a JSON body.
           content:
             application/octet-stream:
               schema:
@@ -2411,7 +2411,7 @@ paths:
       operationId: get_api_v1_snapshots_snapshot_id_content
       responses:
         '200':
-          description: Successful response.
+          description: JPEG image bytes. X-Opal-* correlation headers are sent before any bytes; failures after headers are sent terminate the response without a JSON body.
           content:
             image/jpeg:
               schema:
