@@ -96,7 +96,8 @@ info:
     Disabled by default. The service is an opal-event producer, not a broker, rule evaluator, or action executor.
     Transport addresses, CURVE identities and credentials are provisioned outside portable REST settings and excluded
     from backups. Publication uses exactly two ZeroMQ frames: UTF-8 topic followed by UTF-8 JSON BusEvent. No extra
-    top-level fields, including metadata, are permitted. Both frames together must fit opal-event''s 1 MiB serialized
+    top-level fields, including metadata, are permitted; optional OPAL correlation metadata travels inside
+    data.metadata per the shared convention. Both frames together must fit opal-event''s 1 MiB serialized
     limit. Topic frame MUST equal envelope.topic; source is opal-look; id is a generated UUID; timestamp is UTC
     RFC3339. Topics: opal.look.session.started (first transition to running), opal.look.session.completed (completed
     or stopped), opal.look.session.failed (failed), and opal.look.analysis.completed (successful one-shot/session
@@ -5387,40 +5388,41 @@ components:
         data:
           type: object
           additionalProperties: true
-          description: Identifier-only/redacted notification summary as defined in the event publication section;
-            no image bytes, full results, OCR text, paths or secrets.
-        metadata:
-          type: object
-          additionalProperties: false
-          required:
-          - schema_version
           properties:
-            schema_version:
-              type: string
-              const: '1.0'
-            session_id:
-              type: string
-              minLength: 1
-              maxLength: 128
-            transaction_id:
-              type: string
-              minLength: 1
-              maxLength: 128
-            request_id:
-              type: string
-              minLength: 1
-              maxLength: 128
-            causation_id:
-              type: string
-              minLength: 1
-              maxLength: 128
+            metadata:
+              type: object
+              additionalProperties: false
+              required:
+              - schema_version
+              properties:
+                schema_version:
+                  type: string
+                  const: '1.0'
+                session_id:
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                transaction_id:
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                request_id:
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                causation_id:
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+          description: Identifier-only/redacted notification summary as defined in the event publication section;
+            no image bytes, full results, OCR text, paths or secrets. Optional metadata carries the OPAL correlation
+            context per the shared data.metadata convention; unknown metadata fields MUST be ignored.
       required:
       - id
       - topic
       - source
       - timestamp
       - data
-      - metadata
       description: Non-HTTP publication envelope compatible with opal-event EventInput. SSE EventEnvelope is separate.
       example:
         id: 2b6b48f4-7b87-49e8-bb35-ef0fa777c778
@@ -5433,9 +5435,9 @@ components:
           model_id: yolo-detect
           task: detection
           state: running
-        metadata:
-          schema_version: '1.0'
-          session_id: session-1
+          metadata:
+            schema_version: '1.0'
+            session_id: session-1
     EventPublicationHealth:
       type: object
       additionalProperties: false
