@@ -2053,7 +2053,10 @@ paths:
         410.
 
         Use cursor pagination, stable descending time-plus-ID ordering; filters are bound into the cursor. Invalid
-        or mismatched cursors return 422. Response next_cursor is null at end.
+        or mismatched cursors return 422. Response next_cursor is null at end. has_more is true only while matching
+        items remain to enumerate; it never reports end-of-results on a truncated scan. If the configured
+        max_result_query_limit budget is exhausted mid-enumeration the operation returns 422
+        result_query_budget_exceeded rather than a misleading page.
 
         '
       operationId: get_api_v1_results
@@ -2135,8 +2138,8 @@ paths:
           maximum: 500
           default: 100
         description: Maximum items per page (suite max_limit 500). The configured
-          max_result_query_limit bounds the total result set a query may scan, not the
-          page size.
+          max_result_query_limit bounds the total scan/return budget across the whole cursor
+          chain, not the page size.
       - name: cursor
         in: query
         required: false
@@ -5001,9 +5004,11 @@ components:
         max_result_query_limit:
           type: integer
           minimum: 1
-          description: Server-side cap on the total stored results a single query scans or returns. Independent of
-            the per-request limit page size, which stays capped at the documented maximum (500); lowering this
-            setting does not change the 500 request schema bound, and raising it cannot exceed it.
+          description: Server-side budget bounding the total stored results one paginated query may scan or
+            return across its entire cursor chain. Independent of the per-request limit page size, which stays
+            capped at the documented maximum (500); this setting changes no request schema bound. If the budget
+            is exhausted mid-enumeration the operation returns 422 result_query_budget_exceeded rather than a
+            misleading page; clients narrow filters to proceed.
           default: 1000
         events_enabled:
           type: boolean
@@ -5447,9 +5452,11 @@ components:
         max_result_query_limit:
           type: integer
           minimum: 1
-          description: Server-side cap on the total stored results a single query scans or returns. Independent of
-            the per-request limit page size, which stays capped at the documented maximum (500); lowering this
-            setting does not change the 500 request schema bound, and raising it cannot exceed it.
+          description: Server-side budget bounding the total stored results one paginated query may scan or
+            return across its entire cursor chain. Independent of the per-request limit page size, which stays
+            capped at the documented maximum (500); this setting changes no request schema bound. If the budget
+            is exhausted mid-enumeration the operation returns 422 result_query_budget_exceeded rather than a
+            misleading page; clients narrow filters to proceed.
         events_enabled:
           type: boolean
         event_topics_allowlist:
