@@ -1314,8 +1314,7 @@ paths:
             application/json:
               schema:
                 type: object
-                additionalProperties:
-                  type: string
+                additionalProperties: true
                 title: Response Get All Settings Api V1 Settings  Get
           headers:
             X-Opal-Session-Id:
@@ -1365,8 +1364,7 @@ paths:
             application/json:
               schema:
                 type: object
-                additionalProperties:
-                  type: string
+                additionalProperties: true
                 title: Response Patch Listen Settings
           headers:
             X-Opal-Session-Id:
@@ -4748,7 +4746,7 @@ components:
           type: string
         value:
           title: Value
-          type: string
+          description: Native JSON setting value.
         updated_at:
           format: date-time
           title: Updated At
@@ -4764,7 +4762,7 @@ components:
       properties:
         value:
           title: Value
-          type: string
+          description: Native JSON setting value.
       required:
       - value
       title: SettingUpdate

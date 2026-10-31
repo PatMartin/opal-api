@@ -196,7 +196,21 @@ def main():
           "" if ok else f"(errors {probe[:3]})")
     failures += 0 if ok else 1
 
-    print(f"\n{len(CASES) + 2 - failures}/{len(CASES) + 2} assertions passed")
+    # Native JSON setting values: no contract may force value into a string wire type.
+    talk = yaml.safe_load(open(os.path.join(ROOT, "openapi", "opal_talk.yaml"), encoding="utf-8"))
+    lis = yaml.safe_load(open(os.path.join(ROOT, "openapi", "opal_listen.yaml"), encoding="utf-8"))
+    native = (
+        "type" not in talk["components"]["schemas"]["SettingUpdate"]["properties"]["value"]
+        and "type" not in talk["components"]["schemas"]["SettingRead"]["properties"]["value"]
+        and "type" not in lis["components"]["schemas"]["SettingUpdate"]["properties"]["value"]
+        and lis["paths"]["/api/v1/settings/"]["get"]["responses"]["200"]["content"]
+            ["application/json"]["schema"]["additionalProperties"] is True
+    )
+    print(("PASS" if native else "FAIL"),
+          "positive: native JSON setting values (talk+listen)")
+    failures += 0 if native else 1
+
+    print(f"\n{len(CASES) + 3 - failures}/{len(CASES) + 3} assertions passed")
     sys.exit(1 if failures else 0)
 
 
