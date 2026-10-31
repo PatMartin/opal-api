@@ -26,6 +26,7 @@ npm run validate    # structural validation + $ref resolution of every file
                     # in openapi/ (Redocly CLI, redocly.yaml)
 npm run lint        # generic OpenAPI lint rules (Spectral, .spectral.yaml)
 npm run lint:opal   # OPAL suite conventions (Spectral, .spectral.opal.yaml)
+npm run lint:look    # OPAL Look-specific contract guarantees (.spectral.opal.look.yaml)
 npm run check       # all of the above, same as CI
 ```
 
@@ -48,7 +49,8 @@ npm run check       # all of the above, same as CI
 | --- | --- |
 | `redocly.yaml` | Generic structural validation. Two rules are disabled because they contradict documented OPAL conventions (`no-path-trailing-slash`) or are intentionally deferred (`security-defined`). |
 | `.spectral.yaml` | Generic Spectral `oas` recommended rules. |
-| `.spectral.opal.yaml` | OPAL suite conventions only (error correlation headers, standard error body, request context parameters). Keep OPAL-specific rules here, not in the generic ruleset. |
+| `.spectral.opal.yaml` | OPAL suite conventions only (error correlation headers, standard error body, request context parameters, ETag/precondition declarations, 201 Location, item-op 404s, event-envelope compatibility). Keep OPAL-specific rules here, not in the generic ruleset. |
+| `.spectral.opal.look.yaml` | Look-scoped guarantees: mandatory If-Match on configuration mutations, cursor-page structure (items/next_cursor/has_more), status+ready probe bodies on 200 and 503, and BusEvent keeping correlation metadata optional inside data.metadata. Separate file because these rules apply to Look paths only. |
 
 Spectral fails the build on `error` severity; `warn`-level findings are
 reported but non-blocking.

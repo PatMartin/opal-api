@@ -1,0 +1,145 @@
+extends:
+- - spectral:oas
+  - off
+rules:
+
+  opal-look-config-ifmatch:
+    description: OPAL Look configuration mutations must require a strong If-Match precondition.
+    severity: error
+    given: $.paths[?(@property.match(/api\/v1\/((models|sources|profiles)(\/\{[^}]+\}|\/)|engines\/\{[^}]+\}|profiles\/\{[^}]+\}\/activate|settings(\/\{key\}|\/)|backup\/(import|restore\/\{[^}]+\}))$/))][?(@property.match(/^(post|put|patch|delete)$/))]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - parameters
+          properties:
+            parameters:
+              type: array
+              contains:
+                type: object
+                required:
+                  - name
+                  - required
+                properties:
+                  name:
+                    const: If-Match
+                  required:
+                    const: true
+
+  opal-look-cursor-page:
+    description: OPAL Look cursor-paginated collections must return items, next_cursor and has_more.
+    severity: error
+    given:
+      - $.paths['/api/v1/sessions/'].get.responses['200'].content
+      - $.paths['/api/v1/results/'].get.responses['200'].content
+      - $.paths['/api/v1/media/'].get.responses['200'].content
+      - $.paths['/api/v1/snapshots/'].get.responses['200'].content
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - application/json
+          properties:
+            application/json:
+              type: object
+              required:
+                - schema
+              properties:
+                schema:
+                  type: object
+                  required:
+                    - properties
+                  properties:
+                    properties:
+                      type: object
+                      required:
+                        - items
+                        - next_cursor
+                        - has_more
+
+  opal-look-health-probe:
+    description: OPAL Look liveness/readiness probes must return status+ready bodies on 200 and 503.
+    severity: error
+    given: $.paths[?(@property.match(/\/health\/(live|ready)$/))].get.responses
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - '200'
+            - '503'
+          properties:
+            '200':
+              type: object
+              properties:
+                content:
+                  type: object
+                  properties:
+                    application/json:
+                      type: object
+                      properties:
+                        schema:
+                          type: object
+                          properties:
+                            required:
+                              type: array
+                              allOf:
+                                - contains:
+                                    const: status
+                                - contains:
+                                    const: ready
+            '503':
+              type: object
+              properties:
+                content:
+                  type: object
+                  properties:
+                    application/json:
+                      type: object
+                      properties:
+                        schema:
+                          type: object
+                          properties:
+                            required:
+                              type: array
+                              allOf:
+                                - contains:
+                                    const: status
+                                - contains:
+                                    const: ready
+
+  opal-look-bus-event-envelope:
+    description: OPAL Look BusEvent must keep correlation metadata optional inside data.metadata, not as a required top-level field.
+    severity: error
+    given: $.components.schemas.BusEvent
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - required
+            - properties
+          properties:
+            required:
+              type: array
+              not:
+                contains:
+                  const: metadata
+            properties:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  properties:
+                    properties:
+                      type: object
+                      required:
+                        - metadata

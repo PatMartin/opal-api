@@ -195,3 +195,4 @@ rules:
                         const: X-Opal-Causation-Id
                       in:
                         const: header
+
