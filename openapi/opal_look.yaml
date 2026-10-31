@@ -4142,37 +4142,44 @@ components:
         fields.
     FrameInput:
       oneOf:
-      - type: object
-        additionalProperties: false
-        properties:
-          kind:
-            const: media
-            type: string
-          media_id:
-            $ref: '#/components/schemas/Identifier'
-        required:
-        - kind
-        - media_id
-        description: Uploaded still image. For an uploaded video, use a media-backed source with kind=source.
-      - type: object
-        additionalProperties: false
-        properties:
-          kind:
-            const: source
-            type: string
-          source_id:
-            $ref: '#/components/schemas/Identifier'
-          position_ms:
-            type: integer
-            minimum: 0
-        required:
-        - kind
-        - source_id
-        description: Capture one frame from a registered source. position_ms applies only to finite video, defaults
-          to 0, and selects the first decodable frame at/after this position; beyond EOF returns 422. Live sources
-          capture the freshest frame, and position_ms must be omitted.
+      - $ref: '#/components/schemas/MediaFrameInput'
+      - $ref: '#/components/schemas/SourceFrameInput'
       discriminator:
         propertyName: kind
+        mapping:
+          media: '#/components/schemas/MediaFrameInput'
+          source: '#/components/schemas/SourceFrameInput'
+    MediaFrameInput:
+      type: object
+      additionalProperties: false
+      properties:
+        kind:
+          type: string
+          const: media
+        media_id:
+          $ref: '#/components/schemas/Identifier'
+      required:
+      - kind
+      - media_id
+      description: Uploaded still image. For an uploaded video, use a media-backed source with kind=source.
+    SourceFrameInput:
+      type: object
+      additionalProperties: false
+      properties:
+        kind:
+          type: string
+          const: source
+        source_id:
+          $ref: '#/components/schemas/Identifier'
+        position_ms:
+          type: integer
+          minimum: 0
+      required:
+      - kind
+      - source_id
+      description: Capture one frame from a registered source. position_ms applies only to finite video,
+        defaults to 0, and selects the first decodable frame at/after this position; beyond EOF returns 422.
+        Live sources capture the freshest frame, and position_ms must be omitted.
     AnalyzeRequest:
       type: object
       additionalProperties: false
