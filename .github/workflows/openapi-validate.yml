@@ -35,3 +35,7 @@ jobs:
       # (.spectral.opal.yaml).
       - name: Lint OPAL conventions
         run: npm run lint:opal
+
+      # Look-specific contract guarantees (.spectral.opal.look.yaml).
+      - name: Lint OPAL Look contract
+        run: npm run lint:look
