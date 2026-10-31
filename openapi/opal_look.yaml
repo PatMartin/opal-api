@@ -5105,7 +5105,11 @@ components:
           example: 2.3.0
         api_version:
           type: string
-          description: REST contract version (this document's info.version).
+          description: REST route compatibility level (the v1 in /api/v1 paths).
+          example: v1
+        contract_version:
+          type: string
+          description: Full OpenAPI contract revision (this document's info.version).
           example: 1.4.0
         description:
           type: string
