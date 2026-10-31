@@ -34,7 +34,7 @@ info:
 
     * Structured results stream through SSE and optionally persist in searchable history (default on). Retention
     is seven days for results, 24 hours for uploaded media, seven days for explicitly retained snapshots. Expiration
-    clocks are independent. No recording or image retention from analysis itself; v1.5 supports explicit recording
+    clocks are independent. No recording or image retention from analysis itself; v1.4 supports explicit recording
     and opt-in rule-triggered clips. frame cache and SSE replay are bounded ephemeral caches, not durable storage.
 
     * Raw/annotated JPEG snapshots and an annotated MJPEG preview are available. Historical metadata does not guarantee
@@ -52,7 +52,7 @@ info:
     Bind locally by default; deployment controls access, host-path permissions and remote-source restrictions. Remote
     adapters may transmit source frames to the configured provider.
 
-    * In v1.5, Look supports zones, line-crossing, object observation rules and recording; downstream actions and
+    * In v1.4, Look supports zones, line-crossing, object observation rules and recording; downstream actions and
     identity recognition remain external.
 
 
@@ -203,7 +203,7 @@ info:
 
 
 
-    OPAL LOOK v1.5.0 ADDITIONS (normative):
+    OPAL LOOK v1.4.0 ADDITIONS (normative):
 
     - Capture without inference: GET source frame returns nonretained JPEG. POST source captures with retain=false
     returns JPEG 200; retain=true creates CaptureRead 201. Captures have independent retention and may be inputs
@@ -7316,7 +7316,7 @@ components:
         runtime sessions, or caches. Paths/credential references may require adjustment on another host. 
         Media-backed sources are exported as references and may become unavailable after restore. Engine IDs 
         must match installed adapters. Export never reveals inline secrets. Export job records and generated 
-        artifact bytes/metadata are excluded. v1.5.0 also exports zones, lines, observation rules and durable 
+        artifact bytes/metadata are excluded. v1.4.0 also exports zones, lines, observation rules and durable 
         monitors. Excludes observation history, capture/recording media, rolling buffers, runtime 
         monitor/session state and secrets. Validate source/monitor/profile/zone/rule references atomically 
         during import.

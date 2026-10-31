@@ -108,7 +108,9 @@ def m_location(d):
 
 
 def m_dup_opid(d):
-    d["paths"]["/health"]["get"]["operationId"] = "get_service_info"
+    # /health's opid becomes a real duplicate of GET /'s operationId.
+    d["paths"]["/health"]["get"]["operationId"] = \
+        d["paths"]["/"]["get"]["operationId"]
 
 
 def m_broken_ref(d):
