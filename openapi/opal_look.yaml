@@ -82,11 +82,13 @@ info:
 
     All logical configuration shares one opaque strong ETag revision (engines, models, sources, profiles, portable
     settings). GET configuration resources, collections, and backup/export return this ETag. Successful configuration
-    writes return the new ETag, including 204 responses. Optional If-Match on configuration writes, import and restore
-    compares against that revision atomically with mutation. A stale or otherwise nonmatching valid precondition
-    returns 412 precondition_failed; malformed headers return 422. If-Match accepts a single strong quoted ETag
-    or *; weak tags and lists are rejected. * matches the existing logical configuration. Omission preserves unconditional
-    behavior. No-op writes may retain the revision. Any external configuration edit must participate in the same
+    writes return the new ETag, including 204 responses. A strong If-Match is required on every logical-configuration
+    mutation (creates, updates, deletes, activation, settings, backup import and restore) and is compared against
+    that revision atomically with mutation: missing returns 428 precondition_required, a stale or otherwise
+    nonmatching valid precondition returns 412 precondition_failed, and malformed headers return 422. If-Match
+    accepts a single strong quoted ETag or *; weak tags and lists are rejected. * is the explicit unconditional
+    escape hatch and matches the existing logical configuration; it never skips validation or uniqueness checks.
+    No-op writes may retain the revision. Any external configuration edit must participate in the same
     revision and atomic activation rules. Runtime frames/results/session transitions do not advance the configuration
     revision. Restore/import must never restore an old revision value.
 
@@ -161,7 +163,8 @@ info:
     ASCII tokens with no control/whitespace characters; client-supplied invalid values yield 422.
 
     Standard health routes: /api/v1/health/, /api/v1/health/live, /api/v1/health/ready. Settings: GET and PATCH
-    /api/v1/settings/ exclusively; PATCH is atomic. Mutable configuration uses strong ETags and mandatory If-Match
+    /api/v1/settings/ for the whole typed settings map, plus GET, PUT and DELETE /api/v1/settings/{key} for
+    individual leaf settings; PATCH is atomic. Mutable configuration uses strong ETags and mandatory If-Match
     with 428 missing, 412 stale. For bounded configuration catalogs return full arrays (subject to explicit deployment
     caps); for growing histories use cursor pagination with stable deterministic ordering, opaque next_cursor and
     has_more. Cursors are scoped to the exact filter set and invalidate on mismatch (422); cursor values expire
