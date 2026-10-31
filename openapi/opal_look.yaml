@@ -2852,7 +2852,7 @@ paths:
         model assets, credentials, media, snapshots and history are excluded.
       operationId: post_api_v1_backup_create
       responses:
-        '200':
+        '201':
           description: Successful response.
           content:
             application/json:
