@@ -5287,6 +5287,24 @@ components:
       - filename
       - message
     EventEnvelope:
+      oneOf:
+      - $ref: '#/components/schemas/SseResultEvent'
+      - $ref: '#/components/schemas/SseStateEvent'
+      - $ref: '#/components/schemas/SseErrorEvent'
+      - $ref: '#/components/schemas/SseEndEvent'
+      discriminator:
+        propertyName: type
+        mapping:
+          result: '#/components/schemas/SseResultEvent'
+          state: '#/components/schemas/SseStateEvent'
+          error: '#/components/schemas/SseErrorEvent'
+          end: '#/components/schemas/SseEndEvent'
+      description: 'Discriminated SSE envelope: type selects exactly one data variant. result uses
+        AnalysisResult; state uses SessionRead; error uses OpalError; end uses terminal-state object.
+        These type/data correspondences are normative. Every persistent event has an id and event
+        name matching type. Heartbeats are SSE comments, not envelopes. Heartbeats are SSE comments,
+        not envelopes.'
+    SseResultEvent:
       type: object
       additionalProperties: false
       properties:
@@ -5300,36 +5318,94 @@ components:
           format: date-time
         type:
           type: string
-          enum:
-          - result
-          - state
-          - error
-          - end
+          const: result
         data:
-          oneOf:
-          - $ref: '#/components/schemas/AnalysisResult'
-          - $ref: '#/components/schemas/SessionRead'
-          - $ref: '#/components/schemas/OpalError'
-          - type: object
-            additionalProperties: false
-            properties:
-              state:
-                type: string
-                enum:
-                - stopped
-                - completed
-                - failed
-            required:
-            - state
+          $ref: '#/components/schemas/AnalysisResult'
       required:
       - event_id
       - session_id
       - created_at
       - type
       - data
-      description: 'SSE data JSON: type=result uses AnalysisResult; state uses SessionRead; error uses OpalError;
-        end uses terminal-state object. These type/data correspondences are normative. Every persistent event has
-        an id and event name matching type. Heartbeats are SSE comments, not envelopes.'
+    SseStateEvent:
+      type: object
+      additionalProperties: false
+      properties:
+        event_id:
+          type: string
+          description: Opaque SSE replay identifier, independent of result_id.
+        session_id:
+          $ref: '#/components/schemas/Identifier'
+        created_at:
+          type: string
+          format: date-time
+        type:
+          type: string
+          const: state
+        data:
+          $ref: '#/components/schemas/SessionRead'
+      required:
+      - event_id
+      - session_id
+      - created_at
+      - type
+      - data
+    SseErrorEvent:
+      type: object
+      additionalProperties: false
+      properties:
+        event_id:
+          type: string
+          description: Opaque SSE replay identifier, independent of result_id.
+        session_id:
+          $ref: '#/components/schemas/Identifier'
+        created_at:
+          type: string
+          format: date-time
+        type:
+          type: string
+          const: error
+        data:
+          $ref: '#/components/schemas/OpalError'
+      required:
+      - event_id
+      - session_id
+      - created_at
+      - type
+      - data
+    SseEndEvent:
+      type: object
+      additionalProperties: false
+      properties:
+        event_id:
+          type: string
+          description: Opaque SSE replay identifier, independent of result_id.
+        session_id:
+          $ref: '#/components/schemas/Identifier'
+        created_at:
+          type: string
+          format: date-time
+        type:
+          type: string
+          const: end
+        data:
+          type: object
+          additionalProperties: false
+          properties:
+            state:
+              type: string
+              enum:
+              - stopped
+              - completed
+              - failed
+          required:
+          - state
+      required:
+      - event_id
+      - session_id
+      - created_at
+      - type
+      - data
     ServiceSettingsPatch:
       type: object
       additionalProperties: false
