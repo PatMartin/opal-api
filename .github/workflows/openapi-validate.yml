@@ -39,3 +39,8 @@ jobs:
       # Look-specific contract guarantees (.spectral.opal.look.yaml).
       - name: Lint OPAL Look contract
         run: npm run lint:look
+
+      # Prove the rules above actually fire on deliberately invalid specs
+      # (tests/test_lint.py).
+      - name: Run lint regression tests
+        run: npm run test:lint

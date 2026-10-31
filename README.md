@@ -28,6 +28,7 @@ npm run validate    # structural validation + $ref resolution of every file
 npm run lint        # generic OpenAPI lint rules (Spectral, .spectral.yaml)
 npm run lint:opal   # OPAL suite conventions (Spectral, .spectral.opal.yaml)
 npm run lint:look    # OPAL Look-specific contract guarantees (.spectral.opal.look.yaml)
+npm run test:lint    # regression fixtures proving the rules fire (tests/test_lint.py)
 npm run check       # all of the above, same as CI
 ```
 

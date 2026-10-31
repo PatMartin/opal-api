@@ -7,8 +7,9 @@
     "validate": "redocly lint \"openapi/*.yaml\"",
     "lint": "spectral lint -r .spectral.yaml \"openapi/*.yaml\"",
     "lint:opal": "spectral lint -r .spectral.opal.yaml \"openapi/*.yaml\"",
-    "check": "npm run validate && npm run lint && npm run lint:opal && npm run lint:look",
-    "lint:look": "spectral lint -r .spectral.opal.look.yaml openapi/opal_look.yaml"
+    "check": "npm run validate && npm run lint && npm run lint:opal && npm run lint:look && npm run test:lint",
+    "lint:look": "spectral lint -r .spectral.opal.look.yaml openapi/opal_look.yaml",
+    "test:lint": "python tests/test_lint.py"
   },
   "repository": {
     "type": "git",
