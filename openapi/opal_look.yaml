@@ -2570,7 +2570,7 @@ paths:
       - health
       summary: Check liveness
       description: Return ok when HTTP process is alive, independent of engines/cameras.
-      operationId: get_health
+      operationId: get_health_alias
       responses:
         '200':
           description: Successful response.
@@ -2600,7 +2600,7 @@ paths:
       - health
       summary: Get service info
       description: Basic service identity, matching OPAL suite conventions.
-      operationId: get
+      operationId: get_service_info
       responses:
         '200':
           description: Successful response.
