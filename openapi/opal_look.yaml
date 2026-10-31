@@ -2,7 +2,7 @@ openapi: 3.1.0
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 info:
   title: OPAL Look API
-  version: 1.3.0
+  version: 1.4.0
   description: 'Implementation-neutral vision service for the OPAL suite, complementary to OPAL Listen and OPAL
     Talk. This OpenAPI contract is the public source of truth for REST, CLI and SPA behavior. No particular vision
     library, decoder, camera API, model layout or remote provider is required by clients. Ultralytics YOLO is an
@@ -112,6 +112,23 @@ info:
     success or session state. Event diagnostics and drop counters appear in health; event-bus outage degrades health
     but does not make vision readiness false. SSE remains independent, with its existing replay and disconnect semantics.
     Event settings are portable and included in configuration export; transport bindings and secrets are not.
+
+    Release 1.4.0 contract alignment notes:
+
+    * Error envelopes are the suite OpalError shape (error.{code,message,request_id,transaction_id,...}); legacy
+      ErrorResponse/HTTPValidationError bodies were removed. This is a breaking change for consumers of the old
+      flat error bodies.
+    * All logical-configuration mutations require a strong If-Match (missing 428, stale 412, malformed 422);
+      creates, activates, settings and backup import/restore included. Unconditional mutation now requires the
+      explicit ''*'' precondition.
+    * Individual settings keys address the flat ServiceSettings leaf names (events_enabled, event_queue_capacity,
+      ...); typed JSON values, no stringification. DELETE clears an override and restores the documented default.
+    * ZeroMQ BusEvent keeps OPAL correlation metadata optional inside data.metadata; no required top-level
+      metadata field. Wire protocol unchanged: two frames, topic equals envelope.topic.
+    * Cursor pagination (items/next_cursor/has_more, newest-first + ID tie-break, filter-bound) on sessions,
+      results, media and snapshots; max_result_query_limit bounds total scans, not page size.
+    * Deferred: recording/capture APIs, pause/resume, async one-shot analysis, per-tenant quotas, and broader
+      observability endpoints remain out of scope.
 
 
     SESSION ADMISSION RETRIES
