@@ -143,3 +143,45 @@ rules:
                       type: object
                       required:
                         - metadata
+
+  opal-look-ifmatch-strong-schema:
+    description: OPAL Look If-Match parameters must constrain to one exact strong quoted ETag (pattern required).
+    severity: error
+    given: $.paths[*][*].parameters[?(@.name == 'If-Match')].schema
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - pattern
+
+  opal-look-header-required-ids:
+    description: OPAL Look request/transaction response headers must be declared required.
+    severity: error
+    given: $.components.headers[?(@property.match(/Opal(Request|Transaction)IdHeader$/))]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - required
+          properties:
+            required:
+              const: true
+
+  opal-look-header-conditional-ids:
+    description: OPAL Look session/causation response headers must stay conditional (required false).
+    severity: error
+    given: $.components.headers[?(@property.match(/Opal(Session|Causation)IdHeader$/))]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - required
+          properties:
+            required:
+              const: false

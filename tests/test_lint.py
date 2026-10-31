@@ -113,6 +113,20 @@ def m_dup_opid(d):
         d["paths"]["/"]["get"]["operationId"]
 
 
+def m_ifmatch_pattern(d):
+    for x in d["paths"]["/api/v1/models/{model_id}"]["patch"]["parameters"]:
+        if isinstance(x, dict) and x.get("name") == "If-Match":
+            x["schema"].pop("pattern", None)
+
+
+def m_header_req(d):
+    d["components"]["headers"]["OpalRequestIdHeader"]["required"] = False
+
+
+def m_header_cond(d):
+    d["components"]["headers"]["OpalSessionIdHeader"]["required"] = True
+
+
 def m_broken_ref(d):
     d["paths"]["/api/v1/health/live"]["get"]["responses"]["503"] = {
         "$ref": "#/components/responses/DoesNotExist"}
@@ -134,6 +148,9 @@ CASES = [
     ("missing If-Match on config mutation", m_ifmatch, "look", "opal-look-config-ifmatch", 0),
     ("missing cursor field (inline schema)", m_cursor, "look", "opal-look-cursor-page", 0),
     ("missing 503 probe response", m_probe, "look", "opal-look-health-probe", 0),
+    ("If-Match schema without pattern", m_ifmatch_pattern, "look", "opal-look-ifmatch-strong-schema", 0),
+    ("request header made optional", m_header_req, "look", "opal-look-header-required-ids", 0),
+    ("session header made required", m_header_cond, "look", "opal-look-header-conditional-ids", 0),
     ("probe body missing required ready", m_probe_body, "look", "opal-look-health-probe", 0),
     ("top-level required metadata", m_metadata, "look", "opal-look-bus-event-envelope", 0),
     ("missing correlation header", m_corr, "opal", "opal-correlation-headers", 0),

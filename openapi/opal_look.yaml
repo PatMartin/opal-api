@@ -424,6 +424,7 @@ paths:
         schema:
           type: string
           minLength: 1
+          pattern: '^"[^"]+"$'
         description: Required current strong ETag of the complete logical configuration. Missing returns 428, 
           stale returns 412. One exact strong quoted tag required; weak tags, lists and * are rejected with 
           422.
@@ -584,6 +585,7 @@ paths:
         schema:
           type: string
           minLength: 1
+          pattern: '^"[^"]+"$'
         description: Required current strong ETag of the complete logical configuration. Missing returns 428, 
           stale returns 412. One exact strong quoted tag required; weak tags, lists and * are rejected with 
           422.
@@ -674,6 +676,7 @@ paths:
         schema:
           type: string
           minLength: 1
+          pattern: '^"[^"]+"$'
         description: Required current strong ETag of the complete logical configuration. Missing returns 428, 
           stale returns 412. One exact strong quoted tag required; weak tags, lists and * are rejected with 
           422.
@@ -720,6 +723,7 @@ paths:
         schema:
           type: string
           minLength: 1
+          pattern: '^"[^"]+"$'
         description: Required current strong ETag of the complete logical configuration. Missing returns 428, 
           stale returns 412. One exact strong quoted tag required; weak tags, lists and * are rejected with 
           422.
@@ -870,6 +874,7 @@ paths:
         schema:
           type: string
           minLength: 1
+          pattern: '^"[^"]+"$'
         description: Required current strong ETag of the complete logical configuration. Missing returns 428, 
           stale returns 412. One exact strong quoted tag required; weak tags, lists and * are rejected with 
           422.
@@ -960,6 +965,7 @@ paths:
         schema:
           type: string
           minLength: 1
+          pattern: '^"[^"]+"$'
         description: Required current strong ETag of the complete logical configuration. Missing returns 428, 
           stale returns 412. One exact strong quoted tag required; weak tags, lists and * are rejected with 
           422.
@@ -1006,6 +1012,7 @@ paths:
         schema:
           type: string
           minLength: 1
+          pattern: '^"[^"]+"$'
         description: Required current strong ETag of the complete logical configuration. Missing returns 428, 
           stale returns 412. One exact strong quoted tag required; weak tags, lists and * are rejected with 
           422.
@@ -1151,6 +1158,7 @@ paths:
         schema:
           type: string
           minLength: 1
+          pattern: '^"[^"]+"$'
         description: Required current strong ETag of the complete logical configuration. Missing returns 428, 
           stale returns 412. One exact strong quoted tag required; weak tags, lists and * are rejected with 
           422.
@@ -1240,6 +1248,7 @@ paths:
         schema:
           type: string
           minLength: 1
+          pattern: '^"[^"]+"$'
         description: Required current strong ETag of the complete logical configuration. Missing returns 428, 
           stale returns 412. One exact strong quoted tag required; weak tags, lists and * are rejected with 
           422.
@@ -1284,6 +1293,7 @@ paths:
         schema:
           type: string
           minLength: 1
+          pattern: '^"[^"]+"$'
         description: Required current strong ETag of the complete logical configuration. Missing returns 428, 
           stale returns 412. One exact strong quoted tag required; weak tags, lists and * are rejected with 
           422.
@@ -1383,6 +1393,7 @@ paths:
         schema:
           type: string
           minLength: 1
+          pattern: '^"[^"]+"$'
         description: Required current strong ETag of the complete logical configuration. Missing returns 428, 
           stale returns 412. One exact strong quoted tag required; weak tags, lists and * are rejected with 
           422.
@@ -2655,6 +2666,7 @@ paths:
         schema:
           type: string
           minLength: 1
+          pattern: '^"[^"]+"$'
         description: Required current strong ETag of the complete logical configuration. Missing returns 428, 
           stale returns 412. One exact strong quoted tag required; weak tags, lists and * are rejected with 
           422.
@@ -2845,6 +2857,7 @@ paths:
         schema:
           type: string
           minLength: 1
+          pattern: '^"[^"]+"$'
         description: Required current strong ETag of the complete logical configuration. Missing returns 428, 
           stale returns 412. One exact strong quoted tag required; weak tags, lists and * are rejected with 
           422.
@@ -3075,6 +3088,7 @@ paths:
         schema:
           type: string
           minLength: 1
+          pattern: '^"[^"]+"$'
         description: Required current strong ETag of the complete logical configuration. Missing returns 428, 
           stale returns 412. One exact strong quoted tag required; weak tags, lists and * are rejected with 
           422.
@@ -3318,6 +3332,7 @@ paths:
         schema:
           type: string
           minLength: 1
+          pattern: '^"[^"]+"$'
         description: Required current strong ETag of the complete logical configuration. Missing returns 428, 
           stale returns 412. One exact strong quoted tag required; weak tags, lists and * are rejected with 
           422.
@@ -3417,6 +3432,7 @@ paths:
         schema:
           type: string
           minLength: 1
+          pattern: '^"[^"]+"$'
         description: Required current strong ETag of the complete logical configuration. Missing returns 428, 
           stale returns 412. One exact strong quoted tag required; weak tags, lists and * are rejected with 
           422.
@@ -7564,7 +7580,8 @@ components:
           model_id: yolo-detect
           task: detection
           state: running
-          context:
+          metadata:
+            schema_version: '1.0'
             session_id: workflow-1
             transaction_id: transaction-1
             request_id: request-1
@@ -8610,26 +8627,31 @@ components:
       name: If-Match
       in: header
       required: true
-      description: Strong global configuration ETag or explicit '*'. Missing=428, invalid=422, stale=412. 
-        Checks and mutations atomic.
+      description: Required current strong ETag of the complete logical configuration. Missing returns 428,
+        stale returns 412. One exact strong quoted tag required; weak tags, lists and * are rejected with 422.
       schema:
         type: string
         minLength: 1
+        pattern: '^"[^"]+"$' 
   headers:
     OpalSessionIdHeader:
-      description: Effective OPAL context for this response.
+      description: Logical workflow-session correlation identifier when known; absent when none exists.
+      required: false
       schema:
         type: string
     OpalTransactionIdHeader:
-      description: Effective OPAL context for this response.
+      description: End-to-end transaction correlation identifier returned by the service; the inbound valid value is propagated unchanged, otherwise generated at the entry point.
+      required: true
       schema:
         type: string
     OpalRequestIdHeader:
-      description: Effective OPAL context for this response.
+      description: Request correlation identifier returned by the service; the inbound X-Opal-Request-Id when supplied and valid, otherwise a generated identifier.
+      required: true
       schema:
         type: string
     OpalCausationIdHeader:
-      description: Effective OPAL context for this response.
+      description: Immediate-parent causation correlation identifier where applicable; absent when unknown.
+      required: false
       schema:
         type: string
 x-opal-context-standard:
