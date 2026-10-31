@@ -3368,6 +3368,12 @@ components:
           schema:
             $ref: '#/components/schemas/OpalError'
       headers:
+        Retry-After:
+          description: Advisory retry guidance as delay-seconds or an HTTP-date (per RFC 9110); supplied when
+            the service can estimate one. It is a hint, not a guarantee that capacity will exist at that moment.
+          required: false
+          schema:
+            type: string
         X-Opal-Session-Id:
           $ref: '#/components/headers/OpalSessionIdHeader'
         X-Opal-Transaction-Id:
