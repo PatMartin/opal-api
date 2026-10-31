@@ -111,29 +111,48 @@ def m_dup_opid(d):
     d["paths"]["/health"]["get"]["operationId"] = "get_service_info"
 
 
+def m_broken_ref(d):
+    d["paths"]["/api/v1/health/live"]["get"]["responses"]["503"] = {
+        "$ref": "#/components/responses/DoesNotExist"}
+
+
+def m_probe_body(d):
+    # OpalHealthProbe loses its required 'ready' -- the rule must see through the $ref.
+    d["components"]["schemas"]["OpalHealthProbe"]["required"] = ["status"]
+
+
+def m_precond(d):
+    # A required-If-Match config mutation stops declaring 412/428.
+    res = d["paths"]["/api/v1/models/{model_id}"]["patch"]["responses"]
+    res.pop("412", None)
+    res.pop("428", None)
+
+
 CASES = [
-    ("missing If-Match on config mutation", m_ifmatch, "look", "opal-look-config-ifmatch"),
-    ("missing cursor field", m_cursor, "look", "opal-look-cursor-page"),
-    ("missing 503 probe response", m_probe, "look", "opal-look-health-probe"),
-    ("top-level required metadata", m_metadata, "look", "opal-look-bus-event-envelope"),
-    ("missing correlation header", m_corr, "opal", "opal-correlation-headers"),
-    ("nonstandard error envelope", m_error_env, "opal", "opal-standard-error-body"),
-    ("201 without Location", m_location, "opal", "opal-201-location-header"),
-    ("duplicate operationId", m_dup_opid, "generic", "operation-operationId-unique"),
+    ("missing If-Match on config mutation", m_ifmatch, "look", "opal-look-config-ifmatch", 0),
+    ("missing cursor field (inline schema)", m_cursor, "look", "opal-look-cursor-page", 0),
+    ("missing 503 probe response", m_probe, "look", "opal-look-health-probe", 0),
+    ("probe body missing required ready", m_probe_body, "look", "opal-look-health-probe", 0),
+    ("top-level required metadata", m_metadata, "look", "opal-look-bus-event-envelope", 0),
+    ("missing correlation header", m_corr, "opal", "opal-correlation-headers", 0),
+    ("nonstandard error envelope", m_error_env, "opal", "opal-standard-error-body", 0),
+    ("If-Match op missing 412/428", m_precond, "opal", "opal-ifmatch-precondition-responses", 1),
+    ("201 without Location", m_location, "opal", "opal-201-location-header", 0),
+    ("duplicate operationId", m_dup_opid, "generic", "operation-operationId-unique", 0),
+    ("broken $ref", m_broken_ref, "generic", "invalid-ref", 0),
 ]
 
 
 def main():
-    look_doc = yaml.safe_load(open(LOOK, encoding="utf-8"))
     failures = 0
-    for name, mut, ruleset, expected in CASES:
-        tmp, path = mutate(dict(look_doc) if False else yaml.safe_load(
-            open(LOOK, encoding="utf-8")), mut)
+    for name, mut, ruleset, expected, sev in CASES:
+        tmp, path = mutate(yaml.safe_load(open(LOOK, encoding="utf-8")), mut)
         try:
-            got = codes(lint(ruleset, path))
-            ok = expected in got
+            hits = [x for x in lint(ruleset, path)
+                    if x.get("code") == expected and x.get("severity") == sev]
+            ok = bool(hits)
             print(("PASS" if ok else "FAIL"), name, "->", expected,
-                  "" if ok else f"(got {got[:6]})")
+                  f"(sev {sev})" if ok else f"(got {codes(lint(ruleset, path))[:6]})")
             failures += 0 if ok else 1
         except RuntimeError as e:
             print("FAIL", name, "->", e)
@@ -141,13 +160,24 @@ def main():
         finally:
             tmp.cleanup()
 
-    errs = [x for x in lint("look", LOOK) if x.get("severity") == 0]
+    look_findings = lint("look", LOOK)
+    errs = [x for x in look_findings if x.get("severity") == 0]
     ok = not errs
     print(("PASS" if ok else "FAIL"), "positive: opal_look.yaml lint:look clean",
           "" if ok else f"(errors {errs[:3]})")
     failures += 0 if ok else 1
 
-    print(f"\n{len(CASES) + 1 - failures}/{len(CASES) + 1} assertions passed")
+    # Referenced-schema positives: /results/ uses $ref ResultQueryPage;
+    # /health/* use $ref OpalHealthProbe. Both must be accepted as-is.
+    probe = [x for x in look_findings if x.get("code") in
+             ("opal-look-cursor-page", "opal-look-health-probe")]
+    ok = not probe
+    print(("PASS" if ok else "FAIL"),
+          "positive: referenced page/probe schemas accepted",
+          "" if ok else f"(errors {probe[:3]})")
+    failures += 0 if ok else 1
+
+    print(f"\n{len(CASES) + 2 - failures}/{len(CASES) + 2} assertions passed")
     sys.exit(1 if failures else 0)
 
 
