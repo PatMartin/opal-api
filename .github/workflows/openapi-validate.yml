@@ -40,6 +40,14 @@ jobs:
       - name: Lint OPAL Look contract
         run: npm run lint:look
 
+      # Python runtime for the regression harness (requirements.txt).
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install test dependencies
+        run: python -m pip install -r requirements.txt
+
       # Prove the rules above actually fire on deliberately invalid specs
       # (tests/test_lint.py).
       - name: Run lint regression tests

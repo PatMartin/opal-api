@@ -1,9 +1,16 @@
 """Regression tests proving OPAL Spectral rules fire on deliberately invalid specs.
 
-Each case mutates a copy of a published contract, lints with the relevant
+Each case mutates a copy of a published contract, lints it with the relevant
 ruleset, and asserts the expected rule code appears in the findings.
+Nonzero Spectral exits are normal for violations; unparseable output or a
+missing executable is an explicit test failure.
 """
-import json, os, subprocess, sys, tempfile
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
 
 import yaml
 
@@ -16,26 +23,52 @@ RULES = {
 }
 
 
+def spectral_exe():
+    """Resolve the project-pinned Spectral CLI; no network lookup."""
+    local = os.path.join(ROOT, "node_modules", ".bin",
+                         "spectral.cmd" if os.name == "nt" else "spectral")
+    if os.path.exists(local):
+        return local
+    return shutil.which("spectral") or shutil.which("npx")
+
+
+EXE = spectral_exe()
+
+
 def lint(ruleset_key, path):
-    r = subprocess.run(
-        ["npx", "spectral", "lint", "-r", RULES[ruleset_key], path, "-f", "json"],
-        capture_output=True, text=True, cwd=ROOT, shell=True)
+    """Return parsed findings. Raises RuntimeError on unusable output."""
+    if not EXE:
+        raise RuntimeError("spectral executable not found")
+    r = subprocess.run([EXE, "lint", "-r", RULES[ruleset_key], path, "-f", "json"],
+                       capture_output=True, text=True, cwd=ROOT)
+    if r.returncode not in (0, 1):
+        raise RuntimeError(
+            f"spectral exited {r.returncode}: {r.stderr.strip() or r.stdout.strip()}")
     try:
-        return json.loads(r.stdout)
+        findings = json.loads(r.stdout)
     except json.JSONDecodeError:
-        return []
+        # Spectral appends a human-readable summary after the JSON array when
+        # no error-severity findings exist (e.g. "[]No results...").
+        try:
+            findings = json.loads(r.stdout[: r.stdout.rfind("]") + 1])
+        except json.JSONDecodeError:
+            raise RuntimeError(
+                f"invalid JSON from spectral: {r.stdout[:200]} / {r.stderr[:200]}")
+    if not isinstance(findings, list) or any(not isinstance(x, dict) for x in findings):
+        raise RuntimeError(f"unexpected spectral output shape: {findings[:1]}")
+    return findings
 
 
 def codes(results):
     return [x.get("code") for x in results]
 
 
-def mutated_look(fn):
-    doc = yaml.safe_load(open(LOOK, encoding="utf-8"))
+def mutate(doc, fn):
     fn(doc)
-    p = os.path.join(tempfile.mkdtemp(prefix="opal-lint-"), "mutated.yaml")
-    yaml.safe_dump(doc, open(p, "w"), sort_keys=False)
-    return p
+    tmp = tempfile.TemporaryDirectory(prefix="opal-lint-")
+    path = os.path.join(tmp.name, "mutated.yaml")
+    yaml.safe_dump(doc, open(path, "w", encoding="utf-8"), sort_keys=False)
+    return tmp, path
 
 
 def m_ifmatch(d):
@@ -78,11 +111,6 @@ def m_dup_opid(d):
     d["paths"]["/health"]["get"]["operationId"] = "get_service_info"
 
 
-def m_broken_ref(d):
-    d["paths"]["/api/v1/health/live"]["get"]["responses"]["503"] = {
-        "$ref": "#/components/responses/DoesNotExist"}
-
-
 CASES = [
     ("missing If-Match on config mutation", m_ifmatch, "look", "opal-look-config-ifmatch"),
     ("missing cursor field", m_cursor, "look", "opal-look-cursor-page"),
@@ -96,15 +124,23 @@ CASES = [
 
 
 def main():
+    look_doc = yaml.safe_load(open(LOOK, encoding="utf-8"))
     failures = 0
     for name, mut, ruleset, expected in CASES:
-        got = codes(lint(ruleset, mutated_look(mut)))
-        ok = expected in got
-        print(("PASS" if ok else "FAIL"), name, "->", expected,
-              "" if ok else f"(got {got[:6]})")
-        failures += 0 if ok else 1
+        tmp, path = mutate(dict(look_doc) if False else yaml.safe_load(
+            open(LOOK, encoding="utf-8")), mut)
+        try:
+            got = codes(lint(ruleset, path))
+            ok = expected in got
+            print(("PASS" if ok else "FAIL"), name, "->", expected,
+                  "" if ok else f"(got {got[:6]})")
+            failures += 0 if ok else 1
+        except RuntimeError as e:
+            print("FAIL", name, "->", e)
+            failures += 1
+        finally:
+            tmp.cleanup()
 
-    # positive control: the real contract must stay clean under the look ruleset
     errs = [x for x in lint("look", LOOK) if x.get("severity") == 0]
     ok = not errs
     print(("PASS" if ok else "FAIL"), "positive: opal_look.yaml lint:look clean",
