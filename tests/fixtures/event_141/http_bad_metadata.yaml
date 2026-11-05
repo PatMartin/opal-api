@@ -1,0 +1,8 @@
+id: bad_meta
+type: http
+enabled: true
+method: GET
+url: http://127.0.0.1:9000/x
+body_mode: none
+keywords: ["this-keyword-is-far-too-long-to-be-allowed-by-the-contract-limit-xxxx"]
+output_schema: {type: object}

@@ -1,0 +1,4 @@
+id: broken_shell
+type: shell
+enabled: true
+executable: /opt/opal/bin/x

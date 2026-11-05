@@ -1,0 +1,7 @@
+id: ping_backend
+type: http
+enabled: true
+method: GET
+url: http://127.0.0.1:9000/health
+body_mode: none
+timeout_seconds: 10
