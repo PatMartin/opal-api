@@ -73,13 +73,16 @@ def mutate(doc, fn):
 
 def m_ifmatch(d):
     op = d["paths"]["/api/v1/models/{model_id}"]["patch"]
-    op["parameters"] = [x for x in op["parameters"]
-                        if not (isinstance(x, dict) and x.get("name") == "If-Match")]
+    keep = [x for x in op["parameters"]
+            if "/IfMatch" not in str(x.get("$ref", ""))
+            and not (isinstance(x, dict) and x.get("name") == "If-Match")]
+    assert len(keep) < len(op["parameters"])
+    op["parameters"] = keep
 
 
 def m_cursor(d):
-    d["paths"]["/api/v1/sessions/"]["get"]["responses"]["200"]["content"][
-        "application/json"]["schema"]["properties"].pop("next_cursor")
+    assert "next_cursor" in d["components"]["schemas"]["SessionPage"]["properties"]
+    d["components"]["schemas"]["SessionPage"]["properties"].pop("next_cursor")
 
 
 def m_probe(d):
@@ -87,7 +90,8 @@ def m_probe(d):
 
 
 def m_metadata(d):
-    d["components"]["schemas"]["BusEvent"]["required"].append("metadata")
+    # Strip metadata from the declared BusEvent envelope -> rule must fire.
+    d["x-opal-event-contract"]["envelope"] = "topic frame + JSON body"
 
 
 def m_corr(d):
@@ -113,15 +117,14 @@ def m_location(d):
 
 
 def m_dup_opid(d):
-    # /health's opid becomes a real duplicate of GET /'s operationId.
-    d["paths"]["/health"]["get"]["operationId"] = \
-        d["paths"]["/"]["get"]["operationId"]
+    # Copy an existing operationId onto a second operation -> duplicate.
+    d["paths"]["/api/v1/jobs/{job_id}"]["get"]["operationId"] = \
+        d["paths"]["/api/v1/jobs/"]["get"]["operationId"]
 
 
 def m_ifmatch_pattern(d):
-    for x in d["paths"]["/api/v1/models/{model_id}"]["patch"]["parameters"]:
-        if isinstance(x, dict) and x.get("name") == "If-Match":
-            x["schema"].pop("pattern", None)
+    assert "pattern" in d["components"]["parameters"]["IfMatch"]["schema"]
+    d["components"]["parameters"]["IfMatch"]["schema"].pop("pattern")
 
 
 def m_header_req(d):
@@ -138,8 +141,9 @@ def m_broken_ref(d):
 
 
 def m_probe_body(d):
-    # OpalHealthProbe loses its required 'ready' -- the rule must see through the $ref.
-    d["components"]["schemas"]["OpalHealthProbe"]["required"] = ["status"]
+    # Probe loses its required 'ready' -- the rule must see through the $ref.
+    assert "ready" in d["components"]["schemas"]["Probe"]["required"]
+    d["components"]["schemas"]["Probe"]["required"] = ["status", "version"]
 
 
 def m_precond(d):
@@ -151,13 +155,13 @@ def m_precond(d):
 
 CASES = [
     ("missing If-Match on config mutation", m_ifmatch, "look", "opal-look-config-ifmatch", 0),
-    ("missing cursor field (inline schema)", m_cursor, "look", "opal-look-cursor-page", 0),
+    ("cursor page missing next_cursor", m_cursor, "look", "opal-look-cursor-page", 0),
     ("missing 503 probe response", m_probe, "look", "opal-look-health-probe", 0),
     ("If-Match schema without pattern", m_ifmatch_pattern, "look", "opal-look-ifmatch-strong-schema", 0),
     ("request header made optional", m_header_req, "look", "opal-look-header-required-ids", 0),
     ("session header made required", m_header_cond, "look", "opal-look-header-conditional-ids", 0),
     ("probe body missing required ready", m_probe_body, "look", "opal-look-health-probe", 0),
-    ("top-level required metadata", m_metadata, "look", "opal-look-bus-event-envelope", 0),
+    ("envelope contract without metadata", m_metadata, "look", "opal-look-event-contract", 0),
     ("missing correlation header", m_corr, "opal", "opal-correlation-headers", 0),
     ("406 missing correlation headers", m_corr_406, "opal", "opal-correlation-headers", 0),
     ("nonstandard error envelope", m_error_env, "opal", "opal-standard-error-body", 0),

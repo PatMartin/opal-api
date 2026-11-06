@@ -1798,6 +1798,9 @@ components:
           - healthy
           - degraded
           - unhealthy
+        ready:
+          type: boolean
+          description: True when the service can perform useful work; probes use it as readiness.
         version:
           type: string
         uptime_seconds:
@@ -1826,6 +1829,7 @@ components:
       additionalProperties: false
       required:
       - status
+      - ready
       - version
       - components
     Probe:
@@ -1836,11 +1840,15 @@ components:
           enum:
           - ok
           - not_ready
+        ready:
+          type: boolean
+          description: True when the service can perform useful work; probes use it as readiness.
         version:
           type: string
       additionalProperties: false
       required:
       - status
+      - ready
       - version
     Metrics:
       type: object
@@ -2238,24 +2246,28 @@ components:
   headers:
     OpalSessionIdHeader:
       description: X-Opal-Session-Id correlation token; opaque 1..128 printable non-whitespace ASCII characters.
+      required: false
       schema:
         type: string
         minLength: 1
         maxLength: 128
     OpalTransactionIdHeader:
       description: X-Opal-Transaction-Id correlation token; opaque 1..128 printable non-whitespace ASCII characters.
+      required: true
       schema:
         type: string
         minLength: 1
         maxLength: 128
     OpalRequestIdHeader:
       description: X-Opal-Request-Id correlation token; opaque 1..128 printable non-whitespace ASCII characters.
+      required: true
       schema:
         type: string
         minLength: 1
         maxLength: 128
     OpalCausationIdHeader:
       description: X-Opal-Causation-Id correlation token; opaque 1..128 printable non-whitespace ASCII characters.
+      required: false
       schema:
         type: string
         minLength: 1
@@ -2305,9 +2317,12 @@ components:
       name: If-Match
       in: header
       required: true
-      description: One strong quoted ETag or *. Missing=428, stale=412, malformed=422.
+      description: Required current strong ETag of the complete logical configuration. Missing
+        returns 428, stale returns 412. One exact strong quoted tag required; weak tags,
+        lists and * are rejected with 422.
       schema:
         type: string
+        pattern: '^"[^"]+"$' 
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -6339,7 +6354,20 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '503':
-          $ref: '#/components/responses/Unavailable'
+          description: Probe unavailable; status=unavailable and ready=false.
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Probe'
         '409':
           $ref: '#/components/responses/Conflict'
       x-opal-cli:
@@ -6376,7 +6404,20 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '503':
-          $ref: '#/components/responses/Unavailable'
+          description: Probe unavailable; status=unavailable and ready=false.
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Probe'
         '409':
           $ref: '#/components/responses/Conflict'
       x-opal-cli:
@@ -6767,3 +6808,12 @@ x-opal-filter-catalog:
   scope: Runtime validates concrete parameters and rejects unknown or unsupported keys with 422. These definitions
     are normative; filters are applied in stage order. Motion resets on source discontinuity and lighting-change
     behavior is implementation-specific and disclosed via capabilities.
+x-opal-event-contract:
+  envelope: OPAL suite BusEvent versioned envelope; topic frame + JSON body with
+    data.metadata and correlation IDs.
+  example_topics:
+  - opal.look.observation
+  - opal.look.condition.matched
+  - opal.look.monitor.failed
+  rules: Disabled by default, explicitly allowlisted, bounded drop-newest queue; never
+    blocks source or inference; best effort only.

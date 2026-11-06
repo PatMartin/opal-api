@@ -6,7 +6,7 @@ rules:
   opal-look-config-ifmatch:
     description: OPAL Look configuration mutations must require a strong If-Match precondition.
     severity: error
-    given: $.paths[?(@property.match(/api\/v1\/((models|sources|profiles)(\/\{[^}]+\}|\/)|engines\/\{[^}]+\}|profiles\/\{[^}]+\}\/activate|settings(\/\{key\}|\/)|backup\/(import|restore\/\{[^}]+\}))$/))][?(@property.match(/^(post|put|patch|delete)$/))]
+    given: $.paths[?(@property.match(/api\/v1\/((engines|models|sources|pipelines|profiles|zones|rules|monitors)(\/\{[^}]+\}|\/)|profiles\/\{[^}]+\}\/activate|settings(\/\{key\}|\/)|configuration\/import)$/))][?(@property.match(/^(post|put|patch|delete)$/))]
     then:
       function: schema
       functionOptions:
@@ -33,9 +33,13 @@ rules:
     severity: error
     given:
       - $.paths['/api/v1/sessions/'].get.responses['200'].content
-      - $.paths['/api/v1/results/'].get.responses['200'].content
+      - $.paths['/api/v1/sessions/{session_id}/observations/'].get.responses['200'].content
+      - $.paths['/api/v1/jobs/'].get.responses['200'].content
+      - $.paths['/api/v1/observations/'].get.responses['200'].content
       - $.paths['/api/v1/media/'].get.responses['200'].content
-      - $.paths['/api/v1/snapshots/'].get.responses['200'].content
+      - $.paths['/api/v1/captures/'].get.responses['200'].content
+      - $.paths['/api/v1/artifacts/'].get.responses['200'].content
+      - $.paths['/api/v1/recordings/'].get.responses['200'].content
     then:
       function: schema
       functionOptions:
@@ -60,6 +64,7 @@ rules:
                         - items
                         - next_cursor
                         - has_more
+
 
   opal-look-health-probe:
     description: OPAL Look liveness/readiness probes must return status+ready bodies on 200 and 503.
@@ -113,36 +118,23 @@ rules:
                                 - contains:
                                     const: ready
 
-  opal-look-bus-event-envelope:
-    description: OPAL Look BusEvent must keep correlation metadata optional inside data.metadata, not as a required top-level field.
+  opal-look-event-contract:
+    description: OPAL Look must declare the two-frame BusEvent contract with optional data.metadata correlation.
     severity: error
-    given: $.components.schemas.BusEvent
+    given: $.x-opal-event-contract
     then:
       function: schema
       functionOptions:
         schema:
           type: object
           required:
-            - required
-            - properties
+            - envelope
+            - rules
           properties:
-            required:
-              type: array
-              not:
-                contains:
-                  const: metadata
-            properties:
-              type: object
-              required:
-                - data
-              properties:
-                data:
-                  type: object
-                  properties:
-                    properties:
-                      type: object
-                      required:
-                        - metadata
+            envelope:
+              type: string
+              pattern: metadata
+
 
   opal-look-ifmatch-strong-schema:
     description: OPAL Look If-Match parameters must constrain to one exact strong quoted ETag (pattern required).
