@@ -7,10 +7,11 @@
     "validate": "redocly lint \"openapi/*.yaml\"",
     "lint": "spectral lint -r .spectral.yaml \"openapi/*.yaml\"",
     "lint:opal": "spectral lint -r .spectral.opal.yaml \"openapi/*.yaml\"",
-    "check": "npm run validate && npm run lint && npm run lint:opal && npm run lint:look && npm run test:lint && npm run test:event141",
+    "check": "npm run validate && npm run lint && npm run lint:opal && npm run lint:look && npm run test:lint && npm run test:event141 && npm run test:think-event",
     "lint:look": "spectral lint -r .spectral.opal.look.yaml openapi/opal_look.yaml",
     "test:lint": "python tests/test_lint.py",
-    "test:event141": "python tests/test_event_141.py"
+    "test:event141": "python tests/test_event_141.py",
+    "test:think-event": "python tests/test_think_event.py"
   },
   "repository": {
     "type": "git",

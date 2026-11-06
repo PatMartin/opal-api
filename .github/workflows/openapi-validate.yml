@@ -76,6 +76,12 @@ jobs:
         continue-on-error: true
         run: npm run test:event141
 
+      # THINK <-> EVENT interoperability boundary tests (tests/test_think_event.py).
+      - name: Run THINK/EVENT boundary tests
+        id: test_think_event
+        continue-on-error: true
+        run: npm run test:think-event
+
       # Fail the job if any required stage failed; every stage's output is
       # already visible above.
       - name: Aggregate stage results
@@ -90,7 +96,7 @@ jobs:
             "lint_look=${{ steps.lint_look.outcome }}" \
             "deps=${{ steps.deps.outcome }}" \
             "test_lint=${{ steps.test_lint.outcome }}" \
-            "test_event141=${{ steps.test_event141.outcome }}"; do
+            "test_event141=${{ steps.test_event141.outcome }}"             "test_think_event=${{ steps.test_think_event.outcome }}"; do
             name="${outcome%%=*}"
             result="${outcome##*=}"
             echo "$name: $result"
