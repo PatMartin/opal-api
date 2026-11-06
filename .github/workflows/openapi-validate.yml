@@ -2,9 +2,12 @@ name: Validate OpenAPI contracts
 
 on:
   pull_request:
+  workflow_dispatch:
   push:
     branches:
       - main
+      - 'integration/**'
+      - 'proposal/**'
 
 permissions:
   contents: read
@@ -24,20 +27,30 @@ jobs:
 
       # Structural validation of every spec in openapi/: parsing,
       # $ref resolution, and OpenAPI 3.1 correctness (redocly.yaml).
+      # Each stage uses continue-on-error so one failure does not hide
+      # results from the remaining stages; the aggregate step fails the job.
       - name: Validate specs
+        id: validate
+        continue-on-error: true
         run: npm run validate
 
       # Generic OpenAPI lint rules (.spectral.yaml).
       - name: Lint specs
+        id: lint
+        continue-on-error: true
         run: npm run lint
 
       # OPAL suite conventions, kept separate from generic rules
       # (.spectral.opal.yaml).
       - name: Lint OPAL conventions
+        id: lint_opal
+        continue-on-error: true
         run: npm run lint:opal
 
       # Look-specific contract guarantees (.spectral.opal.look.yaml).
       - name: Lint OPAL Look contract
+        id: lint_look
+        continue-on-error: true
         run: npm run lint:look
 
       # Python runtime for the regression harness (requirements.txt).
@@ -46,9 +59,38 @@ jobs:
           python-version: '3.x'
 
       - name: Install test dependencies
+        id: deps
+        continue-on-error: true
         run: python -m pip install -r requirements.txt
 
       # Prove the rules above actually fire on deliberately invalid specs
       # (tests/test_lint.py).
       - name: Run lint regression tests
+        id: test_lint
+        continue-on-error: true
         run: npm run test:lint
+
+      # Fail the job if any required stage failed; every stage's output is
+      # already visible above.
+      - name: Aggregate stage results
+        if: always()
+        run: |
+          set -u
+          failed=0
+          for outcome in \
+            "validate=${{ steps.validate.outcome }}" \
+            "lint=${{ steps.lint.outcome }}" \
+            "lint_opal=${{ steps.lint_opal.outcome }}" \
+            "lint_look=${{ steps.lint_look.outcome }}" \
+            "deps=${{ steps.deps.outcome }}" \
+            "test_lint=${{ steps.test_lint.outcome }}"; do
+            name="${outcome%%=*}"
+            result="${outcome##*=}"
+            echo "$name: $result"
+            if [ "$result" = "failure" ]; then failed=1; fi
+          done
+          if [ "$failed" -eq 1 ]; then
+            echo "::error::One or more validation stages failed"
+            exit 1
+          fi
+          echo "All validation stages passed"
