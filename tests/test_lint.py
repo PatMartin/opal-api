@@ -73,13 +73,14 @@ def mutate(doc, fn):
 
 def m_ifmatch(d):
     op = d["paths"]["/api/v1/models/{model_id}"]["patch"]
-    op["parameters"] = [x for x in op["parameters"]
-                        if not (isinstance(x, dict) and x.get("name") == "If-Match")]
+    op["parameters"] = [
+        x for x in op["parameters"]
+        if "OpalIfMatch" not in str(x)
+        and not (isinstance(x, dict) and x.get("name") == "If-Match")]
 
 
 def m_cursor(d):
-    d["paths"]["/api/v1/sessions/"]["get"]["responses"]["200"]["content"][
-        "application/json"]["schema"]["properties"].pop("next_cursor")
+    d["components"]["schemas"]["JobPage"]["properties"].pop("next_cursor")
 
 
 def m_probe(d):
@@ -87,7 +88,8 @@ def m_probe(d):
 
 
 def m_metadata(d):
-    d["components"]["schemas"]["BusEvent"]["required"].append("metadata")
+    # Strip the envelope declaration so the event-contract invariant fails.
+    d["x-opal-event-contract"]["envelope"] = "topic frame + JSON body"
 
 
 def m_corr(d):
@@ -114,9 +116,7 @@ def m_dup_opid(d):
 
 
 def m_ifmatch_pattern(d):
-    for x in d["paths"]["/api/v1/models/{model_id}"]["patch"]["parameters"]:
-        if isinstance(x, dict) and x.get("name") == "If-Match":
-            x["schema"].pop("pattern", None)
+    d["components"]["parameters"]["OpalIfMatch"]["schema"].pop("pattern", None)
 
 
 def m_header_req(d):
@@ -133,8 +133,8 @@ def m_broken_ref(d):
 
 
 def m_probe_body(d):
-    # OpalHealthProbe loses its required 'ready' -- the rule must see through the $ref.
-    d["components"]["schemas"]["OpalHealthProbe"]["required"] = ["status"]
+    # Health loses its required 'ready' -- the rule must see through the $ref.
+    d["components"]["schemas"]["Health"]["required"] = ["status"]
 
 
 def m_precond(d):
@@ -146,13 +146,13 @@ def m_precond(d):
 
 CASES = [
     ("missing If-Match on config mutation", m_ifmatch, "look", "opal-look-config-ifmatch", 0),
-    ("missing cursor field (inline schema)", m_cursor, "look", "opal-look-cursor-page", 0),
+    ("cursor page missing next_cursor", m_cursor, "look", "opal-look-cursor-page", 0),
     ("missing 503 probe response", m_probe, "look", "opal-look-health-probe", 0),
     ("If-Match schema without pattern", m_ifmatch_pattern, "look", "opal-look-ifmatch-strong-schema", 0),
     ("request header made optional", m_header_req, "look", "opal-look-header-required-ids", 0),
     ("session header made required", m_header_cond, "look", "opal-look-header-conditional-ids", 0),
     ("probe body missing required ready", m_probe_body, "look", "opal-look-health-probe", 0),
-    ("top-level required metadata", m_metadata, "look", "opal-look-bus-event-envelope", 0),
+    ("envelope contract without metadata", m_metadata, "look", "opal-look-event-contract", 0),
     ("missing correlation header", m_corr, "opal", "opal-correlation-headers", 0),
     ("nonstandard error envelope", m_error_env, "opal", "opal-standard-error-body", 0),
     ("If-Match op missing 412/428", m_precond, "opal", "opal-ifmatch-precondition-responses", 1),
