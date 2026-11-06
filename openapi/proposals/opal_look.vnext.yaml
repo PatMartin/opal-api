@@ -5809,6 +5809,9 @@ components:
       type: http
       scheme: bearer
       bearerFormat: opaque
+      description: Optional on loopback deployments; required on non-loopback interfaces.
+        Bearer credentials are configured via token_env. Correlation headers are transport
+        context, never authorization credentials.
 x-opal-cli:
   root: opal look
   resource_verbs:
@@ -5900,3 +5903,19 @@ x-opal-context-standard:
   streaming: Include HTTP context headers before bytes; after headers are sent, failures are represented
     by transport-specific terminal events or stream termination; no invented resumability.
 x-opal-stage: draft
+x-opal-authorization:
+  version: '1.0'
+  description: Suite REST authentication and authorization semantics. Loopback-only
+    deployments may explicitly disable authentication; non-loopback deployments require
+    authentication. Privileged configuration operations require authorization. 401
+    means missing or invalid authentication; 403 means authenticated but not permitted.
+    Correlation IDs are never authorization credentials. Secret values must not appear
+    in responses, exports, or error details.
+  semantics:
+    missing_or_invalid_credentials: '401'
+    authenticated_but_not_permitted: '403'
+    loopback: authentication may be explicitly disabled on loopback deployments
+    non_loopback: authentication required
+    privileged_operations: authorization required for configuration mutations
+    credentials: correlation headers are transport context, never authorization credentials
+    secrets: secret values must not appear in responses, exports, or error details

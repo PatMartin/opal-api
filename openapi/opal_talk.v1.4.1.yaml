@@ -96,6 +96,10 @@ paths:
         '
       operationId: list_engines_api_v1_engines__get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Engines known to the service.
           content:
@@ -139,6 +143,10 @@ paths:
       description: Return one installed engine and its current service configuration.
       operationId: get_engine_api_v1_engines__engine_id__get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Engine details.
           content:
@@ -184,6 +192,10 @@ paths:
             schema:
               $ref: '#/components/schemas/EngineUpdate'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Updated engine.
           content:
@@ -239,6 +251,10 @@ paths:
         '
       operationId: validate_engine_api_v1_engines__engine_id__validate_post
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Engine validation result.
           content:
@@ -288,6 +304,10 @@ paths:
         schema:
           type: boolean
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Registered voices.
           content:
@@ -342,6 +362,10 @@ paths:
             schema:
               $ref: '#/components/schemas/VoiceCreate'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Voice registered successfully.
           content:
@@ -412,6 +436,10 @@ paths:
       description: Return one registered voice.
       operationId: get_voice_api_v1_voices__voice_id__get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Voice details.
           content:
@@ -454,6 +482,10 @@ paths:
             schema:
               $ref: '#/components/schemas/VoiceUpdate'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Updated voice registration.
           content:
@@ -519,6 +551,10 @@ paths:
         '
       operationId: delete_voice_api_v1_voices__voice_id__delete
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Voice registration removed. No response body is returned.
           headers:
@@ -582,6 +618,10 @@ paths:
         '
       operationId: validate_voice_api_v1_voices__voice_id__validate_post
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Voice validation result.
           content:
@@ -630,6 +670,10 @@ paths:
             schema:
               $ref: '#/components/schemas/VoiceTestRequest'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           $ref: '#/components/responses/AudioResponse'
         '404':
@@ -653,6 +697,10 @@ paths:
         '
       operationId: list_profiles_api_v1_profiles__get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Configured profiles.
           content:
@@ -697,6 +745,10 @@ paths:
             schema:
               $ref: '#/components/schemas/ProfileCreate'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Profile created successfully.
           content:
@@ -754,6 +806,10 @@ paths:
       description: Return one generation profile.
       operationId: get_profile_api_v1_profiles__profile_id__get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Profile details.
           content:
@@ -794,6 +850,10 @@ paths:
             schema:
               $ref: '#/components/schemas/ProfileUpdate'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Updated profile.
           content:
@@ -841,6 +901,10 @@ paths:
         '
       operationId: delete_profile_api_v1_profiles__profile_id__delete
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Profile deleted. No response body is returned.
           headers:
@@ -885,6 +949,10 @@ paths:
       description: Set this profile as active, deactivating all other profiles.
       operationId: activate_profile_api_v1_profiles__profile_id__activate_post
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Activated profile.
           content:
@@ -950,6 +1018,10 @@ paths:
             schema:
               $ref: '#/components/schemas/GenerateRequest'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           $ref: '#/components/responses/AudioResponse'
         '409':
@@ -995,6 +1067,10 @@ paths:
             schema:
               $ref: '#/components/schemas/GenerateStreamRequest'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           $ref: '#/components/responses/PcmStreamResponse'
         '409':
@@ -1024,6 +1100,10 @@ paths:
         '
       operationId: get_all_settings_api_v1_settings__get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Current settings keyed by setting name.
           content:
@@ -1060,6 +1140,10 @@ paths:
               minProperties: 1
               additionalProperties: true
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Updated portable settings
           content:
@@ -1110,6 +1194,10 @@ paths:
       description: Return one setting.
       operationId: get_setting_api_v1_settings__key__get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Setting value and metadata.
           content:
@@ -1146,6 +1234,10 @@ paths:
             schema:
               $ref: '#/components/schemas/SettingUpdate'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Upserted setting.
           content:
@@ -1183,6 +1275,10 @@ paths:
       description: Delete one setting so the implementation or profile default can apply.
       operationId: delete_setting_api_v1_settings__key__delete
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Setting deleted. No response body is returned.
           headers:
@@ -1223,6 +1319,10 @@ paths:
         '
       operationId: health_check_api_v1_health__get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Service health state.
           content:
@@ -1253,6 +1353,10 @@ paths:
       description: List backups available to this OPAL Talk instance.
       operationId: list_backups_api_v1_backup_list_get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Available backups.
           content:
@@ -1298,6 +1402,10 @@ paths:
         '
       operationId: create_backup_api_v1_backup_create_post
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Backup created.
           content:
@@ -1346,6 +1454,10 @@ paths:
         '
       operationId: download_backup_api_v1_backup_download__filename__get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Backup file contents.
           headers:
@@ -1406,6 +1518,10 @@ paths:
           type: string
           pattern: '^"[^"]+"$'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Restore completed.
           content:
@@ -1447,6 +1563,10 @@ paths:
       description: Delete a named backup file managed by OPAL Talk.
       operationId: delete_backup_api_v1_backup__filename__delete
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Backup deleted. No response body is returned.
           headers:
@@ -1476,6 +1596,10 @@ paths:
         '
       operationId: export_config_api_v1_backup_export_get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Full logical service configuration.
           content:
@@ -1530,6 +1654,10 @@ paths:
           type: string
           pattern: '^"[^"]+"$'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Import result.
           content:
@@ -1576,6 +1704,10 @@ paths:
         '
       operationId: validate_config_api_v1_backup_validate_get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Configuration validation result.
           content:
@@ -1606,6 +1738,10 @@ paths:
               type: object
               additionalProperties: true
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Validation results
           content:
@@ -1635,6 +1771,10 @@ paths:
       description: Return basic service identity and API version information.
       operationId: root__get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Service identity.
           content:
@@ -1669,6 +1809,10 @@ paths:
         '
       operationId: healthz_healthz_get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Service process is alive.
           content:
@@ -1698,6 +1842,10 @@ paths:
       operationId: get_talk_health_live
       summary: Liveness probe
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Health probe
           content:
@@ -1742,6 +1890,10 @@ paths:
       operationId: get_talk_health_ready
       summary: Readiness probe
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Health probe
           content:
@@ -1780,6 +1932,14 @@ paths:
     - $ref: '#/components/parameters/OpalRequestIdHeader'
     - $ref: '#/components/parameters/OpalCausationIdHeader'
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+      description: Optional on loopback deployments; required on non-loopback interfaces.
+        Bearer credentials are configured via token_env. Correlation headers are transport
+        context, never authorization credentials.
   parameters:
     EngineId:
       name: engine_id
@@ -1934,6 +2094,36 @@ components:
       schema:
         type: string
   responses:
+    Unauthorized:
+      description: Missing or invalid authentication.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
+    Forbidden:
+      description: Authenticated but not permitted.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
     AudioResponse:
       description: 'Completed generated audio. The media type corresponds to the resolved
 
@@ -3162,3 +3352,21 @@ x-opal-context-standard:
     stale_status: 412
   streaming: Include HTTP context headers before bytes; after headers are sent, failures are represented by
     transport-specific terminal events or stream termination; no invented resumability.
+security:
+- BearerAuth: []
+x-opal-authorization:
+  version: '1.0'
+  description: Suite REST authentication and authorization semantics. Loopback-only
+    deployments may explicitly disable authentication; non-loopback deployments require
+    authentication. Privileged configuration operations require authorization. 401
+    means missing or invalid authentication; 403 means authenticated but not permitted.
+    Correlation IDs are never authorization credentials. Secret values must not appear
+    in responses, exports, or error details.
+  semantics:
+    missing_or_invalid_credentials: '401'
+    authenticated_but_not_permitted: '403'
+    loopback: authentication may be explicitly disabled on loopback deployments
+    non_loopback: authentication required
+    privileged_operations: authorization required for configuration mutations
+    credentials: correlation headers are transport context, never authorization credentials
+    secrets: secret values must not appear in responses, exports, or error details

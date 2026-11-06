@@ -80,11 +80,17 @@ def main():
     check("get" in coll and "patch" in coll, "settings collection GET/PATCH retained")
     check("If-Match" in param_names(coll["patch"]), "settings PATCH keeps required If-Match")
 
-    # unrelated surfaces untouched
+    # unrelated surfaces untouched (security response additions are the only delta)
+    def strip_sec(op):
+        o = dict(op)
+        o["responses"] = {k: v for k, v in o["responses"].items()
+                          if k not in ("401", "403")}
+        return o
+
     for p in ("/api/v1/recognition/", "/api/v1/wakewords/", "/api/v1/intents/"):
         for m, op in spec141["paths"].get(p, {}).items():
             if isinstance(op, dict):
-                check(spec140["paths"][p][m] == op or p not in spec140["paths"],
+                check(spec140["paths"][p][m] == strip_sec(op) or p not in spec140["paths"],
                       f"{m} {p} unchanged from 1.4.0")
 
     sys.exit(1 if failures else 0)

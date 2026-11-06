@@ -60,6 +60,10 @@ paths:
       summary: List Wakewords
       operationId: list_wakewords_api_v1_wakewords__get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -97,6 +101,10 @@ paths:
               $ref: '#/components/schemas/WakewordCreate'
         required: true
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Successful Response
           content:
@@ -134,6 +142,10 @@ paths:
           type: integer
           title: Wakeword Id
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -186,6 +198,10 @@ paths:
             schema:
               $ref: '#/components/schemas/WakewordUpdate'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -233,6 +249,10 @@ paths:
         description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the resource's ETag returned by GET /api/v1/wakewords/{wakeword_id}.
         example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Successful Response
           headers:
@@ -259,6 +279,10 @@ paths:
       summary: List Intents
       operationId: list_intents_api_v1_intents__get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -296,6 +320,10 @@ paths:
               $ref: '#/components/schemas/IntentCreate'
         required: true
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Successful Response
           content:
@@ -333,6 +361,10 @@ paths:
           type: integer
           title: Intent Id
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -385,6 +417,10 @@ paths:
             schema:
               $ref: '#/components/schemas/IntentUpdate'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -432,6 +468,10 @@ paths:
         description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the resource's ETag returned by GET /api/v1/intents/{intent_id}.
         example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Successful Response
           headers:
@@ -465,6 +505,10 @@ paths:
           type: integer
           title: Intent Id
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -511,6 +555,10 @@ paths:
             schema:
               $ref: '#/components/schemas/IntentPhraseCreate'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Successful Response
           content:
@@ -565,6 +613,10 @@ paths:
         description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the phrase collection's ETag returned by GET /api/v1/intents/{intent_id}/phrases.
         example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Successful Response
           headers:
@@ -591,6 +643,10 @@ paths:
       summary: List Slots
       operationId: list_slots_api_v1_slots__get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -628,6 +684,10 @@ paths:
               $ref: '#/components/schemas/SlotCreate'
         required: true
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Successful Response
           content:
@@ -665,6 +725,10 @@ paths:
           type: integer
           title: Slot Id
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -717,6 +781,10 @@ paths:
             schema:
               $ref: '#/components/schemas/SlotUpdate'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -764,6 +832,10 @@ paths:
         description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the resource's ETag returned by GET /api/v1/slots/{slot_id}.
         example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Successful Response
           headers:
@@ -797,6 +869,10 @@ paths:
           type: integer
           title: Slot Id
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -843,6 +919,10 @@ paths:
             schema:
               $ref: '#/components/schemas/SlotValueCreate'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Successful Response
           content:
@@ -897,6 +977,10 @@ paths:
         description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the slot-value collection's ETag returned by GET /api/v1/slots/{slot_id}/values.
         example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Successful Response
           headers:
@@ -936,6 +1020,10 @@ paths:
           type: integer
           title: Value Id
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -989,6 +1077,10 @@ paths:
             schema:
               $ref: '#/components/schemas/SlotAliasCreate'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Successful Response
           content:
@@ -1049,6 +1141,10 @@ paths:
         description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the alias collection's ETag returned by GET /api/v1/slots/{slot_id}/values/{value_id}/aliases.
         example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Successful Response
           headers:
@@ -1075,6 +1171,10 @@ paths:
       summary: List Profiles
       operationId: list_profiles_api_v1_profiles__get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -1112,6 +1212,10 @@ paths:
               $ref: '#/components/schemas/ProfileCreate'
         required: true
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Successful Response
           content:
@@ -1149,6 +1253,10 @@ paths:
           type: integer
           title: Profile Id
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -1201,6 +1309,10 @@ paths:
             schema:
               $ref: '#/components/schemas/ProfileUpdate'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -1248,6 +1360,10 @@ paths:
         description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the resource's ETag returned by GET /api/v1/profiles/{profile_id}.
         example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Successful Response
           headers:
@@ -1282,6 +1398,10 @@ paths:
           type: integer
           title: Profile Id
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -1308,6 +1428,10 @@ paths:
       summary: Get All Settings
       operationId: get_all_settings_api_v1_settings__get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -1358,6 +1482,10 @@ paths:
               additionalProperties: true
               title: Changes
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -1403,6 +1531,10 @@ paths:
           type: string
           minLength: 1
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Setting value
           content:
@@ -1451,6 +1583,10 @@ paths:
             schema:
               $ref: '#/components/schemas/SettingUpdate'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Updated setting
           content:
@@ -1500,6 +1636,10 @@ paths:
           type: string
           pattern: '^"[^"]+"$'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Setting restored to default
           content:
@@ -1546,6 +1686,10 @@ paths:
             schema:
               $ref: '#/components/schemas/TextTestRequest'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -1596,6 +1740,10 @@ paths:
             schema:
               $ref: '#/components/schemas/Body_test_audio_api_v1_recognition_test_audio_post'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -1620,6 +1768,10 @@ paths:
       summary: Start Pipeline
       operationId: start_pipeline_api_v1_recognition_start_post
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -1647,6 +1799,10 @@ paths:
       summary: Stop Pipeline
       operationId: stop_pipeline_api_v1_recognition_stop_post
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -1674,6 +1830,10 @@ paths:
       summary: Get Status
       operationId: get_status_api_v1_recognition_status_get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -1758,6 +1918,10 @@ paths:
           title: Debug
         description: Include audio levels and partial transcripts
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: SSE stream of live recognition events.
           content:
@@ -1822,6 +1986,10 @@ paths:
           - type: 'null'
           title: Matched
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -1869,6 +2037,10 @@ paths:
           title: Cursor
         description: Opaque continuation token returned from the preceding page.
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -1903,6 +2075,10 @@ paths:
           type: integer
           title: Log Id
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -1962,6 +2138,10 @@ paths:
           default: 0
           title: Offset
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -1994,6 +2174,10 @@ paths:
             schema:
               $ref: '#/components/schemas/FailedUtteranceCreate'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Successful Response
           content:
@@ -2029,6 +2213,10 @@ paths:
           type: integer
           title: Fu Id
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2067,6 +2255,10 @@ paths:
             schema:
               $ref: '#/components/schemas/FailedUtteranceUpdate'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2099,6 +2291,10 @@ paths:
           type: integer
           title: Fu Id
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Successful Response
           headers:
@@ -2144,6 +2340,10 @@ paths:
           title: Create Regression
         description: Also add a regression test for this utterance
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2170,6 +2370,10 @@ paths:
       summary: List Regression Tests
       operationId: list_regression_tests_api_v1_regression__get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2202,6 +2406,10 @@ paths:
               $ref: '#/components/schemas/RegressionTestCreate'
         required: true
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Successful Response
           content:
@@ -2239,6 +2447,10 @@ paths:
           default: true
           title: Enabled Only
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2270,6 +2482,10 @@ paths:
           type: integer
           title: Test Id
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2308,6 +2524,10 @@ paths:
             schema:
               $ref: '#/components/schemas/RegressionTestUpdate'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2340,6 +2560,10 @@ paths:
           type: integer
           title: Test Id
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Successful Response
           headers:
@@ -2363,6 +2587,10 @@ paths:
       description: Return the most recent performance result.
       operationId: get_last_performance_api_v1_performance_last_get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2400,6 +2628,10 @@ paths:
           default: 100
           title: Limit
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2447,6 +2679,10 @@ paths:
           title: Cursor
         description: Opaque continuation token returned from the preceding page.
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2474,6 +2710,10 @@ paths:
       summary: Health Check
       operationId: health_check_api_v1_health__get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2498,6 +2738,10 @@ paths:
       summary: Get Audio Devices
       operationId: get_audio_devices_api_v1_health_audio_devices_get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2526,6 +2770,10 @@ paths:
       description: 'Cheap liveness check: the process is up and the database is reachable.'
       operationId: get_listen_health_live
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2567,6 +2815,10 @@ paths:
         loads, etc.'
       operationId: get_listen_health_ready
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2606,6 +2858,10 @@ paths:
       summary: List Backups
       operationId: list_backups_api_v1_backup_list_get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2633,6 +2889,10 @@ paths:
       summary: Create Backup
       operationId: create_backup_api_v1_backup_create_post
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Successful Response
           content:
@@ -2671,6 +2931,10 @@ paths:
           type: string
           title: Filename
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           headers:
@@ -2700,6 +2964,10 @@ paths:
           type: string
           title: Filename
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2736,6 +3004,10 @@ paths:
           type: string
           title: Filename
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Successful Response
           headers:
@@ -2759,6 +3031,10 @@ paths:
       description: Export full configuration as JSON.
       operationId: export_config_api_v1_backup_export_get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2802,6 +3078,10 @@ paths:
               title: Bundle
               description: Bundle to import; omit to use ./config/
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2830,6 +3110,10 @@ paths:
       summary: Validate Config
       operationId: validate_config_api_v1_backup_validate_get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2861,6 +3145,10 @@ paths:
               $ref: '#/components/schemas/ConfigBundle'
         required: true
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2883,6 +3171,10 @@ paths:
       summary: Root
       operationId: root__get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2908,6 +3200,10 @@ paths:
       summary: Healthz
       operationId: healthz_healthz_get
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful Response
           content:
@@ -2929,6 +3225,14 @@ paths:
         '422':
           $ref: '#/components/responses/OpalError422'
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+      description: Optional on loopback deployments; required on non-loopback interfaces.
+        Bearer credentials are configured via token_env. Correlation headers are transport
+        context, never authorization credentials.
   headers:
     OpalSessionIdHeader:
       description: Effective OPAL session context for this response. Returned when a session identifier is known; conditionally present.
@@ -2951,6 +3255,36 @@ components:
       schema:
         type: string
   responses:
+    Unauthorized:
+      description: Missing or invalid authentication.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
+    Forbidden:
+      description: Authenticated but not permitted.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpalError'
+      headers:
+        X-Opal-Session-Id:
+          $ref: '#/components/headers/OpalSessionIdHeader'
+        X-Opal-Transaction-Id:
+          $ref: '#/components/headers/OpalTransactionIdHeader'
+        X-Opal-Request-Id:
+          $ref: '#/components/headers/OpalRequestIdHeader'
+        X-Opal-Causation-Id:
+          $ref: '#/components/headers/OpalCausationIdHeader'
     NotFound:
       description: Requested resource was not found.
       content:
@@ -4962,3 +5296,21 @@ x-opal-context-standard:
   streaming: Include HTTP context headers before bytes; after headers are sent, failures
     are represented by transport-specific terminal events or stream termination; no
     invented resumability.
+security:
+- BearerAuth: []
+x-opal-authorization:
+  version: '1.0'
+  description: Suite REST authentication and authorization semantics. Loopback-only
+    deployments may explicitly disable authentication; non-loopback deployments require
+    authentication. Privileged configuration operations require authorization. 401
+    means missing or invalid authentication; 403 means authenticated but not permitted.
+    Correlation IDs are never authorization credentials. Secret values must not appear
+    in responses, exports, or error details.
+  semantics:
+    missing_or_invalid_credentials: '401'
+    authenticated_but_not_permitted: '403'
+    loopback: authentication may be explicitly disabled on loopback deployments
+    non_loopback: authentication required
+    privileged_operations: authorization required for configuration mutations
+    credentials: correlation headers are transport context, never authorization credentials
+    secrets: secret values must not appear in responses, exports, or error details

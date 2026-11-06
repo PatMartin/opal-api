@@ -64,10 +64,17 @@ def main():
     check("200" in val["responses"], "backup/validate exists for non-mutating validation")
 
     # engines/voices/profiles/generation surfaces unchanged
+    # (security response additions are the only delta)
+    def strip_sec(op):
+        o = dict(op)
+        o["responses"] = {k: v for k, v in o["responses"].items()
+                          if k not in ("401", "403")}
+        return o
+
     for p in ("/api/v1/engines/{engine_id}", "/api/v1/voices/", "/api/v1/profiles/"):
         for m, op in spec141["paths"].get(p, {}).items():
             if isinstance(op, dict) and p in spec140["paths"]:
-                check(spec140["paths"][p][m] == op or m == "post",
+                check(spec140["paths"][p][m] == strip_sec(op) or m == "post",
                       f"{m} {p} unchanged from 1.4.0")
 
     sys.exit(1 if failures else 0)

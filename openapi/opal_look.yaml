@@ -2497,7 +2497,9 @@ components:
     BearerAuth:
       type: http
       scheme: bearer
-      description: Required for non-loopback deployments; may be disabled only on loopback in trusted environment.
+      description: Optional on loopback deployments; required on non-loopback interfaces.
+        Bearer credentials are configured via token_env. Correlation headers are transport
+        context, never authorization credentials.
 paths:
   /api/v1/capabilities/:
     get:
@@ -2516,6 +2518,10 @@ paths:
       - &id035
         $ref: '#/components/parameters/OpalCausationIdHeader'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -2553,6 +2559,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -2594,6 +2604,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -2633,6 +2647,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -2690,6 +2708,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -2731,6 +2753,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Created
           headers:
@@ -2782,6 +2808,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -2821,6 +2851,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -2870,6 +2904,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Deleted
           headers:
@@ -2917,6 +2955,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -2958,6 +3000,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Created
           headers:
@@ -3009,6 +3055,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -3048,6 +3098,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -3097,6 +3151,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Deleted
           headers:
@@ -3144,6 +3202,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -3185,6 +3247,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Created
           headers:
@@ -3236,6 +3302,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -3275,6 +3345,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -3324,6 +3398,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Deleted
           headers:
@@ -3371,6 +3449,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -3412,6 +3494,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Created
           headers:
@@ -3463,6 +3549,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -3502,6 +3592,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -3551,6 +3645,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Deleted
           headers:
@@ -3598,6 +3696,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -3639,6 +3741,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Created
           headers:
@@ -3690,6 +3796,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -3729,6 +3839,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -3778,6 +3892,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Deleted
           headers:
@@ -3825,6 +3943,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -3866,6 +3988,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Created
           headers:
@@ -3917,6 +4043,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -3956,6 +4086,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -4005,6 +4139,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Deleted
           headers:
@@ -4052,6 +4190,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -4093,6 +4235,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Created
           headers:
@@ -4144,6 +4290,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -4183,6 +4333,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -4232,6 +4386,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Deleted
           headers:
@@ -4279,6 +4437,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -4323,6 +4485,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -4374,6 +4540,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -4419,6 +4589,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -4464,6 +4638,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -4510,6 +4688,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -4593,6 +4775,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IdempotencyKey'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '202':
           description: Accepted
           headers:
@@ -4651,6 +4837,10 @@ paths:
           minLength: 1
           maxLength: 128
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -4688,6 +4878,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -4733,6 +4927,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '202':
           description: Accepted
           headers:
@@ -4780,6 +4978,10 @@ paths:
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/Limit'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -4830,6 +5032,10 @@ paths:
         schema:
           type: string
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -4929,6 +5135,10 @@ paths:
           type: string
         description: Compact JSON FilterSpec applied to presentation, not inference.
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -4976,6 +5186,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IdempotencyKey'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '202':
           description: Accepted
           headers:
@@ -5032,6 +5246,10 @@ paths:
         schema:
           type: string
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -5069,6 +5287,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -5114,6 +5336,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '202':
           description: Accepted
           headers:
@@ -5204,6 +5430,10 @@ paths:
           type: string
           format: date-time
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -5241,6 +5471,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -5292,6 +5526,10 @@ paths:
           type: string
         description: Required supported media MIME type e.g. video/mp4, image/jpeg.
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Created
           headers:
@@ -5341,6 +5579,10 @@ paths:
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/Limit'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -5378,6 +5620,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -5414,6 +5660,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Deleted
           headers:
@@ -5488,6 +5738,10 @@ paths:
         schema:
           type: string
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -5535,6 +5789,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '201':
           description: Created
           headers:
@@ -5602,6 +5860,10 @@ paths:
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/Limit'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -5639,6 +5901,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -5675,6 +5941,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Deleted
           headers:
@@ -5716,6 +5986,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -5764,6 +6038,10 @@ paths:
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/Limit'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -5801,6 +6079,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -5837,6 +6119,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Deleted
           headers:
@@ -5884,6 +6170,10 @@ paths:
           type: string
         description: Optional single bytes range; unsupported multipart range rejected.
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -5944,6 +6234,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -5983,6 +6277,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -6032,6 +6330,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -6071,6 +6373,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -6120,6 +6426,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '204':
           description: Deleted
           headers:
@@ -6167,6 +6477,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -6206,6 +6520,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -6250,6 +6568,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IfMatch'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -6299,6 +6621,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -6336,6 +6662,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -6386,6 +6716,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -6436,6 +6770,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -6473,6 +6811,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -6511,6 +6853,10 @@ paths:
       - *id035
       - $ref: '#/components/parameters/IdempotencyKey'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '202':
           description: Accepted
           headers:
@@ -6557,6 +6903,10 @@ paths:
       - $ref: '#/components/parameters/Cursor'
       - $ref: '#/components/parameters/Limit'
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -6594,6 +6944,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: OK
           headers:
@@ -6639,6 +6993,10 @@ paths:
       - *id034
       - *id035
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '202':
           description: Accepted
           headers:
@@ -6766,6 +7124,10 @@ paths:
         schema:
           type: string
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Multipart motion JPEG; stream remains open until disconnect, EOS or error.
           headers:
@@ -6817,3 +7179,19 @@ x-opal-event-contract:
   - opal.look.monitor.failed
   rules: Disabled by default, explicitly allowlisted, bounded drop-newest queue; never
     blocks source or inference; best effort only.
+x-opal-authorization:
+  version: '1.0'
+  description: Suite REST authentication and authorization semantics. Loopback-only
+    deployments may explicitly disable authentication; non-loopback deployments require
+    authentication. Privileged configuration operations require authorization. 401
+    means missing or invalid authentication; 403 means authenticated but not permitted.
+    Correlation IDs are never authorization credentials. Secret values must not appear
+    in responses, exports, or error details.
+  semantics:
+    missing_or_invalid_credentials: '401'
+    authenticated_but_not_permitted: '403'
+    loopback: authentication may be explicitly disabled on loopback deployments
+    non_loopback: authentication required
+    privileged_operations: authorization required for configuration mutations
+    credentials: correlation headers are transport context, never authorization credentials
+    secrets: secret values must not appear in responses, exports, or error details

@@ -738,6 +738,10 @@ paths:
       description: Overall service and dependency status. Model-only tasks can work without EVENT; report degraded
         rather than falsely claiming all tool capabilities are healthy.
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Health summary.
           content:
@@ -769,6 +773,10 @@ paths:
       summary: Liveness probe
       description: Process liveness; 200 if serving requests, regardless of model/EVENT availability.
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Process is alive.
           content:
@@ -800,6 +808,10 @@ paths:
       description: Ready when able to accept and process tasks using at least one configured available model. EVENT
         availability is reported as degraded; it need not block plain reasoning.
       responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '200':
           description: Ready for model-backed tasks.
           content:
@@ -838,7 +850,9 @@ components:
       type: http
       scheme: bearer
       bearerFormat: opaque
-      description: REST token; can be disabled only on loopback in an explicitly local deployment.
+      description: Optional on loopback deployments; required on non-loopback interfaces.
+        Bearer credentials are configured via token_env. Correlation headers are transport
+        context, never authorization credentials.
   parameters:
     TaskId:
       name: task_id
@@ -1677,3 +1691,19 @@ x-opal-event-integration:
   - settings:write
   note: Permission names are proposed for EVENT authorization enhancement, not claims that EVENT 1.4.0 already implements
     them.
+x-opal-authorization:
+  version: '1.0'
+  description: Suite REST authentication and authorization semantics. Loopback-only
+    deployments may explicitly disable authentication; non-loopback deployments require
+    authentication. Privileged configuration operations require authorization. 401
+    means missing or invalid authentication; 403 means authenticated but not permitted.
+    Correlation IDs are never authorization credentials. Secret values must not appear
+    in responses, exports, or error details.
+  semantics:
+    missing_or_invalid_credentials: '401'
+    authenticated_but_not_permitted: '403'
+    loopback: authentication may be explicitly disabled on loopback deployments
+    non_loopback: authentication required
+    privileged_operations: authorization required for configuration mutations
+    credentials: correlation headers are transport context, never authorization credentials
+    secrets: secret values must not appear in responses, exports, or error details
