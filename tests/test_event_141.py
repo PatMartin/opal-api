@@ -110,7 +110,17 @@ def main():
     check(set(schemas141) - set(schemas140) == {"ActionInputSchema"}, "only ActionInputSchema added",
           f"(added: {set(schemas141) - set(schemas140)}, removed: {set(schemas140) - set(schemas141)})")
     changed = [k for k in set(schemas140) & set(schemas141) if schemas140[k] != schemas141[k]]
-    check(sorted(changed) == sorted(ACTIONS), "only the three action schemas changed", f"({changed})")
+    check(sorted(changed) == sorted(ACTIONS + ("Execution",)),
+          "only action schemas + Execution changed", f"({changed})")
+
+    # Execution's delta is restricted to error_code/error_message descriptions.
+    ex140, ex141 = schemas140["Execution"], schemas141["Execution"]
+    check(set(ex141["properties"]) == set(ex140["properties"]),
+          "Execution: no properties added or removed")
+    check(ex141.get("required") == ex140.get("required"), "Execution: required unchanged")
+    diffs = [p for p in ex140["properties"] if ex140["properties"][p] != ex141["properties"][p]]
+    check(sorted(diffs) == ["error_code", "error_message"],
+          "Execution: only error_code/error_message descriptions changed", f"({diffs})")
 
     for name in ACTIONS:
         old, new = schemas140[name], schemas141[name]
@@ -168,6 +178,37 @@ def main():
                 ok = not expected
                 detail = f"(rejected: {exc.message[:80]})"
             check(ok, f"fixture {fixture} vs {schema_name} [{label}]", detail)
+
+    # --- input-validation semantics ----------------------------------------------
+    ex = spec141["paths"]["/api/v1/actions/{action_id}/execute"]["post"]
+    check("422" in ex["responses"], "execute declares 422 for input-validation rejection")
+    check("202" in ex["responses"], "execute still declares 202 for admitted async executions")
+    desc = ex.get("description", "")
+    check("input_schema" in desc and "422" in desc, "execute documents synchronous input validation -> 422")
+    check("before" in desc.lower(), "execute: validation happens before any execution record")
+
+    pub = spec141["paths"]["/api/v1/events/"]["post"].get("description", "")
+    check("dropped" in pub and "input_validation_failed" in pub,
+          "events documents rule-triggered validation -> dropped execution record")
+    check("already-completed" in pub or "publisher" in pub,
+          "events: async failure never returned to the publisher")
+
+    ex_props = spec141["components"]["schemas"]["Execution"]["properties"]
+    check("dropped" in ex_props["status"]["enum"], "Execution.status includes dropped")
+    check(set(ex_props["trigger"]["enum"]) == {"rule", "manual"},
+          "Execution.trigger distinguishes rule vs manual")
+    ec = ex_props["error_code"].get("description", "")
+    check("input_validation_failed" in ec, "error_code documents input_validation_failed")
+    check("error_message" in ex_props, "error_message field present for failure detail")
+    check("error_code" not in spec141["components"]["schemas"]["Execution"].get("required", []),
+          "error_code remains optional")
+
+    ais = spec141["components"]["schemas"]["ActionInputSchema"].get("description", "")
+    check("EventInput.data" in ais, "ActionInputSchema describes EventInput.data only")
+    check("local" in ais.lower() or "remote" in ais.lower(),
+          "ActionInputSchema restricts $ref targets")
+    check("dropped" in ais and "422" in ais,
+          "ActionInputSchema documents sync 422 vs async dropped semantics")
 
     sys.exit(1 if failures else 0)
 
