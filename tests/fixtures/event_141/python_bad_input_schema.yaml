@@ -1,0 +1,6 @@
+id: bad_schema
+type: python
+enabled: true
+module: opal_plugins.x
+function: run
+input_schema: "not-an-object"

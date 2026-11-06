@@ -1,0 +1,16 @@
+id: send_notification
+type: http
+enabled: true
+method: POST
+url: http://127.0.0.1:9000/notify
+body_mode: template
+body: {camera: "{{data.camera}}", event: "{{event}}"}
+timeout_seconds: 15
+description: Send a notification about an event from a camera.
+input_schema:
+  type: object
+  properties:
+    camera: {type: string}
+  required: [camera]
+keywords: [notify, camera]
+suggested_prompts: ["notify me when the porch camera sees someone"]

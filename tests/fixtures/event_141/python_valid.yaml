@@ -1,0 +1,14 @@
+id: process_detection
+type: python
+enabled: true
+module: opal_plugins.detection
+function: handle_event
+timeout_seconds: 30
+description: Process an image detection event with the registered plugin.
+input_schema:
+  type: object
+  properties:
+    object: {type: string}
+  required: [object]
+keywords: [detection, image]
+suggested_prompts: ["process this detection"]
