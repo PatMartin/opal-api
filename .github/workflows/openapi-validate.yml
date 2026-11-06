@@ -82,6 +82,17 @@ jobs:
         continue-on-error: true
         run: npm run test:think-event
 
+      # Draft proposal lint + dedicated checks (openapi/proposals/, tests/test_look_vnext.py).
+      - name: Lint draft proposals
+        id: lint_proposals
+        continue-on-error: true
+        run: npm run lint:proposals
+
+      - name: Run LOOK draft checks
+        id: test_look_vnext
+        continue-on-error: true
+        run: npm run test:look-vnext
+
       # Fail the job if any required stage failed; every stage's output is
       # already visible above.
       - name: Aggregate stage results
@@ -96,7 +107,7 @@ jobs:
             "lint_look=${{ steps.lint_look.outcome }}" \
             "deps=${{ steps.deps.outcome }}" \
             "test_lint=${{ steps.test_lint.outcome }}" \
-            "test_event141=${{ steps.test_event141.outcome }}"             "test_think_event=${{ steps.test_think_event.outcome }}"; do
+            "test_event141=${{ steps.test_event141.outcome }}"             "test_think_event=${{ steps.test_think_event.outcome }}"             "lint_proposals=${{ steps.lint_proposals.outcome }}"             "test_look_vnext=${{ steps.test_look_vnext.outcome }}"; do
             name="${outcome%%=*}"
             result="${outcome##*=}"
             echo "$name: $result"
