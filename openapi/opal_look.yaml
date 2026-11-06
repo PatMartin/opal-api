@@ -5691,5 +5691,29 @@ x-opal-event-contract:
   - opal.look.monitor.failed
   rules: Disabled by default, explicitly allowlisted, bounded drop-newest queue; never blocks source or inference;
     best effort only.
+x-opal-context-standard:
+  version: '1.3'
+  headers:
+  - X-Opal-Session-Id
+  - X-Opal-Transaction-Id
+  - X-Opal-Request-Id
+  - X-Opal-Causation-Id
+  id_format: opaque-printable-ascii-1-to-128
+  concurrency:
+    settings_and_config_mutations: strong-etag-if-match-required
+    missing_status: 428
+    stale_status: 412
+  pagination:
+    configuration: none
+    history: cursor
+    ordering: newest-first-then-id-tiebreak
+  session_mode: context-only
+  streaming: HTTP context headers precede bytes; SSE streams carry monotonic per-session event IDs and
+    Last-Event-ID resume from a bounded cache (expired cursor returns 409); backpressure drops frames
+    instead of unbounded buffering; no unlimited replay.
+  transaction_atomicity: false
+  events:
+    $ref: './shared/opal_kernel.yaml#/x-opal-event-envelope'
+    metadata_schema_version: '1.0'
 x-opal-authorization:
   $ref: ./shared/opal_kernel.yaml#/x-opal-authorization

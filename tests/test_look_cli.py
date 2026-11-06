@@ -10,6 +10,8 @@ import sys
 import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import spec_util  # noqa: E402
 SPEC = os.path.join(ROOT, "openapi", "opal_look.yaml")
 
 failures = 0
@@ -37,7 +39,7 @@ def params(d, method, path):
 
 
 def main():
-    d = yaml.safe_load(open(SPEC, encoding="utf-8"))
+    d = spec_util.load(SPEC)
     paths = d["paths"]
 
     # every public REST op has an unambiguous CLI mapping
