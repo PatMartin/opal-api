@@ -4522,6 +4522,15 @@ paths:
           $ref: '#/components/responses/Conflict'
         '406':
           description: Requested media type not supported
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
           content:
             application/json:
               schema:

@@ -95,6 +95,11 @@ def m_corr(d):
         "X-Opal-Request-Id")
 
 
+def m_corr_406(d):
+    # The 406 on analyze/image loses its correlation-header block.
+    d["paths"]["/api/v1/analyze/image"]["post"]["responses"]["406"].pop("headers")
+
+
 def m_error_env(d):
     op = d["paths"]["/api/v1/models/{model_id}"]["get"]["responses"]["404"]
     op.pop("$ref", None)
@@ -154,6 +159,7 @@ CASES = [
     ("probe body missing required ready", m_probe_body, "look", "opal-look-health-probe", 0),
     ("top-level required metadata", m_metadata, "look", "opal-look-bus-event-envelope", 0),
     ("missing correlation header", m_corr, "opal", "opal-correlation-headers", 0),
+    ("406 missing correlation headers", m_corr_406, "opal", "opal-correlation-headers", 0),
     ("nonstandard error envelope", m_error_env, "opal", "opal-standard-error-body", 0),
     ("If-Match op missing 412/428", m_precond, "opal", "opal-ifmatch-precondition-responses", 1),
     ("201 without Location", m_location, "opal", "opal-201-location-header", 0),
