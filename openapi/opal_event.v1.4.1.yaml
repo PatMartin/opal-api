@@ -1347,6 +1347,170 @@ paths:
     - $ref: '#/components/parameters/OpalTransactionIdHeader'
     - $ref: '#/components/parameters/OpalRequestIdHeader'
     - $ref: '#/components/parameters/OpalCausationIdHeader'
+  /api/v1/settings/{key}:
+    parameters:
+    - $ref: '#/components/parameters/OpalSessionIdHeader'
+    - $ref: '#/components/parameters/OpalTransactionIdHeader'
+    - $ref: '#/components/parameters/OpalRequestIdHeader'
+    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    get:
+      tags:
+      - Settings
+      operationId: get_api_v1_settings_key
+      summary: Read a registered setting
+      description: Returns the current native JSON value for a registered setting key. Sensitive
+        values are masked; credentials are never exposed. Unknown key returns 404.
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Registered setting key; unknown keys return 404.
+        schema:
+          type: string
+          minLength: 1
+      responses:
+        '200':
+          description: Setting value
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingRead'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - Settings
+      operationId: put_api_v1_settings_key
+      summary: Replace a registered setting's value
+      description: Atomically replaces a registered setting's value with the supplied native
+        JSON value. Unknown key returns 404; invalid value for that setting returns 422.
+        Requires the current strong configuration ETag in If-Match.
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Registered setting key; unknown keys return 404.
+        schema:
+          type: string
+          minLength: 1
+      - name: If-Match
+        in: header
+        required: true
+        description: Required current strong configuration ETag from GET /api/v1/settings/.
+          Missing returns 428, stale returns 412, malformed/weak/list/wildcard returns 422.
+        schema:
+          type: string
+          pattern: '^"[^"]+"$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingUpdate'
+      responses:
+        '200':
+          description: Updated setting
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingRead'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/OpalError412'
+        '422':
+          $ref: '#/components/responses/OpalError422'
+        '428':
+          $ref: '#/components/responses/OpalError428'
+        '500':
+          $ref: '#/components/responses/OperationFailed'
+    delete:
+      tags:
+      - Settings
+      operationId: delete_api_v1_settings_key
+      summary: Restore a registered setting's default
+      description: Removes the override for a registered setting, restoring its default value.
+        Unknown key returns 404. Requires the current strong configuration ETag in If-Match.
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Registered setting key; unknown keys return 404.
+        schema:
+          type: string
+          minLength: 1
+      - name: If-Match
+        in: header
+        required: true
+        description: Required current strong configuration ETag from GET /api/v1/settings/.
+          Missing returns 428, stale returns 412, malformed/weak/list/wildcard returns 422.
+        schema:
+          type: string
+          pattern: '^"[^"]+"$'
+      responses:
+        '200':
+          description: Setting restored to default
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingRead'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/OpalError412'
+        '428':
+          $ref: '#/components/responses/OpalError428'
+        '500':
+          $ref: '#/components/responses/OperationFailed'
   /api/v1/health/live:
     get:
       tags:
@@ -1557,7 +1721,11 @@ paths:
         '401': *id002
         '403': *id003
         '409': *id004
+        '412':
+          $ref: '#/components/responses/OpalError412'
         '422': *id005
+        '428':
+          $ref: '#/components/responses/OpalError428'
         '500': *id006
     parameters:
     - $ref: '#/components/parameters/OpalSessionIdHeader'
@@ -2262,6 +2430,34 @@ components:
       additionalProperties: false
       required:
       - items
+    SettingRead:
+      type: object
+      additionalProperties: false
+      description: Current value of a registered setting. value is native JSON typed per
+        the setting's own schema; sensitive values are masked.
+      properties:
+        key:
+          type: string
+          description: Registered setting key.
+        value:
+          description: Native JSON value (integer, boolean, string, array, object); never
+            requires client-side stringification.
+        updated_at:
+          type: string
+          format: date-time
+      required:
+      - key
+      - value
+    SettingUpdate:
+      type: object
+      additionalProperties: false
+      description: Replacement value for a registered setting; value is native JSON typed
+        per the setting's own schema.
+      properties:
+        value:
+          description: Native JSON replacement value; literal secret credentials forbidden.
+      required:
+      - value
     Settings:
       type: object
       description: YAML-managed service configuration, including rules and actions. Masked read excludes secrets;

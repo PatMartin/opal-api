@@ -104,10 +104,17 @@ def main():
     # --- version / parity -------------------------------------------------------
     check(spec141["info"]["version"] == "1.4.1", "info.version is 1.4.1")
     check(spec141["openapi"].startswith("3.1"), "openapi 3.1 declared")
-    check(set(spec141["paths"]) == set(spec140["paths"]), "path set identical to 1.4.0")
-    check(opids(spec141) == opids(spec140), "operationId set identical to 1.4.0")
+    check(set(spec141["paths"]) - set(spec140["paths"]) == {"/api/v1/settings/{key}"},
+          "only /api/v1/settings/{key} path added",
+          f"(added: {set(spec141['paths']) - set(spec140['paths'])}, removed: {set(spec140['paths']) - set(spec141['paths'])})")
+    new_opids = opids(spec141) - opids(spec140)
+    check(new_opids == {"get_api_v1_settings_key", "put_api_v1_settings_key",
+                        "delete_api_v1_settings_key"},
+          "only the three settings operationIds added", f"({new_opids})")
+    check(opids(spec140) - opids(spec141) == set(), "no operationIds removed")
     schemas140, schemas141 = spec140["components"]["schemas"], spec141["components"]["schemas"]
-    check(set(schemas141) - set(schemas140) == {"ActionInputSchema"}, "only ActionInputSchema added",
+    check(set(schemas141) - set(schemas140) == {"ActionInputSchema", "SettingRead", "SettingUpdate"},
+          "only ActionInputSchema + SettingRead + SettingUpdate added",
           f"(added: {set(schemas141) - set(schemas140)}, removed: {set(schemas140) - set(schemas141)})")
     changed = [k for k in set(schemas140) & set(schemas141) if schemas140[k] != schemas141[k]]
     check(sorted(changed) == sorted(ACTIONS + ("Execution",)),
@@ -249,6 +256,42 @@ def main():
           "token_env" in str(sem.get("credential_handling", "")) or
           "token_env" in str(auth.get("description", "")),
           "credential handling via token_env documented")
+
+    # --- settings management convention ------------------------------------------
+    sk = spec141["paths"].get("/api/v1/settings/{key}", {})
+    check(set(sk) & {"get", "put", "delete"} == {"get", "put", "delete"},
+          "GET/PUT/DELETE /api/v1/settings/{key} all present")
+    check("200" in sk["get"]["responses"] and "404" in sk["get"]["responses"],
+          "settings/{key} GET returns 200 + 404 unknown key")
+    for mth in ("put", "delete"):
+        op = sk[mth]
+        names = [x.get("name") for x in op.get("parameters", [])
+                 if isinstance(x, dict) and x.get("name")]
+        check("If-Match" in names and
+              next(x for x in op["parameters"] if x.get("name") == "If-Match")["required"],
+              f"settings/{{key}} {mth.upper()} requires If-Match")
+        check("412" in op["responses"] and "428" in op["responses"],
+              f"settings/{{key}} {mth.upper()} declares 412 + 428")
+        check("404" in op["responses"], f"settings/{{key}} {mth.upper()} declares 404")
+    check("422" in sk["put"]["responses"], "settings/{{key}} PUT declares 422 invalid value")
+    check("422" not in sk["delete"]["responses"], "settings/{{key}} DELETE needs no 422")
+    check("SettingRead" in spec141["components"]["schemas"] and
+          "SettingUpdate" in spec141["components"]["schemas"],
+          "SettingRead/SettingUpdate schemas exist")
+    sr = spec141["components"]["schemas"]["SettingRead"]
+    check("value" in sr["properties"] and "type" not in sr["properties"]["value"],
+          "SettingRead.value is native JSON (untyped)")
+    check(sr["required"] == ["key", "value"], "SettingRead requires key+value")
+    su = spec141["components"]["schemas"]["SettingUpdate"]
+    check(su["required"] == ["value"], "SettingUpdate requires only value")
+    imp = spec141["paths"]["/api/v1/backup/import"]["post"]
+    imp_names = [x.get("name") for x in imp.get("parameters", []) if isinstance(x, dict)]
+    check("If-Match" in imp_names, "backup/import requires If-Match")
+    check("412" in imp["responses"] and "428" in imp["responses"],
+          "backup/import declares 412 + 428")
+    check(not any("secret" in str(v).lower() and "value" in str(v).lower()
+                  for v in sr.get("properties", {}).values()),
+          "settings read masks secrets")
 
     sys.exit(1 if failures else 0)
 
