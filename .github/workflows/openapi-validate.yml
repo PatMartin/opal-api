@@ -98,6 +98,11 @@ jobs:
         continue-on-error: true
         run: npm run test:look-vnext-cli
 
+      - name: Run LISTEN 1.4.1 contract tests
+        id: test_listen141
+        continue-on-error: true
+        run: npm run test:listen141
+
       # Fail the job if any required stage failed; every stage's output is
       # already visible above.
       - name: Aggregate stage results
@@ -113,7 +118,8 @@ jobs:
             "deps=${{ steps.deps.outcome }}" \
             "test_lint=${{ steps.test_lint.outcome }}" \
             "test_event141=${{ steps.test_event141.outcome }}"             "test_think_event=${{ steps.test_think_event.outcome }}"             "lint_proposals=${{ steps.lint_proposals.outcome }}"             "test_look_vnext=${{ steps.test_look_vnext.outcome }}" 
-            "test_look_vnext_cli=${{ steps.test_look_vnext_cli.outcome }}"; do
+            "test_look_vnext_cli=${{ steps.test_look_vnext_cli.outcome }}" 
+            "test_listen141=${{ steps.test_listen141.outcome }}"; do
             name="${outcome%%=*}"
             result="${outcome##*=}"
             echo "$name: $result"

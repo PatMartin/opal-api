@@ -7,14 +7,15 @@
     "validate": "redocly lint \"openapi/*.yaml\"",
     "lint": "spectral lint -r .spectral.yaml \"openapi/*.yaml\"",
     "lint:opal": "spectral lint -r .spectral.opal.yaml \"openapi/*.yaml\"",
-    "check": "npm run validate && npm run lint && npm run lint:opal && npm run lint:look && npm run test:lint && npm run test:event141 && npm run test:think-event && npm run lint:proposals && npm run test:look-vnext && npm run test:look-vnext-cli",
+    "check": "npm run validate && npm run lint && npm run lint:opal && npm run lint:look && npm run test:lint && npm run test:event141 && npm run test:think-event && npm run lint:proposals && npm run test:look-vnext && npm run test:look-vnext-cli && npm run test:listen141",
     "lint:look": "spectral lint -r .spectral.opal.look.yaml openapi/opal_look.yaml",
     "test:lint": "python tests/test_lint.py",
     "test:event141": "python tests/test_event_141.py",
     "test:think-event": "python tests/test_think_event.py",
     "lint:proposals": "spectral lint -r .spectral.yaml openapi/proposals/*.yaml && spectral lint -r .spectral.opal.yaml openapi/proposals/*.yaml",
     "test:look-vnext": "python tests/test_look_vnext.py",
-    "test:look-vnext-cli": "python tests/test_look_vnext_cli.py"
+    "test:look-vnext-cli": "python tests/test_look_vnext_cli.py",
+    "test:listen141": "python tests/test_listen_141.py"
   },
   "repository": {
     "type": "git",
