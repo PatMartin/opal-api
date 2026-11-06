@@ -1,4 +1,4 @@
-"""Contract regression tests for the unified opal_talk.yaml (atomic config imports).
+"""Contract regression tests for the unified opal_say.yaml (atomic config imports).
 
 Verifies the published 1.4.1 spec:
 - backup/import and backup/restore now require strong If-Match with 412+428;
@@ -10,7 +10,7 @@ import sys
 import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SPEC = os.path.join(ROOT, "openapi", "opal_talk.yaml")
+SPEC = os.path.join(ROOT, "openapi", "opal_say.yaml")
 
 failures = 0
 

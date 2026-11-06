@@ -99,10 +99,10 @@ jobs:
         continue-on-error: true
         run: npm run test:listen141
 
-      - name: Run TALK 1.4.1 contract tests
-        id: test_talk141
+      - name: Run SAY 1.4.1 contract tests
+        id: test_say141
         continue-on-error: true
-        run: npm run test:talk141
+        run: npm run test:say141
 
       - name: Run suite REST security tests
         id: test_rest_security
@@ -128,7 +128,7 @@ jobs:
             "test_think_event=${{ steps.test_think_event.outcome }}" \
             "test_look_cli=${{ steps.test_look_cli.outcome }}" \
             "test_listen141=${{ steps.test_listen141.outcome }}" \
-            "test_talk141=${{ steps.test_talk141.outcome }}" \
+            "test_say141=${{ steps.test_say141.outcome }}" \
             "test_rest_security=${{ steps.test_rest_security.outcome }}"; do
             name="${outcome%%=*}"
             result="${outcome##*=}"

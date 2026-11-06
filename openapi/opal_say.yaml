@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
-  title: OPAL Talk API
+  title: OPAL Say API
   version: 1.4.1
-  description: "Implementation-neutral text-to-speech (TTS) service for the OPAL suite.\n\nOPAL Talk provides\
+  description: "Implementation-neutral text-to-speech (TTS) service for the OPAL suite.\n\nOPAL Say provides\
     \ a stable REST contract over one or more host-installed TTS\nengines such as Piper or Kokoro. Clients\
     \ interact with OPAL concepts—engines,\nvoices, profiles, generation settings, and audio output—without\
     \ depending on a\nspecific engine's command line, model layout, Python API, or native output format.\n\n\
@@ -73,7 +73,7 @@ tags:
 - name: health
   description: Service readiness and health information. Playback devices are out of scope.
 - name: backup
-  description: Backup, restore, import, export, and validate OPAL Talk configuration.
+  description: Backup, restore, import, export, and validate OPAL Say configuration.
 paths:
   /api/v1/engines/:
     get:
@@ -335,7 +335,7 @@ paths:
       tags:
       - voices
       summary: Register Voice
-      description: 'Register a host-resident voice/model resource with OPAL Talk.
+      description: 'Register a host-resident voice/model resource with OPAL Say.
 
 
         `engine_voice_ref` is an opaque identifier interpreted only by the selected
@@ -1095,7 +1095,7 @@ paths:
       summary: Get All Settings
       description: 'Return all service-wide settings as a key/value object. Setting keys are
 
-        implementation-defined unless separately standardized by the OPAL Talk service.
+        implementation-defined unless separately standardized by the OPAL Say service.
 
         '
       operationId: get_all_settings_api_v1_settings__get
@@ -1130,7 +1130,7 @@ paths:
       tags:
       - settings
       summary: Atomically patch portable settings
-      operationId: patch_talk_settings
+      operationId: patch_say_settings
       requestBody:
         required: true
         content:
@@ -1350,7 +1350,7 @@ paths:
       tags:
       - backup
       summary: List Backups
-      description: List backups available to this OPAL Talk instance.
+      description: List backups available to this OPAL Say instance.
       operationId: list_backups_api_v1_backup_list_get
       responses:
         '401':
@@ -1389,7 +1389,7 @@ paths:
       description: 'Create a service configuration backup.
 
 
-        Backups contain OPAL Talk configuration and registrations but MUST NOT be
+        Backups contain OPAL Say configuration and registrations but MUST NOT be
 
         interpreted as a model-package format. Host-installed engines, model binaries,
 
@@ -1560,7 +1560,7 @@ paths:
       tags:
       - backup
       summary: Delete Backup
-      description: Delete a named backup file managed by OPAL Talk.
+      description: Delete a named backup file managed by OPAL Say.
       operationId: delete_backup_api_v1_backup__filename__delete
       responses:
         '401':
@@ -1587,7 +1587,7 @@ paths:
       tags:
       - backup
       summary: Export Config
-      description: 'Export the full logical OPAL Talk configuration as JSON. The export describes
+      description: 'Export the full logical OPAL Say configuration as JSON. The export describes
 
         engine configuration, voice registrations, profiles, and service settings; it
 
@@ -1627,7 +1627,7 @@ paths:
       tags:
       - backup
       summary: Import Config
-      description: 'Import OPAL Talk configuration from YAML files in `./config/`, matching the
+      description: 'Import OPAL Say configuration from YAML files in `./config/`, matching the
 
         sister OPAL Listen operational convention.
 
@@ -1728,7 +1728,7 @@ paths:
     post:
       tags:
       - backup
-      operationId: validate_talk_backup_payload
+      operationId: validate_say_backup_payload
       description: Validate supplied backup without side effects.
       requestBody:
         required: true
@@ -1839,7 +1839,7 @@ paths:
     get:
       tags:
       - health
-      operationId: get_talk_health_live
+      operationId: get_say_health_live
       summary: Liveness probe
       responses:
         '401':
@@ -1887,7 +1887,7 @@ paths:
     get:
       tags:
       - health
-      operationId: get_talk_health_ready
+      operationId: get_say_health_ready
       summary: Readiness probe
       responses:
         '401':
@@ -1984,7 +1984,7 @@ components:
         minLength: 1
         maxLength: 255
         pattern: ^[^/\\]+$
-      example: opal-talk-2026-10-04T230000Z.tar.gz
+      example: opal-say-2026-10-04T230000Z.tar.gz
     SettingKey:
       name: key
       in: path
@@ -2046,13 +2046,13 @@ components:
         maximum: 192000
       example: 22050
     Channels:
-      description: Number of audio channels. OPAL Talk v1 returns mono audio only.
+      description: Number of audio channels. OPAL Say v1 returns mono audio only.
       schema:
         type: integer
         enum:
         - 1
     SampleFormat:
-      description: PCM sample representation. OPAL Talk v1 standardizes on signed 16-bit little-endian.
+      description: PCM sample representation. OPAL Say v1 standardizes on signed 16-bit little-endian.
       schema:
         type: string
         enum:
@@ -2396,7 +2396,7 @@ components:
           example: Local neural text-to-speech engine
         enabled:
           type: boolean
-          description: Whether OPAL Talk is administratively allowed to route generation to this engine.
+          description: Whether OPAL Say is administratively allowed to route generation to this engine.
           example: true
         available:
           type: boolean
@@ -2597,7 +2597,7 @@ components:
       type: object
       description: 'Engine-neutral generation controls shared by completed and streaming generation.
 
-        These fields are standardized by OPAL Talk and must retain the same meaning
+        These fields are standardized by OPAL Say and must retain the same meaning
 
         regardless of the selected engine.
 
@@ -2821,7 +2821,7 @@ components:
             by the OpenAPI schema.
 
             '
-          example: Hello from OPAL Talk.
+          example: Hello from OPAL Say.
         profile_id:
           anyOf:
           - type: integer
@@ -2958,7 +2958,7 @@ components:
         text:
           type: string
           minLength: 1
-          default: This is a test of the selected OPAL Talk voice.
+          default: This is a test of the selected OPAL Say voice.
         speed:
           type: number
           format: float
@@ -3141,7 +3141,7 @@ components:
             minimum: 0
           - type: 'null'
       example:
-        filename: opal-talk-2026-10-04T230000Z.tar.gz
+        filename: opal-say-2026-10-04T230000Z.tar.gz
         created_at: '2026-10-04T23:00:00Z'
         size_bytes: 18432
     BackupCreateResponse:
@@ -3154,7 +3154,7 @@ components:
         message:
           type: string
       example:
-        filename: opal-talk-2026-10-04T230000Z.tar.gz
+        filename: opal-say-2026-10-04T230000Z.tar.gz
         message: Backup created successfully.
     ConfigExport:
       type: object
@@ -3173,7 +3173,7 @@ components:
       properties:
         version:
           type: string
-          description: OPAL Talk configuration schema/service version.
+          description: OPAL Say configuration schema/service version.
           example: 1.0.0
         exported_at:
           type: string
@@ -3241,7 +3241,7 @@ components:
       properties:
         name:
           type: string
-          example: opal-talk-svc
+          example: opal-say-svc
         version:
           type: string
           example: 1.0.0
