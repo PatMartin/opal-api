@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Opal Event API
-  version: 1.4.0
+  version: 1.4.1
   description: 'REST management and HTTP event ingress for opal-event-svc. API-first contract, release v1.
 
 
@@ -86,6 +86,13 @@ info:
     204. Streaming keeps media-specific transports but exposes correlation headers, defined failure behavior,
     and no unsupported replay guarantee. Configuration export/import/validation excludes secrets and history.
 
+
+    v1.4.1 revision: registered actions (shell/http/python) gain optional self-description
+    metadata — description, input_schema, keywords, suggested_prompts — with no endpoint,
+    discriminator, or required-field changes. Declared input_schema describes EventInput.data
+    only and is validated server-side before execution (invalid submissions yield 422);
+    the remaining fields are untrusted discovery hints, never authorization or instructions.
+
     '
   license:
     name: Internal use
@@ -112,7 +119,12 @@ paths:
       operationId: post_api_v1_events
       summary: Publish event
       description: Normalizes missing metadata, checks 1 MiB serialized wire payload, enqueues publication.
-        Does not guarantee observer storage or action execution. Returns 503 if the publisher queue is full.
+        Rule-triggered dispatch validates event.data against each matched action's optional input_schema;
+        on failure the action is not run and no retry occurs; an Execution record is persisted with
+        status=dropped, trigger=rule, error_code=input_validation_failed, and error_message describing
+        the rejection — observable via GET /api/v1/executions/, never returned to the already-completed
+        publisher. Does not guarantee observer storage or action execution. Returns 503 if the publisher
+        queue is full.
       responses:
         '202':
           description: Accepted, not guaranteed delivered/executed
@@ -984,7 +996,10 @@ paths:
       operationId: post_api_v1_actions_id_execute
       summary: Execute registered action manually
       description: Enqueue one independent execution. Queue-full yields execution record status=dropped and
-        HTTP 202, never an automatic retry. Registered and enabled action only.
+        HTTP 202, never an automatic retry. Registered and enabled action only. When the action declares
+        input_schema, event.data is validated synchronously before any execution record is created; invalid
+        input returns the standard OpalError 422 response and no execution occurs, unlike the asynchronous
+        queue-full path which records status=dropped.
       responses:
         '202':
           description: Accepted, not guaranteed delivered/executed
@@ -1170,10 +1185,6 @@ paths:
       summary: Get readiness and health
       description: ''
       responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful operation
           content:
@@ -1191,6 +1202,10 @@ paths:
               $ref: '#/components/headers/OpalCausationIdHeader'
         '500':
           $ref: '#/components/responses/OperationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
         '422':
@@ -1336,6 +1351,170 @@ paths:
     - $ref: '#/components/parameters/OpalTransactionIdHeader'
     - $ref: '#/components/parameters/OpalRequestIdHeader'
     - $ref: '#/components/parameters/OpalCausationIdHeader'
+  /api/v1/settings/{key}:
+    parameters:
+    - $ref: '#/components/parameters/OpalSessionIdHeader'
+    - $ref: '#/components/parameters/OpalTransactionIdHeader'
+    - $ref: '#/components/parameters/OpalRequestIdHeader'
+    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    get:
+      tags:
+      - Settings
+      operationId: get_api_v1_settings_key
+      summary: Read a registered setting
+      description: Returns the current native JSON value for a registered setting key. Sensitive
+        values are masked; credentials are never exposed. Unknown key returns 404.
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Registered setting key; unknown keys return 404.
+        schema:
+          type: string
+          minLength: 1
+      responses:
+        '200':
+          description: Setting value
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingRead'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - Settings
+      operationId: put_api_v1_settings_key
+      summary: Replace a registered setting's value
+      description: Atomically replaces a registered setting's value with the supplied native
+        JSON value. Unknown key returns 404; invalid value for that setting returns 422.
+        Requires the current strong configuration ETag in If-Match.
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Registered setting key; unknown keys return 404.
+        schema:
+          type: string
+          minLength: 1
+      - name: If-Match
+        in: header
+        required: true
+        description: Required current strong configuration ETag from GET /api/v1/settings/.
+          Missing returns 428, stale returns 412, malformed/weak/list/wildcard returns 422.
+        schema:
+          type: string
+          pattern: '^"[^"]+"$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingUpdate'
+      responses:
+        '200':
+          description: Updated setting
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingRead'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/OpalError412'
+        '422':
+          $ref: '#/components/responses/OpalError422'
+        '428':
+          $ref: '#/components/responses/OpalError428'
+        '500':
+          $ref: '#/components/responses/OperationFailed'
+    delete:
+      tags:
+      - Settings
+      operationId: delete_api_v1_settings_key
+      summary: Restore a registered setting's default
+      description: Removes the override for a registered setting, restoring its default value.
+        Unknown key returns 404. Requires the current strong configuration ETag in If-Match.
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Registered setting key; unknown keys return 404.
+        schema:
+          type: string
+          minLength: 1
+      - name: If-Match
+        in: header
+        required: true
+        description: Required current strong configuration ETag from GET /api/v1/settings/.
+          Missing returns 428, stale returns 412, malformed/weak/list/wildcard returns 422.
+        schema:
+          type: string
+          pattern: '^"[^"]+"$'
+      responses:
+        '200':
+          description: Setting restored to default
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/OpalCausationIdHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingRead'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/OpalError412'
+        '428':
+          $ref: '#/components/responses/OpalError428'
+        '500':
+          $ref: '#/components/responses/OperationFailed'
   /api/v1/health/live:
     get:
       tags:
@@ -1345,10 +1524,6 @@ paths:
       description: Checks only that the server process can answer HTTP, without probing external services.
       security: []
       responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful response
           content:
@@ -1364,6 +1539,10 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '503':
           description: Service unavailable
           content:
@@ -1396,10 +1575,6 @@ paths:
         returns 503. Does not start or repair anything.
       security: []
       responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
         '200':
           description: Successful response
           content:
@@ -1415,6 +1590,10 @@ paths:
               $ref: '#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/OpalCausationIdHeader'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '503':
           description: Service unavailable
           content:
@@ -1554,7 +1733,11 @@ paths:
         '401': *id002
         '403': *id003
         '409': *id004
+        '412':
+          $ref: '#/components/responses/OpalError412'
         '422': *id005
+        '428':
+          $ref: '#/components/responses/OpalError428'
         '500': *id006
     parameters:
     - $ref: '#/components/parameters/OpalSessionIdHeader'
@@ -1743,6 +1926,34 @@ components:
         actions:
         - announce_person
         - send_notification
+    ActionInputSchema:
+      type: object
+      description: >-
+        Optional, self-contained JSON Schema Draft 2020-12 document describing
+        the expected JSON value in EventInput.data for this action — nothing
+        else. Absent means legacy permissive behavior: event.data is unchecked
+        by shape. When declared, EVENT validates event.data against it and
+        rejects invalid submissions with the standard 422 error before
+        execution, independently of any client-side prevalidation (such as
+        OPAL-THINK's); the server is the validating authority. Implementations
+        bound schema size/depth and reject remote $ref targets — internal local
+        references only — but exact limits are implementation-defined and not
+        guaranteed by this schema. Clients such as OPAL-THINK may use this
+        metadata to construct arguments. This field does not change the
+        EventInput envelope, rule matching, execution authorization, or
+        templating, and is not an authorization control. Manual execution (POST
+        /actions/{id}/execute) rejects invalid input synchronously with 422; asynchronous
+        rule-triggered dispatch instead persists an Execution record with status=dropped and
+        error_code=input_validation_failed.
+      additionalProperties: true
+      example:
+        type: object
+        properties:
+          camera:
+            type: string
+            description: Camera identifier
+        required:
+        - camera
     ShellAction:
       type: object
       description: Static executable and argv with optional explicit interpreter. For interpreter modes script_path
@@ -1755,6 +1966,38 @@ components:
         enabled:
           type: boolean
           default: true
+        description:
+          type: string
+          minLength: 1
+          maxLength: 2048
+          description: >-
+            Human- and agent-readable purpose, expected effect, and relevant
+            constraints. Informational metadata, not an authorization grant.
+        input_schema:
+          $ref: '#/components/schemas/ActionInputSchema'
+        keywords:
+          type: array
+          description: >-
+            Search/discovery hints that help an agent or operator select this
+            action. Untrusted informational metadata: never executable
+            instructions, not an authorization grant, not a security control.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 64
+          maxItems: 16
+          uniqueItems: true
+        suggested_prompts:
+          type: array
+          description: >-
+            Example natural-language prompts that could legitimately lead to
+            this action. Untrusted informational metadata: never executable
+            instructions, never an authorization grant, not a security control.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 512
+          maxItems: 8
         mode:
           type: string
           enum:
@@ -1813,6 +2056,15 @@ components:
         id: announce_person
         type: shell
         enabled: true
+        description: Announce a person detected by a named camera.
+        input_schema:
+          type: object
+          properties:
+            camera:
+              type: string
+              description: Camera identifier
+          required:
+          - camera
         mode: bash
         script_path: /opt/opal/scripts/announce.sh
         args:
@@ -1831,6 +2083,38 @@ components:
         enabled:
           type: boolean
           default: true
+        description:
+          type: string
+          minLength: 1
+          maxLength: 2048
+          description: >-
+            Human- and agent-readable purpose, expected effect, and relevant
+            constraints. Informational metadata, not an authorization grant.
+        input_schema:
+          $ref: '#/components/schemas/ActionInputSchema'
+        keywords:
+          type: array
+          description: >-
+            Search/discovery hints that help an agent or operator select this
+            action. Untrusted informational metadata: never executable
+            instructions, not an authorization grant, not a security control.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 64
+          maxItems: 16
+          uniqueItems: true
+        suggested_prompts:
+          type: array
+          description: >-
+            Example natural-language prompts that could legitimately lead to
+            this action. Untrusted informational metadata: never executable
+            instructions, never an authorization grant, not a security control.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 512
+          maxItems: 8
         method:
           type: string
           enum:
@@ -1888,6 +2172,38 @@ components:
         enabled:
           type: boolean
           default: true
+        description:
+          type: string
+          minLength: 1
+          maxLength: 2048
+          description: >-
+            Human- and agent-readable purpose, expected effect, and relevant
+            constraints. Informational metadata, not an authorization grant.
+        input_schema:
+          $ref: '#/components/schemas/ActionInputSchema'
+        keywords:
+          type: array
+          description: >-
+            Search/discovery hints that help an agent or operator select this
+            action. Untrusted informational metadata: never executable
+            instructions, not an authorization grant, not a security control.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 64
+          maxItems: 16
+          uniqueItems: true
+        suggested_prompts:
+          type: array
+          description: >-
+            Example natural-language prompts that could legitimately lead to
+            this action. Untrusted informational metadata: never executable
+            instructions, never an authorization grant, not a security control.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 512
+          maxItems: 8
         module:
           type: string
           pattern: ^[a-zA-Z_]\w*(\.[a-zA-Z_]\w*)*$
@@ -1992,10 +2308,15 @@ components:
           type:
           - string
           - 'null'
+          description: Stable machine code for failure classification. input_validation_failed
+            means the action was rejected before execution because event.data did not satisfy
+            the action's declared input_schema.
         error_message:
           type:
           - string
           - 'null'
+          description: Human-readable failure detail; for input_validation_failed, describes
+            which field or schema constraint failed.
         action_revision:
           type: string
       additionalProperties: false
@@ -2121,6 +2442,34 @@ components:
       additionalProperties: false
       required:
       - items
+    SettingRead:
+      type: object
+      additionalProperties: false
+      description: Current value of a registered setting. value is native JSON typed per
+        the setting's own schema; sensitive values are masked.
+      properties:
+        key:
+          type: string
+          description: Registered setting key.
+        value:
+          description: Native JSON value (integer, boolean, string, array, object); never
+            requires client-side stringification.
+        updated_at:
+          type: string
+          format: date-time
+      required:
+      - key
+      - value
+    SettingUpdate:
+      type: object
+      additionalProperties: false
+      description: Replacement value for a registered setting; value is native JSON typed
+        per the setting's own schema.
+      properties:
+        value:
+          description: Native JSON replacement value; literal secret credentials forbidden.
+      required:
+      - value
     Settings:
       type: object
       description: YAML-managed service configuration, including rules and actions. Masked read excludes secrets;
@@ -2938,17 +3287,68 @@ x-opal-context-standard:
     transport-specific terminal events or stream termination; no invented resumability.
 x-opal-authorization:
   version: '1.0'
-  description: Suite REST authentication and authorization semantics. Loopback-only
-    deployments may explicitly disable authentication; non-loopback deployments require
-    authentication. Privileged configuration operations require authorization. 401
-    means missing or invalid authentication; 403 means authenticated but not permitted.
-    Correlation IDs are never authorization credentials. Secret values must not appear
-    in responses, exports, or error details.
+  description: Least-privilege scope model for EVENT access. BearerAuth authenticates;
+    scopes authorize. 401 means missing or invalid credentials; 403 means authenticated
+    but insufficient scope. Credentials are supplied via token_env and never appear in
+    configuration export, import, backup bundles, or log output.
+  scopes:
+    actions:read:
+      description: Discover registered actions and topics.
+      permits:
+      - GET /api/v1/actions/
+      - GET /api/v1/actions/{action_id}
+      - GET /api/v1/topics/
+    actions:execute:
+      description: Manually invoke a registered, enabled action.
+      permits:
+      - POST /api/v1/actions/{action_id}/execute
+    executions:read:
+      description: Inspect execution records, including dropped input-validation failures.
+      permits:
+      - GET /api/v1/executions/
+      - GET /api/v1/executions/{execution_id}
+    actions:write:
+      description: Create, edit, or delete actions.
+      permits:
+      - POST /api/v1/actions/
+      - PATCH /api/v1/actions/{action_id}
+      - DELETE /api/v1/actions/{action_id}
+    rules:write:
+      description: Create, edit, delete, or test rules.
+      permits:
+      - POST /api/v1/rules/
+      - PATCH /api/v1/rules/{rule_id}
+      - DELETE /api/v1/rules/{rule_id}
+      - POST /api/v1/rules/{rule_id}/test
+    settings:write:
+      description: Change settings, credentials, or configuration backups.
+      permits:
+      - PATCH /api/v1/settings/
+      - POST /api/v1/backup/import
+  principals:
+    think:
+      description: OPAL Think's least-privilege principal. Discovers enabled actions,
+        invokes permitted actions, and inspects execution results only.
+      scopes:
+      - actions:read
+      - actions:execute
+      - executions:read
+      denied:
+      - actions:write
+      - rules:write
+      - settings:write
   semantics:
     missing_or_invalid_credentials: '401'
+    authenticated_but_insufficient_scope: '403'
+    loopback: BearerAuth is optional on loopback interfaces per the security scheme;
+      scope enforcement is intended for non-loopback clients. Loopback access is
+      administrative and is not a permission-escalation vector.
+    credential_handling: Tokens are configured via token_env; no credential material is
+      exposed through configuration export/import, backup bundles, or log output.
     authenticated_but_not_permitted: '403'
-    loopback: authentication may be explicitly disabled on loopback deployments
-    non_loopback: authentication required
-    privileged_operations: authorization required for configuration mutations
     credentials: correlation headers are transport context, never authorization credentials
     secrets: secret values must not appear in responses, exports, or error details
+    least_privilege: Grant only the scopes a principal needs. A principal holding only
+      actions:read, actions:execute, executions:read cannot create/edit/delete actions,
+      manage rules, change settings or credentials, escalate its own permissions, or
+      bypass endpoint/destination restrictions.
