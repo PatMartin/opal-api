@@ -3077,3 +3077,67 @@ x-opal-context-standard:
     stale_status: 412
   streaming: Include HTTP context headers before bytes; after headers are sent, failures are represented by
     transport-specific terminal events or stream termination; no invented resumability.
+x-opal-authorization:
+  version: '1.0'
+  description: Least-privilege scope model for EVENT access. BearerAuth authenticates;
+    scopes authorize. 401 means missing or invalid credentials; 403 means authenticated
+    but insufficient scope. Credentials are supplied via token_env and never appear in
+    configuration export, import, backup bundles, or log output.
+  scopes:
+    actions:read:
+      description: Discover registered actions and topics.
+      permits:
+      - GET /api/v1/actions/
+      - GET /api/v1/actions/{action_id}
+      - GET /api/v1/topics/
+    actions:execute:
+      description: Manually invoke a registered, enabled action.
+      permits:
+      - POST /api/v1/actions/{action_id}/execute
+    executions:read:
+      description: Inspect execution records, including dropped input-validation failures.
+      permits:
+      - GET /api/v1/executions/
+      - GET /api/v1/executions/{execution_id}
+    actions:write:
+      description: Create, edit, or delete actions.
+      permits:
+      - POST /api/v1/actions/
+      - PATCH /api/v1/actions/{action_id}
+      - DELETE /api/v1/actions/{action_id}
+    rules:write:
+      description: Create, edit, delete, or test rules.
+      permits:
+      - POST /api/v1/rules/
+      - PATCH /api/v1/rules/{rule_id}
+      - DELETE /api/v1/rules/{rule_id}
+      - POST /api/v1/rules/{rule_id}/test
+    settings:write:
+      description: Change settings, credentials, or configuration backups.
+      permits:
+      - PATCH /api/v1/settings/
+      - POST /api/v1/backup/import
+  principals:
+    think:
+      description: OPAL Think's least-privilege principal. Discovers enabled actions,
+        invokes permitted actions, and inspects execution results only.
+      scopes:
+      - actions:read
+      - actions:execute
+      - executions:read
+      denied:
+      - actions:write
+      - rules:write
+      - settings:write
+  semantics:
+    missing_or_invalid_credentials: '401'
+    authenticated_but_insufficient_scope: '403'
+    loopback: BearerAuth is optional on loopback interfaces per the security scheme;
+      scope enforcement is intended for non-loopback clients. Loopback access is
+      administrative and is not a permission-escalation vector.
+    credential_handling: Tokens are configured via token_env; no credential material is
+      exposed through configuration export/import, backup bundles, or log output.
+    least_privilege: Grant only the scopes a principal needs. A principal holding only
+      actions:read, actions:execute, executions:read cannot create/edit/delete actions,
+      manage rules, change settings or credentials, escalate its own permissions, or
+      bypass endpoint/destination restrictions.

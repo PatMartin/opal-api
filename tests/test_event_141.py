@@ -210,6 +210,46 @@ def main():
     check("dropped" in ais and "422" in ais,
           "ActionInputSchema documents sync 422 vs async dropped semantics")
 
+    # --- least-privilege authorization -------------------------------------------
+    auth = spec141.get("x-opal-authorization", {})
+    scopes = auth.get("scopes", {})
+    check(sorted(scopes) == sorted([
+        "actions:read", "actions:execute", "executions:read",
+        "actions:write", "rules:write", "settings:write"]),
+          "all six permission scopes declared")
+    think = auth.get("principals", {}).get("think", {})
+    check(sorted(think.get("scopes", [])) == sorted(
+        ["actions:read", "actions:execute", "executions:read"]),
+          "THINK has discover/invoke/inspect scopes only")
+    check(sorted(think.get("denied", [])) == sorted(
+        ["actions:write", "rules:write", "settings:write"]),
+          "THINK denied all write scopes")
+    # every permitted route maps to a real path
+    for scope, body in scopes.items():
+        for route in body.get("permits", []):
+            m, p = route.split(" ", 1)
+            check(p in spec141["paths"] and m.lower() in spec141["paths"][p],
+                  f"scope {scope}: permit {route} maps to a real endpoint")
+    sem = auth.get("semantics", {})
+    check(sem.get("missing_or_invalid_credentials") == "401" and
+          sem.get("authenticated_but_insufficient_scope") == "403",
+          "401 vs 403 semantics documented")
+    for p in ("/api/v1/actions/{action_id}/execute", "/api/v1/rules/{rule_id}",
+              "/api/v1/settings/"):
+        op = spec141["paths"][p]
+        for m in ("post", "patch", "delete", "get"):
+            if m in op:
+                check("401" in op[m].get("responses", {}) and
+                      "403" in op[m].get("responses", {}),
+                      f"{m.upper()} {p} declares 401+403")
+    bearer = spec141["components"]["securitySchemes"].get("BearerAuth", {})
+    check(bearer.get("type") == "http" and bearer.get("scheme") == "bearer",
+          "BearerAuth scheme unchanged")
+    check("token_env" in bearer.get("description", "") or
+          "token_env" in str(sem.get("credential_handling", "")) or
+          "token_env" in str(auth.get("description", "")),
+          "credential handling via token_env documented")
+
     sys.exit(1 if failures else 0)
 
 
