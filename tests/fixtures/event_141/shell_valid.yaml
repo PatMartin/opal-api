@@ -1,0 +1,16 @@
+id: announce_person
+type: shell
+enabled: true
+mode: exec
+executable: /opt/opal/scripts/announce.sh
+args: ["{{data.camera}}"]
+stdin: event_json
+timeout_seconds: 30
+description: Announce a person detected by a named camera.
+input_schema:
+  type: object
+  properties:
+    camera: {type: string}
+  required: [camera]
+keywords: [camera, person]
+suggested_prompts: ["announce when someone is at the door"]

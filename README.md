@@ -9,6 +9,7 @@ Published OpenAPI 3.1 contracts for the OPAL suite, one file per service in
 | `openapi/opal_listen.yaml` | Opal Listen (voice intent) API |
 | `openapi/opal_talk.yaml` | OPAL Talk API |
 | `openapi/opal_look.yaml` | OPAL Look (vision) API |
+| `openapi/opal_think.yaml` | OPAL Think (LLM/agentic) API |
 
 ## Validating the contracts
 

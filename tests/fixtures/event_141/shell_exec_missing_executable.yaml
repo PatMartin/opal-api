@@ -1,0 +1,4 @@
+id: broken_exec
+type: shell
+enabled: true
+mode: exec

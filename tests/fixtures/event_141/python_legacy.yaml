@@ -1,0 +1,6 @@
+id: enrich_event
+type: python
+enabled: true
+module: opal_plugins.enrich
+function: run
+timeout_seconds: 10

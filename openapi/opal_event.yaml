@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Opal Event API
-  version: 1.4.0
+  version: 1.6.0
   description: 'REST management and HTTP event ingress for opal-event-svc. API-first contract, release v1.
 
 
@@ -85,6 +85,13 @@ info:
     cursor values expire explicitly. Standard HTTP creation 201 Location, async admission 202, empty deletion
     204. Streaming keeps media-specific transports but exposes correlation headers, defined failure behavior,
     and no unsupported replay guarantee. Configuration export/import/validation excludes secrets and history.
+
+
+    v1.4.1 revision: registered actions (shell/http/python) gain optional self-description
+    metadata — description, input_schema, keywords, suggested_prompts — with no endpoint,
+    discriminator, or required-field changes. Declared input_schema describes EventInput.data
+    only and is validated server-side before execution (invalid submissions yield 422);
+    the remaining fields are untrusted discovery hints, never authorization or instructions.
 
     '
   license:
@@ -1731,6 +1738,31 @@ components:
         actions:
         - announce_person
         - send_notification
+    ActionInputSchema:
+      type: object
+      description: >-
+        Optional, self-contained JSON Schema Draft 2020-12 document describing
+        the expected JSON value in EventInput.data for this action — nothing
+        else. Absent means legacy permissive behavior: event.data is unchecked
+        by shape. When declared, EVENT validates event.data against it and
+        rejects invalid submissions with the standard 422 error before
+        execution, independently of any client-side prevalidation (such as
+        OPAL-THINK's); the server is the validating authority. Implementations
+        bound schema size/depth and reject remote $ref targets — internal local
+        references only — but exact limits are implementation-defined and not
+        guaranteed by this schema. Clients such as OPAL-THINK may use this
+        metadata to construct arguments. This field does not change the
+        EventInput envelope, rule matching, execution authorization, or
+        templating, and is not an authorization control.
+      additionalProperties: true
+      example:
+        type: object
+        properties:
+          camera:
+            type: string
+            description: Camera identifier
+        required:
+        - camera
     ShellAction:
       type: object
       description: Static executable and argv with optional explicit interpreter. For interpreter modes script_path
@@ -1743,6 +1775,38 @@ components:
         enabled:
           type: boolean
           default: true
+        description:
+          type: string
+          minLength: 1
+          maxLength: 2048
+          description: >-
+            Human- and agent-readable purpose, expected effect, and relevant
+            constraints. Informational metadata, not an authorization grant.
+        input_schema:
+          $ref: '#/components/schemas/ActionInputSchema'
+        keywords:
+          type: array
+          description: >-
+            Search/discovery hints that help an agent or operator select this
+            action. Untrusted informational metadata: never executable
+            instructions, not an authorization grant, not a security control.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 64
+          maxItems: 16
+          uniqueItems: true
+        suggested_prompts:
+          type: array
+          description: >-
+            Example natural-language prompts that could legitimately lead to
+            this action. Untrusted informational metadata: never executable
+            instructions, never an authorization grant, not a security control.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 512
+          maxItems: 8
         mode:
           type: string
           enum:
@@ -1801,6 +1865,15 @@ components:
         id: announce_person
         type: shell
         enabled: true
+        description: Announce a person detected by a named camera.
+        input_schema:
+          type: object
+          properties:
+            camera:
+              type: string
+              description: Camera identifier
+          required:
+          - camera
         mode: bash
         script_path: /opt/opal/scripts/announce.sh
         args:
@@ -1819,6 +1892,38 @@ components:
         enabled:
           type: boolean
           default: true
+        description:
+          type: string
+          minLength: 1
+          maxLength: 2048
+          description: >-
+            Human- and agent-readable purpose, expected effect, and relevant
+            constraints. Informational metadata, not an authorization grant.
+        input_schema:
+          $ref: '#/components/schemas/ActionInputSchema'
+        keywords:
+          type: array
+          description: >-
+            Search/discovery hints that help an agent or operator select this
+            action. Untrusted informational metadata: never executable
+            instructions, not an authorization grant, not a security control.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 64
+          maxItems: 16
+          uniqueItems: true
+        suggested_prompts:
+          type: array
+          description: >-
+            Example natural-language prompts that could legitimately lead to
+            this action. Untrusted informational metadata: never executable
+            instructions, never an authorization grant, not a security control.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 512
+          maxItems: 8
         method:
           type: string
           enum:
@@ -1857,6 +1962,14 @@ components:
         id: send_notification
         type: http
         enabled: true
+        description: Send a notification about an event from a camera.
+        input_schema:
+          type: object
+          properties:
+            camera:
+              type: string
+          required:
+          - camera
         method: POST
         url: http://127.0.0.1:9000/notify
         body_mode: template
@@ -1876,6 +1989,38 @@ components:
         enabled:
           type: boolean
           default: true
+        description:
+          type: string
+          minLength: 1
+          maxLength: 2048
+          description: >-
+            Human- and agent-readable purpose, expected effect, and relevant
+            constraints. Informational metadata, not an authorization grant.
+        input_schema:
+          $ref: '#/components/schemas/ActionInputSchema'
+        keywords:
+          type: array
+          description: >-
+            Search/discovery hints that help an agent or operator select this
+            action. Untrusted informational metadata: never executable
+            instructions, not an authorization grant, not a security control.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 64
+          maxItems: 16
+          uniqueItems: true
+        suggested_prompts:
+          type: array
+          description: >-
+            Example natural-language prompts that could legitimately lead to
+            this action. Untrusted informational metadata: never executable
+            instructions, never an authorization grant, not a security control.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 512
+          maxItems: 8
         module:
           type: string
           pattern: ^[a-zA-Z_]\w*(\.[a-zA-Z_]\w*)*$
@@ -1897,6 +2042,14 @@ components:
         id: process_detection
         type: python
         enabled: true
+        description: Process an image detection event with the registered plugin.
+        input_schema:
+          type: object
+          properties:
+            object:
+              type: string
+          required:
+          - object
         module: opal_plugins.detection
         function: handle_event
         timeout_seconds: 30

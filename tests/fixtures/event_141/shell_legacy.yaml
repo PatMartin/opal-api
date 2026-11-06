@@ -1,0 +1,8 @@
+id: gpu_diagnostics
+type: shell
+enabled: true
+mode: exec
+executable: /opt/opal/bin/gpu-diag
+args: []
+stdin: event_json
+timeout_seconds: 30
