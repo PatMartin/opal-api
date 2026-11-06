@@ -82,21 +82,11 @@ jobs:
         continue-on-error: true
         run: npm run test:think-event
 
-      # Draft proposal lint + dedicated checks (openapi/proposals/, tests/test_look_vnext.py).
-      - name: Lint draft proposals
-        id: lint_proposals
+      # Published LOOK contract CLI parity checks.
+      - name: Run LOOK CLI parity checks
+        id: test_look_cli
         continue-on-error: true
-        run: npm run lint:proposals
-
-      - name: Run LOOK draft checks
-        id: test_look_vnext
-        continue-on-error: true
-        run: npm run test:look-vnext
-
-      - name: Run LOOK draft CLI parity checks
-        id: test_look_vnext_cli
-        continue-on-error: true
-        run: npm run test:look-vnext-cli
+        run: npm run test:look-cli
 
       - name: Run LISTEN 1.4.1 contract tests
         id: test_listen141
@@ -127,10 +117,11 @@ jobs:
             "lint_look=${{ steps.lint_look.outcome }}" \
             "deps=${{ steps.deps.outcome }}" \
             "test_lint=${{ steps.test_lint.outcome }}" \
-            "test_event141=${{ steps.test_event141.outcome }}"             "test_think_event=${{ steps.test_think_event.outcome }}"             "lint_proposals=${{ steps.lint_proposals.outcome }}"             "test_look_vnext=${{ steps.test_look_vnext.outcome }}" 
-            "test_look_vnext_cli=${{ steps.test_look_vnext_cli.outcome }}" 
-            "test_listen141=${{ steps.test_listen141.outcome }}" 
-            "test_talk141=${{ steps.test_talk141.outcome }}" 
+            "test_event141=${{ steps.test_event141.outcome }}" \
+            "test_think_event=${{ steps.test_think_event.outcome }}" \
+            "test_look_cli=${{ steps.test_look_cli.outcome }}" \
+            "test_listen141=${{ steps.test_listen141.outcome }}" \
+            "test_talk141=${{ steps.test_talk141.outcome }}" \
             "test_rest_security=${{ steps.test_rest_security.outcome }}"; do
             name="${outcome%%=*}"
             result="${outcome##*=}"

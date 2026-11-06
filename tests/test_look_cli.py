@@ -1,4 +1,4 @@
-"""CLI <-> REST parity tests for openapi/proposals/opal_look.vnext.yaml.
+"""CLI <-> REST parity tests for the published openapi/opal_look.yaml.
 
 Contract-level only: verifies every operation has an unambiguous CLI mapping
 (x-opal-cli) and that the documented CLI flows map to real REST endpoints,
@@ -10,7 +10,7 @@ import sys
 import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DRAFT = os.path.join(ROOT, "openapi", "proposals", "opal_look.vnext.yaml")
+SPEC = os.path.join(ROOT, "openapi", "opal_look.yaml")
 
 failures = 0
 
@@ -37,7 +37,7 @@ def params(d, method, path):
 
 
 def main():
-    d = yaml.safe_load(open(DRAFT, encoding="utf-8"))
+    d = yaml.safe_load(open(SPEC, encoding="utf-8"))
     paths = d["paths"]
 
     # every public REST op has an unambiguous CLI mapping
@@ -70,7 +70,7 @@ def main():
     # 2) view live feed without creating a session
     check(op(d, "get", "/api/v1/sources/{source_id}/stream") is not None,
           "GET /sources/{id}/stream exists")
-    check(not any("/sessions" in p for p in paths), "no /sessions/ public path")
+    check(any("/sessions" in p for p in paths), "session lifecycle endpoints are available")
 
     # 3) enable/disable annotations on the live stream
     sp = params(d, "get", "/api/v1/sources/{source_id}/stream")

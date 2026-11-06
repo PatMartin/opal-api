@@ -13,12 +13,6 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FILES = sorted(glob.glob(os.path.join(ROOT, "openapi", "opal_*.yaml"))
                + glob.glob(os.path.join(ROOT, "openapi", "proposals", "*.yaml")))
 
-# Published 1.4.0 LISTEN/TALK are superseded by their v1.4.1 proposals, which
-# carry the reconciled declarations; the frozen published files predate the
-# suite security standard and are exempt until they are superseded.
-FROZEN = {"opal_listen.yaml", "opal_talk.yaml"}
-FILES = [f for f in FILES if os.path.basename(f) not in FROZEN]
-
 failures = 0
 
 
@@ -72,7 +66,7 @@ def main():
               f"{short}: correlation headers not credentials documented")
 
     # EVENT keeps the stronger scoped model
-    ev = yaml.safe_load(open(os.path.join(ROOT, "openapi", "opal_event.v1.4.1.yaml"),
+    ev = yaml.safe_load(open(os.path.join(ROOT, "openapi", "opal_event.yaml"),
                              encoding="utf-8"))
     ea = ev.get("x-opal-authorization", {})
     check(bool(ea.get("scopes")), "event: scoped authorization model preserved")

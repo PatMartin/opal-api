@@ -11,7 +11,7 @@ import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 THINK = os.path.join(ROOT, "openapi", "opal_think.yaml")
-EVENT = os.path.join(ROOT, "openapi", "opal_event.v1.4.1.yaml")
+EVENT = os.path.join(ROOT, "openapi", "opal_event.yaml")
 
 failures = 0
 
