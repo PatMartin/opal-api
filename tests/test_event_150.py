@@ -1,11 +1,11 @@
 """Contract regression tests for the unified opal_event.yaml (self-describing actions).
 
-Verifies the published 1.4.1 spec:
+Verifies the published 1.5.0 spec:
 - all four optional metadata fields are present on each action type;
 - all $refs are internal and resolve; no duplicate YAML mapping keys;
 - positive/negative fixture payloads validate against each action schema.
 
-Run: python tests/test_event_141.py   (exit 0 = all assertions passed)
+Run: python tests/test_event_150.py   (exit 0 = all assertions passed)
 """
 import os
 import sys
@@ -15,8 +15,10 @@ from jsonschema import Draft202012Validator
 from jsonschema.exceptions import ValidationError
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import spec_util  # noqa: E402
 SPEC = os.path.join(ROOT, "openapi", "opal_event.yaml")
-FIXTURES = os.path.join(ROOT, "tests", "fixtures", "event_141")
+FIXTURES = os.path.join(ROOT, "tests", "fixtures", "event_150")
 ACTIONS = ("ShellAction", "HttpAction", "PythonAction")
 METADATA_FIELDS = {"description", "input_schema", "keywords", "suggested_prompts"}
 
@@ -30,7 +32,7 @@ def check(ok, name, detail=""):
 
 
 def load(path):
-    return yaml.safe_load(open(path, encoding="utf-8"))
+    return spec_util.load(path)
 
 
 def no_duplicate_keys(path):
@@ -93,7 +95,7 @@ def main():
     spec = load(SPEC)
 
     # --- version and metadata ---------------------------------------------------
-    check(spec["info"]["version"] == "1.4.1", "info.version is 1.4.1")
+    check(spec["info"]["version"] == "1.5.0", "info.version is 1.5.0")
     check(spec["openapi"].startswith("3.1"), "openapi 3.1 declared")
     schemas = spec["components"]["schemas"]
 

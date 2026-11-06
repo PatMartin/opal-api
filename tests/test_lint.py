@@ -15,7 +15,12 @@ import tempfile
 import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import spec_util  # noqa: E402
+
 LOOK = os.path.join(ROOT, "openapi", "opal_look.yaml")
+KERNEL = os.path.join(ROOT, "openapi", "shared", "opal_kernel.yaml")
+DOCS = {"look": LOOK, "kernel": KERNEL}
 RULES = {
     "look": os.path.join(ROOT, ".spectral.opal.look.yaml"),
     "opal": os.path.join(ROOT, ".spectral.opal.yaml"),
@@ -81,8 +86,21 @@ def m_ifmatch(d):
 
 
 def m_cursor(d):
-    assert "next_cursor" in d["components"]["schemas"]["SessionPage"]["properties"]
-    d["components"]["schemas"]["SessionPage"]["properties"].pop("next_cursor")
+    # Resolved doc inlines page schemas at usage sites; strip next_cursor
+    # wherever it is declared under paths so the rule sees the violation.
+    hit = []
+    def walk(n):
+        if isinstance(n, dict):
+            if "next_cursor" in (n.get("properties") or {}):
+                n["properties"].pop("next_cursor")
+                hit.append(1)
+            for v in n.values():
+                walk(v)
+        elif isinstance(n, list):
+            for v in n:
+                walk(v)
+    walk(d["paths"])
+    assert hit, "no next_cursor found under paths"
 
 
 def m_probe(d):
@@ -123,15 +141,20 @@ def m_dup_opid(d):
 
 
 def m_ifmatch_pattern(d):
-    assert "pattern" in d["components"]["parameters"]["IfMatch"]["schema"]
-    d["components"]["parameters"]["IfMatch"]["schema"].pop("pattern")
+    # Resolved doc: drop the strong-ETag pattern from an inlined If-Match parameter.
+    op = d["paths"]["/api/v1/settings/"]["patch"]
+    ifm = next(x for x in op["parameters"] if x.get("name") == "If-Match")
+    assert "pattern" in ifm["schema"]
+    ifm["schema"].pop("pattern")
 
 
 def m_header_req(d):
+    # Kernel doc: request-id header loses its required marker.
     d["components"]["headers"]["OpalRequestIdHeader"]["required"] = False
 
 
 def m_header_cond(d):
+    # Kernel doc: session-id header becomes mandatory.
     d["components"]["headers"]["OpalSessionIdHeader"]["required"] = True
 
 
@@ -141,9 +164,11 @@ def m_broken_ref(d):
 
 
 def m_probe_body(d):
-    # Probe loses its required 'ready' -- the rule must see through the $ref.
-    assert "ready" in d["components"]["schemas"]["Probe"]["required"]
-    d["components"]["schemas"]["Probe"]["required"] = ["status", "version"]
+    # Probe loses its required 'ready' at the inlined kernel pathItem site.
+    sch = d["paths"]["/api/v1/health/live"]["get"]["responses"]["200"][
+        "content"]["application/json"]["schema"]
+    assert "ready" in sch["required"]
+    sch["required"] = ["status", "version"]
 
 
 def m_precond(d):
@@ -154,28 +179,28 @@ def m_precond(d):
 
 
 CASES = [
-    ("missing If-Match on config mutation", m_ifmatch, "look", "opal-look-config-ifmatch", 0),
-    ("cursor page missing next_cursor", m_cursor, "look", "opal-look-cursor-page", 0),
-    ("missing 503 probe response", m_probe, "look", "opal-look-health-probe", 0),
-    ("If-Match schema without pattern", m_ifmatch_pattern, "look", "opal-look-ifmatch-strong-schema", 0),
-    ("request header made optional", m_header_req, "look", "opal-look-header-required-ids", 0),
-    ("session header made required", m_header_cond, "look", "opal-look-header-conditional-ids", 0),
-    ("probe body missing required ready", m_probe_body, "look", "opal-look-health-probe", 0),
-    ("envelope contract without metadata", m_metadata, "look", "opal-look-event-contract", 0),
-    ("missing correlation header", m_corr, "opal", "opal-correlation-headers", 0),
-    ("406 missing correlation headers", m_corr_406, "opal", "opal-correlation-headers", 0),
-    ("nonstandard error envelope", m_error_env, "opal", "opal-standard-error-body", 0),
-    ("If-Match op missing 412/428", m_precond, "opal", "opal-ifmatch-precondition-responses", 1),
-    ("201 without Location", m_location, "opal", "opal-201-location-header", 0),
-    ("duplicate operationId", m_dup_opid, "generic", "operation-operationId-unique", 0),
-    ("broken $ref", m_broken_ref, "generic", "invalid-ref", 0),
+    ("missing If-Match on config mutation", "look", m_ifmatch, "look", "opal-look-config-ifmatch", 0),
+    ("cursor page missing next_cursor", "look", m_cursor, "look", "opal-look-cursor-page", 0),
+    ("missing 503 probe response", "look", m_probe, "look", "opal-look-health-probe", 0),
+    ("If-Match schema without pattern", "look", m_ifmatch_pattern, "look", "opal-look-ifmatch-strong-schema", 0),
+    ("request header made optional", "kernel", m_header_req, "opal", "opal-header-required-ids", 0),
+    ("session header made required", "kernel", m_header_cond, "opal", "opal-header-conditional-ids", 0),
+    ("probe body missing required ready", "look", m_probe_body, "look", "opal-look-health-probe", 0),
+    ("envelope contract without metadata", "look", m_metadata, "look", "opal-look-event-contract", 0),
+    ("missing correlation header", "look", m_corr, "opal", "opal-correlation-headers", 0),
+    ("406 missing correlation headers", "look", m_corr_406, "opal", "opal-correlation-headers", 0),
+    ("nonstandard error envelope", "look", m_error_env, "opal", "opal-standard-error-body", 0),
+    ("If-Match op missing 412/428", "look", m_precond, "opal", "opal-ifmatch-precondition-responses", 1),
+    ("201 without Location", "look", m_location, "opal", "opal-201-location-header", 0),
+    ("duplicate operationId", "look", m_dup_opid, "generic", "operation-operationId-unique", 0),
+    ("broken $ref", "look", m_broken_ref, "generic", "invalid-ref", 0),
 ]
 
 
 def main():
     failures = 0
-    for name, mut, ruleset, expected, sev in CASES:
-        tmp, path = mutate(yaml.safe_load(open(LOOK, encoding="utf-8")), mut)
+    for name, doc_key, mut, ruleset, expected, sev in CASES:
+        tmp, path = mutate(spec_util.load(DOCS[doc_key]), mut)
         try:
             hits = [x for x in lint(ruleset, path)
                     if x.get("code") == expected and x.get("severity") == sev]
@@ -207,12 +232,21 @@ def main():
     failures += 0 if ok else 1
 
     # Native JSON setting values: no contract may force value into a string wire type.
-    say = yaml.safe_load(open(os.path.join(ROOT, "openapi", "opal_say.yaml"), encoding="utf-8"))
-    lis = yaml.safe_load(open(os.path.join(ROOT, "openapi", "opal_listen.yaml"), encoding="utf-8"))
+    # Read through the kernel-mounted settings ops (resolved spec).
+    say = spec_util.load(os.path.join(ROOT, "openapi", "opal_say.yaml"))
+    lis = spec_util.load(os.path.join(ROOT, "openapi", "opal_listen.yaml"))
+
+    def key_op(spec, method):
+        return spec["paths"]["/api/v1/settings/{key}"][method]
+
+    upd = lambda spec: key_op(spec, "put")["requestBody"]["content"][
+        "application/json"]["schema"]
+    rd = lambda spec: key_op(spec, "get")["responses"]["200"]["content"][
+        "application/json"]["schema"]
     native = (
-        "type" not in say["components"]["schemas"]["SettingUpdate"]["properties"]["value"]
-        and "type" not in say["components"]["schemas"]["SettingRead"]["properties"]["value"]
-        and "type" not in lis["components"]["schemas"]["SettingUpdate"]["properties"]["value"]
+        "type" not in upd(say)["properties"]["value"]
+        and "type" not in rd(say)["properties"]["value"]
+        and "type" not in upd(lis)["properties"]["value"]
         and lis["paths"]["/api/v1/settings/"]["get"]["responses"]["200"]["content"]
             ["application/json"]["schema"]["additionalProperties"] is True
     )

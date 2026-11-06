@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OPAL Say API
-  version: 1.4.1
+  version: 1.5.0
   description: "Implementation-neutral text-to-speech (TTS) service for the OPAL suite.\n\nOPAL Say provides\
     \ a stable REST contract over one or more host-installed TTS\nengines such as Piper or Kokoro. Clients\
     \ interact with OPAL concepts—engines,\nvoices, profiles, generation settings, and audio output—without\
@@ -76,165 +76,16 @@ tags:
   description: Backup, restore, import, export, and validate OPAL Say configuration.
 paths:
   /api/v1/engines/:
-    get:
-      tags:
-      - engines
-      summary: List Engines
-      description: 'Return all TTS engines known to the service implementation.
-
-
-        An engine can be known but unavailable, for example when its runtime dependency
-
-        is missing or initialization failed. `enabled` is administrative configuration;
-
-        `available` reports whether the implementation can currently use the engine.
-
-
-        Return the complete bounded configuration collection; pagination is not supported. An implementation
-        may reject catalog sizes over an advertised deployment cap, rather than silently truncate.
-
-        '
-      operationId: list_engines_api_v1_engines__get
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Engines known to the service.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/EngineRead'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-            ETag:
-              description: Strong revision of logical portable configuration
-              schema:
-                type: string
-        '422':
-          $ref: '#/components/responses/OpalError422'
-      parameters: []
-    parameters:
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/engines_collection'
   /api/v1/engines/{engine_id}:
-    parameters:
-    - $ref: '#/components/parameters/EngineId'
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
-    get:
-      tags:
-      - engines
-      summary: Get Engine
-      description: Return one installed engine and its current service configuration.
-      operationId: get_engine_api_v1_engines__engine_id__get
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Engine details.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EngineRead'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-            ETag:
-              description: Strong revision of logical portable configuration
-              schema:
-                type: string
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-    patch:
-      tags:
-      - engines
-      summary: Update Engine
-      description: 'Update mutable configuration for an installed engine.
-
-
-        This operation can enable or disable the engine and replace/adjust its opaque
-
-        engine configuration. It cannot install a new engine, remove an installed
-
-        engine, or upload engine binaries.
-
-        '
-      operationId: update_engine_api_v1_engines__engine_id__patch
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EngineUpdate'
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Updated engine.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EngineRead'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-        '412':
-          $ref: '#/components/responses/OpalError412'
-        '428':
-          $ref: '#/components/responses/OpalError428'
-      parameters:
-      - name: If-Match
-        in: header
-        required: true
-        schema:
-          type: string
-          minLength: 1
-        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. DELETE without
-          existence is still subject to the precondition.
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/engine_item'
   /api/v1/engines/{engine_id}/validate:
     parameters:
-    - $ref: '#/components/parameters/EngineId'
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/EngineId'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
     post:
       tags:
       - engines
@@ -252,28 +103,28 @@ paths:
       operationId: validate_engine_api_v1_engines__engine_id__validate_post
       responses:
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Forbidden'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
         '200':
           description: Engine validation result.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationResult'
+                $ref: './shared/opal_kernel.yaml#/components/schemas/OpalValidationReport'
           headers:
             X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
             X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
         '422':
-          $ref: '#/components/responses/OpalError422'
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
   /api/v1/voices/:
     get:
       tags:
@@ -305,9 +156,9 @@ paths:
           type: boolean
       responses:
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Forbidden'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
         '200':
           description: Registered voices.
           content:
@@ -318,19 +169,19 @@ paths:
                   $ref: '#/components/schemas/VoiceRead'
           headers:
             X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
             X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
             ETag:
               description: Strong revision of logical portable configuration
               schema:
                 type: string
         '422':
-          $ref: '#/components/responses/OpalError422'
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
     post:
       tags:
       - voices
@@ -363,9 +214,9 @@ paths:
               $ref: '#/components/schemas/VoiceCreate'
       responses:
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Forbidden'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
         '201':
           description: Voice registered successfully.
           content:
@@ -374,13 +225,13 @@ paths:
                 $ref: '#/components/schemas/VoiceRead'
           headers:
             X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
             X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
             Location:
               description: Resource URL
               schema:
@@ -390,45 +241,45 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OpalError'
+                $ref: './shared/opal_kernel.yaml#/components/schemas/OpalError'
           headers:
             X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
             X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '409':
           description: The requested `voice_id` is already registered.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OpalError'
+                $ref: './shared/opal_kernel.yaml#/components/schemas/OpalError'
           headers:
             X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
             X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '422':
-          $ref: '#/components/responses/OpalError422'
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
     parameters:
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
   /api/v1/voices/{voice_id}:
     parameters:
     - $ref: '#/components/parameters/VoiceId'
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
     get:
       tags:
       - voices
@@ -437,9 +288,9 @@ paths:
       operationId: get_voice_api_v1_voices__voice_id__get
       responses:
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Forbidden'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
         '200':
           description: Voice details.
           content:
@@ -448,21 +299,21 @@ paths:
                 $ref: '#/components/schemas/VoiceRead'
           headers:
             X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
             X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
             ETag:
               description: Strong revision of logical portable configuration
               schema:
                 type: string
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
         '422':
-          $ref: '#/components/responses/OpalError422'
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
     patch:
       tags:
       - voices
@@ -483,9 +334,9 @@ paths:
               $ref: '#/components/schemas/VoiceUpdate'
       responses:
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Forbidden'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
         '200':
           description: Updated voice registration.
           content:
@@ -494,36 +345,36 @@ paths:
                 $ref: '#/components/schemas/VoiceRead'
           headers:
             X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
             X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
         '409':
           description: The update would leave the voice in an incompatible or referenced state.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OpalError'
+                $ref: './shared/opal_kernel.yaml#/components/schemas/OpalError'
           headers:
             X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
             X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '422':
-          $ref: '#/components/responses/OpalError422'
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
         '412':
-          $ref: '#/components/responses/OpalError412'
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
         '428':
-          $ref: '#/components/responses/OpalError428'
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
       parameters:
       - name: If-Match
         in: header
@@ -552,43 +403,43 @@ paths:
       operationId: delete_voice_api_v1_voices__voice_id__delete
       responses:
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Forbidden'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
         '204':
           description: Voice registration removed. No response body is returned.
           headers:
             X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
             X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
         '409':
           description: The voice is still referenced by configuration such as a profile.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OpalError'
+                $ref: './shared/opal_kernel.yaml#/components/schemas/OpalError'
           headers:
             X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
             X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '422':
-          $ref: '#/components/responses/OpalError422'
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
         '412':
-          $ref: '#/components/responses/OpalError412'
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
         '428':
-          $ref: '#/components/responses/OpalError428'
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
       parameters:
       - name: If-Match
         in: header
@@ -601,10 +452,10 @@ paths:
   /api/v1/voices/{voice_id}/validate:
     parameters:
     - $ref: '#/components/parameters/VoiceId'
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
     post:
       tags:
       - voices
@@ -619,35 +470,35 @@ paths:
       operationId: validate_voice_api_v1_voices__voice_id__validate_post
       responses:
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Forbidden'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
         '200':
           description: Voice validation result.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationResult'
+                $ref: './shared/opal_kernel.yaml#/components/schemas/OpalValidationReport'
           headers:
             X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
             X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
         '422':
-          $ref: '#/components/responses/OpalError422'
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
   /api/v1/voices/{voice_id}/test:
     parameters:
     - $ref: '#/components/parameters/VoiceId'
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
     post:
       tags:
       - voices
@@ -671,322 +522,25 @@ paths:
               $ref: '#/components/schemas/VoiceTestRequest'
       responses:
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Forbidden'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
         '200':
           $ref: '#/components/responses/AudioResponse'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/OpalError422'
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
         '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+          $ref: './shared/opal_kernel.yaml#/components/responses/ServiceUnavailable'
   /api/v1/profiles/:
-    get:
-      tags:
-      - profiles
-      summary: List Profiles
-      description: 'List reusable TTS generation profiles.
-
-        Return the complete bounded configuration collection; pagination is not supported. An implementation
-        may reject catalog sizes over an advertised deployment cap, rather than silently truncate.
-
-        '
-      operationId: list_profiles_api_v1_profiles__get
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Configured profiles.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProfileRead'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-            ETag:
-              description: Strong revision of logical portable configuration
-              schema:
-                type: string
-        '422':
-          $ref: '#/components/responses/OpalError422'
-      parameters: []
-    post:
-      tags:
-      - profiles
-      summary: Create Profile
-      description: 'Create a reusable set of generation defaults. A profile identifies a voice and
-
-        may define speed, volume, output format, sample rate, and engine-specific options.
-
-
-        If `is_active` is true, the newly created profile becomes the only active profile.
-
-        '
-      operationId: create_profile_api_v1_profiles__post
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProfileCreate'
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '201':
-          description: Profile created successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProfileRead'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-            Location:
-              description: Resource URL
-              schema:
-                type: string
-        '404':
-          description: The referenced voice does not exist.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-    parameters:
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/profiles_collection'
   /api/v1/profiles/{profile_id}:
-    parameters:
-    - $ref: '#/components/parameters/ProfileId'
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
-    get:
-      tags:
-      - profiles
-      summary: Get Profile
-      description: Return one generation profile.
-      operationId: get_profile_api_v1_profiles__profile_id__get
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Profile details.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProfileRead'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-            ETag:
-              description: Strong revision of logical portable configuration
-              schema:
-                type: string
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-    patch:
-      tags:
-      - profiles
-      summary: Update Profile
-      description: 'Partially update profile defaults. If `is_active` is changed to true, all other
-
-        profiles are deactivated.
-
-        '
-      operationId: update_profile_api_v1_profiles__profile_id__patch
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProfileUpdate'
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Updated profile.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProfileRead'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-        '412':
-          $ref: '#/components/responses/OpalError412'
-        '428':
-          $ref: '#/components/responses/OpalError428'
-      parameters:
-      - name: If-Match
-        in: header
-        required: true
-        schema:
-          type: string
-          minLength: 1
-        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. DELETE without
-          existence is still subject to the precondition.
-    delete:
-      tags:
-      - profiles
-      summary: Delete Profile
-      description: 'Delete a profile. The active profile SHOULD NOT be deleted directly; activate
-
-        another profile first. Implementations should return `409 Conflict` when deletion
-
-        would leave configuration in an invalid active-profile state.
-
-        '
-      operationId: delete_profile_api_v1_profiles__profile_id__delete
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '204':
-          description: Profile deleted. No response body is returned.
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-        '412':
-          $ref: '#/components/responses/OpalError412'
-        '428':
-          $ref: '#/components/responses/OpalError428'
-      parameters:
-      - name: If-Match
-        in: header
-        required: true
-        schema:
-          type: string
-          minLength: 1
-        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. DELETE without
-          existence is still subject to the precondition.
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_item'
   /api/v1/profiles/{profile_id}/activate:
-    parameters:
-    - $ref: '#/components/parameters/ProfileId'
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
-    post:
-      tags:
-      - profiles
-      summary: Activate Profile
-      description: Set this profile as active, deactivating all other profiles.
-      operationId: activate_profile_api_v1_profiles__profile_id__activate_post
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Activated profile.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProfileRead'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          description: The profile cannot be activated because its voice or engine is unusable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalError'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '422':
-          $ref: '#/components/responses/OpalError422'
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_activate'
   /api/v1/generate:
     post:
       tags:
@@ -1019,26 +573,26 @@ paths:
               $ref: '#/components/schemas/GenerateRequest'
       responses:
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Forbidden'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
         '200':
           $ref: '#/components/responses/AudioResponse'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Conflict'
         '413':
-          $ref: '#/components/responses/PayloadTooLarge'
+          $ref: './shared/opal_kernel.yaml#/components/responses/PayloadTooLarge'
         '422':
-          $ref: '#/components/responses/OpalError422'
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
         '500':
           $ref: '#/components/responses/GenerationFailed'
         '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+          $ref: './shared/opal_kernel.yaml#/components/responses/ServiceUnavailable'
     parameters:
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
   /api/v1/generate/stream:
     post:
       tags:
@@ -1068,703 +622,48 @@ paths:
               $ref: '#/components/schemas/GenerateStreamRequest'
       responses:
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Forbidden'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
         '200':
           $ref: '#/components/responses/PcmStreamResponse'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Conflict'
         '413':
-          $ref: '#/components/responses/PayloadTooLarge'
+          $ref: './shared/opal_kernel.yaml#/components/responses/PayloadTooLarge'
         '422':
-          $ref: '#/components/responses/OpalError422'
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
         '500':
           $ref: '#/components/responses/GenerationFailed'
         '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+          $ref: './shared/opal_kernel.yaml#/components/responses/ServiceUnavailable'
     parameters:
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
   /api/v1/settings/:
-    get:
-      tags:
-      - settings
-      summary: Get All Settings
-      description: 'Return all service-wide settings as a key/value object. Setting keys are
-
-        implementation-defined unless separately standardized by the OPAL Say service.
-
-        '
-      operationId: get_all_settings_api_v1_settings__get
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Current settings keyed by setting name.
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: true
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-            ETag:
-              description: Strong revision of logical portable configuration
-              schema:
-                type: string
-        '422':
-          $ref: '#/components/responses/OpalError422'
-    patch:
-      tags:
-      - settings
-      summary: Atomically patch portable settings
-      operationId: patch_say_settings
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              minProperties: 1
-              additionalProperties: true
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Updated portable settings
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: true
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '412':
-          $ref: '#/components/responses/OpalError412'
-        '428':
-          $ref: '#/components/responses/OpalError428'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-      parameters:
-      - name: If-Match
-        in: header
-        required: true
-        schema:
-          type: string
-          minLength: 1
-        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. DELETE without
-          existence is still subject to the precondition.
-    parameters:
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_collection'
   /api/v1/settings/{key}:
-    parameters:
-    - $ref: '#/components/parameters/SettingKey'
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
-    get:
-      tags:
-      - settings
-      summary: Get Setting
-      description: Return one setting.
-      operationId: get_setting_api_v1_settings__key__get
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Setting value and metadata.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SettingRead'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-            ETag:
-              description: Strong revision of logical portable configuration
-              schema:
-                type: string
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-    put:
-      tags:
-      - settings
-      summary: Upsert Setting
-      description: Create the setting if absent or replace its native JSON value if present.
-      operationId: upsert_setting_api_v1_settings__key__put
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SettingUpdate'
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Upserted setting.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SettingRead'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-        '412':
-          $ref: '#/components/responses/OpalError412'
-        '428':
-          $ref: '#/components/responses/OpalError428'
-      parameters:
-      - name: If-Match
-        in: header
-        required: true
-        schema:
-          type: string
-          minLength: 1
-        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. DELETE without
-          existence is still subject to the precondition.
-    delete:
-      tags:
-      - settings
-      summary: Delete Setting
-      description: Delete one setting so the implementation or profile default can apply.
-      operationId: delete_setting_api_v1_settings__key__delete
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '204':
-          description: Setting deleted. No response body is returned.
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-        '412':
-          $ref: '#/components/responses/OpalError412'
-        '428':
-          $ref: '#/components/responses/OpalError428'
-      parameters:
-      - name: If-Match
-        in: header
-        required: true
-        schema:
-          type: string
-          minLength: 1
-        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. DELETE without
-          existence is still subject to the precondition.
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_key'
   /api/v1/health/:
-    get:
-      tags:
-      - health
-      summary: Health Check
-      description: 'Return service readiness information, including the state of configured engines.
-
-        This endpoint intentionally contains no audio playback/device information.
-
-        '
-      operationId: health_check_api_v1_health__get
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Service health state.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HealthRead'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-    parameters:
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/health'
   /api/v1/backup/list:
-    get:
-      tags:
-      - backup
-      summary: List Backups
-      description: List backups available to this OPAL Say instance.
-      operationId: list_backups_api_v1_backup_list_get
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Available backups.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/BackupRead'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-    parameters:
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_list'
   /api/v1/backup/create:
-    post:
-      tags:
-      - backup
-      summary: Create Backup
-      description: 'Create a service configuration backup.
-
-
-        Backups contain OPAL Say configuration and registrations but MUST NOT be
-
-        interpreted as a model-package format. Host-installed engines, model binaries,
-
-        and voice/model files are not required to be copied into the backup. Restoring
-
-        onto another host may therefore require the corresponding resources to be
-
-        installed separately.
-
-        '
-      operationId: create_backup_api_v1_backup_create_post
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '201':
-          description: Backup created.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BackupCreateResponse'
-          headers:
-            Location:
-              description: URI of the created backup (/api/v1/backup/download/{filename}).
-              schema:
-                type: string
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '500':
-          $ref: '#/components/responses/OperationFailed'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-    parameters:
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_create'
   /api/v1/backup/download/{filename}:
-    parameters:
-    - $ref: '#/components/parameters/BackupFilename'
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
-    get:
-      tags:
-      - backup
-      summary: Download Backup
-      description: 'Download a previously created backup file. `filename` is a backup identifier,
-
-        not an arbitrary filesystem path; path traversal and path separators MUST be
-
-        rejected.
-
-        '
-      operationId: download_backup_api_v1_backup_download__filename__get
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Backup file contents.
-          headers:
-            Content-Disposition:
-              description: Suggested download filename.
-              schema:
-                type: string
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/OpalError422'
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_download'
   /api/v1/backup/restore/{filename}:
-    parameters:
-    - $ref: '#/components/parameters/BackupFilename'
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
-    post:
-      tags:
-      - backup
-      summary: Restore Backup
-      description: 'Restore service configuration from a named backup.
-
-
-        The service MUST validate the backup before applying it and MUST apply the
-
-        restore atomically; a failed restore leaves the previous valid configuration
-
-        intact. Missing If-Match returns 428, stale If-Match 412. Host-resident engine
-
-        and voice resources referenced by the restored configuration remain external to
-
-        the backup and can subsequently be checked through the validation endpoints.
-
-        '
-      operationId: restore_backup_api_v1_backup_restore__filename__post
-      parameters:
-      - name: If-Match
-        in: header
-        required: true
-        description: Required strong configuration ETag from GET /api/v1/settings/. Missing
-          428, stale 412, malformed/weak/list/wildcard 422.
-        schema:
-          type: string
-          pattern: '^"[^"]+"$'
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Restore completed.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OperationResult'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '412':
-          $ref: '#/components/responses/OpalError412'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-        '428':
-          $ref: '#/components/responses/OpalError428'
-        '500':
-          $ref: '#/components/responses/OperationFailed'
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_restore'
   /api/v1/backup/{filename}:
-    parameters:
-    - $ref: '#/components/parameters/BackupFilename'
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
-    delete:
-      tags:
-      - backup
-      summary: Delete Backup
-      description: Delete a named backup file managed by OPAL Say.
-      operationId: delete_backup_api_v1_backup__filename__delete
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '204':
-          description: Backup deleted. No response body is returned.
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/OpalError422'
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_delete'
   /api/v1/backup/export:
-    get:
-      tags:
-      - backup
-      summary: Export Config
-      description: 'Export the full logical OPAL Say configuration as JSON. The export describes
-
-        engine configuration, voice registrations, profiles, and service settings; it
-
-        does not embed engine binaries or voice/model files.
-
-        '
-      operationId: export_config_api_v1_backup_export_get
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Full logical service configuration.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConfigExport'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-    parameters:
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_export'
   /api/v1/backup/import:
-    post:
-      tags:
-      - backup
-      summary: Import Config
-      description: 'Import OPAL Say configuration from YAML files in `./config/`, matching the
-
-        sister OPAL Listen operational convention.
-
-
-        The implementation MUST validate the complete candidate configuration before
-
-        applying any change and MUST apply all changes atomically; a failed import
-
-        leaves the previous valid configuration intact. Missing If-Match returns 428,
-
-        stale If-Match 412, invalid configuration a structured 422.
-
-        Importing registration data never provisions engine binaries or voice/model files.
-
-        '
-      operationId: import_config_api_v1_backup_import_post
-      parameters:
-      - name: If-Match
-        in: header
-        required: true
-        description: Required strong configuration ETag from GET /api/v1/settings/. Missing
-          428, stale 412, malformed/weak/list/wildcard 422.
-        schema:
-          type: string
-          pattern: '^"[^"]+"$'
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Import result.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConfigImportResult'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '500':
-          $ref: '#/components/responses/OperationFailed'
-        '412':
-          $ref: '#/components/responses/OpalError412'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-        '428':
-          $ref: '#/components/responses/OpalError428'
-    parameters:
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_import'
   /api/v1/backup/validate:
-    get:
-      tags:
-      - backup
-      summary: Validate Config
-      description: 'Validate configuration without performing speech generation. Validation should
-
-        cover structural configuration, references between profiles/voices/engines, and
-
-        implementation-specific configuration rules. It need not fully load every model
-
-        unless the implementation chooses to do so.
-
-        '
-      operationId: validate_config_api_v1_backup_validate_get
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Configuration validation result.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationResult'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-    post:
-      tags:
-      - backup
-      operationId: validate_say_backup_payload
-      description: Validate supplied backup without side effects.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              additionalProperties: true
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Validation results
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: true
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-    parameters:
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_validate'
   /:
     get:
       summary: Root
@@ -1772,9 +671,9 @@ paths:
       operationId: root__get
       responses:
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Forbidden'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
         '200':
           description: Service identity.
           content:
@@ -1783,20 +682,20 @@ paths:
                 $ref: '#/components/schemas/ServiceInfo'
           headers:
             X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
             X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '422':
-          $ref: '#/components/responses/OpalError422'
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
     parameters:
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
   /healthz:
     get:
       summary: Healthz
@@ -1810,9 +709,9 @@ paths:
       operationId: healthz_healthz_get
       responses:
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Forbidden'
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
         '200':
           description: Service process is alive.
           content:
@@ -1821,135 +720,28 @@ paths:
                 $ref: '#/components/schemas/LivenessRead'
           headers:
             X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
             X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '422':
-          $ref: '#/components/responses/OpalError422'
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
     parameters:
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
   /api/v1/health/live:
-    get:
-      tags:
-      - health
-      operationId: get_say_health_live
-      summary: Liveness probe
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Health probe
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalHealthProbe'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '503':
-          description: Service unavailable
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalHealthProbe'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-    parameters:
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/health_live'
   /api/v1/health/ready:
-    get:
-      tags:
-      - health
-      operationId: get_say_health_ready
-      summary: Readiness probe
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Health probe
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalHealthProbe'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '503':
-          description: Readiness unavailable
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalHealthProbe'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/OpalCausationIdHeader'
-        '422':
-          $ref: '#/components/responses/OpalError422'
-    parameters:
-    - $ref: '#/components/parameters/OpalSessionIdHeader'
-    - $ref: '#/components/parameters/OpalTransactionIdHeader'
-    - $ref: '#/components/parameters/OpalRequestIdHeader'
-    - $ref: '#/components/parameters/OpalCausationIdHeader'
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/health_ready'
 components:
   securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: opaque
-      description: Optional on loopback deployments; required on non-loopback interfaces.
-        Bearer credentials are configured via token_env. Correlation headers are transport
-        context, never authorization credentials.
+    BearerAuth: {$ref: './shared/opal_kernel.yaml#/components/securitySchemes/BearerAuth'}
   parameters:
-    EngineId:
-      name: engine_id
-      in: path
-      required: true
-      description: Stable implementation-defined identifier of an installed TTS engine.
-      schema:
-        type: string
-        minLength: 1
-      example: piper
     VoiceId:
       name: voice_id
       in: path
@@ -1961,78 +753,6 @@ components:
         maxLength: 200
         pattern: ^[A-Za-z0-9][A-Za-z0-9._-]*$
       example: en-us-lessac-medium
-    ProfileId:
-      name: profile_id
-      in: path
-      required: true
-      description: Numeric profile identifier.
-      schema:
-        type: integer
-        minimum: 1
-      example: 1
-    BackupFilename:
-      name: filename
-      in: path
-      required: true
-      description: 'Filename/identifier of a backup managed by the service. It must not contain
-
-        path separators or traversal components.
-
-        '
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 255
-        pattern: ^[^/\\]+$
-      example: opal-say-2026-10-04T230000Z.tar.gz
-    SettingKey:
-      name: key
-      in: path
-      required: true
-      description: Setting key.
-      schema:
-        type: string
-        minLength: 1
-    OpalSessionIdHeader:
-      name: X-Opal-Session-Id
-      in: header
-      required: false
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 128
-        pattern: ^[!-~]+$
-      description: OPAL suite context propagation; opaque and not an authentication credential.
-    OpalTransactionIdHeader:
-      name: X-Opal-Transaction-Id
-      in: header
-      required: false
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 128
-        pattern: ^[!-~]+$
-      description: OPAL suite context propagation; opaque and not an authentication credential.
-    OpalRequestIdHeader:
-      name: X-Opal-Request-Id
-      in: header
-      required: false
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 128
-        pattern: ^[!-~]+$
-      description: OPAL suite context propagation; opaque and not an authentication credential.
-    OpalCausationIdHeader:
-      name: X-Opal-Causation-Id
-      in: header
-      required: false
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 128
-        pattern: ^[!-~]+$
-      description: OPAL suite context propagation; opaque and not an authentication credential.
   headers:
     AudioFormat:
       description: Logical output format returned in the response body.
@@ -2073,57 +793,7 @@ components:
         type: integer
         minimum: 1
       example: 1
-    OpalSessionIdHeader:
-      description: Effective OPAL session context for this response. Returned when a session identifier is known; conditionally present.
-      required: false
-      schema:
-        type: string
-    OpalTransactionIdHeader:
-      description: Logical transaction identifier for this exchange. Always returned; generated when the inbound request lacks one.
-      required: true
-      schema:
-        type: string
-    OpalRequestIdHeader:
-      description: Identifier of this inbound HTTP exchange. Always returned; regenerated for each downstream hop.
-      required: true
-      schema:
-        type: string
-    OpalCausationIdHeader:
-      description: Immediate parent event/request identifier for this response. Returned when applicable; conditionally present.
-      required: false
-      schema:
-        type: string
   responses:
-    Unauthorized:
-      description: Missing or invalid authentication.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/OpalError'
-      headers:
-        X-Opal-Session-Id:
-          $ref: '#/components/headers/OpalSessionIdHeader'
-        X-Opal-Transaction-Id:
-          $ref: '#/components/headers/OpalTransactionIdHeader'
-        X-Opal-Request-Id:
-          $ref: '#/components/headers/OpalRequestIdHeader'
-        X-Opal-Causation-Id:
-          $ref: '#/components/headers/OpalCausationIdHeader'
-    Forbidden:
-      description: Authenticated but not permitted.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/OpalError'
-      headers:
-        X-Opal-Session-Id:
-          $ref: '#/components/headers/OpalSessionIdHeader'
-        X-Opal-Transaction-Id:
-          $ref: '#/components/headers/OpalTransactionIdHeader'
-        X-Opal-Request-Id:
-          $ref: '#/components/headers/OpalRequestIdHeader'
-        X-Opal-Causation-Id:
-          $ref: '#/components/headers/OpalCausationIdHeader'
     AudioResponse:
       description: 'Completed generated audio. The media type corresponds to the resolved
 
@@ -2146,13 +816,13 @@ components:
         X-Opal-Profile-Id:
           $ref: '#/components/headers/ResolvedProfileId'
         X-Opal-Session-Id:
-          $ref: '#/components/headers/OpalSessionIdHeader'
+          $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
         X-Opal-Transaction-Id:
-          $ref: '#/components/headers/OpalTransactionIdHeader'
+          $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
         X-Opal-Request-Id:
-          $ref: '#/components/headers/OpalRequestIdHeader'
+          $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
         X-Opal-Causation-Id:
-          $ref: '#/components/headers/OpalCausationIdHeader'
+          $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
       content:
         audio/wav:
           schema:
@@ -2190,153 +860,33 @@ components:
         X-Opal-Profile-Id:
           $ref: '#/components/headers/ResolvedProfileId'
         X-Opal-Session-Id:
-          $ref: '#/components/headers/OpalSessionIdHeader'
+          $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
         X-Opal-Transaction-Id:
-          $ref: '#/components/headers/OpalTransactionIdHeader'
+          $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
         X-Opal-Request-Id:
-          $ref: '#/components/headers/OpalRequestIdHeader'
+          $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
         X-Opal-Causation-Id:
-          $ref: '#/components/headers/OpalCausationIdHeader'
+          $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
       content:
         application/octet-stream:
           schema:
             type: string
             format: binary
-    NotFound:
-      description: Requested resource was not found.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/OpalError'
-      headers:
-        X-Opal-Session-Id:
-          $ref: '#/components/headers/OpalSessionIdHeader'
-        X-Opal-Transaction-Id:
-          $ref: '#/components/headers/OpalTransactionIdHeader'
-        X-Opal-Request-Id:
-          $ref: '#/components/headers/OpalRequestIdHeader'
-        X-Opal-Causation-Id:
-          $ref: '#/components/headers/OpalCausationIdHeader'
-    Conflict:
-      description: Request is structurally valid but conflicts with current configuration or resource state.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/OpalError'
-      headers:
-        X-Opal-Session-Id:
-          $ref: '#/components/headers/OpalSessionIdHeader'
-        X-Opal-Transaction-Id:
-          $ref: '#/components/headers/OpalTransactionIdHeader'
-        X-Opal-Request-Id:
-          $ref: '#/components/headers/OpalRequestIdHeader'
-        X-Opal-Causation-Id:
-          $ref: '#/components/headers/OpalCausationIdHeader'
-    PayloadTooLarge:
-      description: Input text exceeds the service's configured maximum accepted request size.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/OpalError'
-      headers:
-        X-Opal-Session-Id:
-          $ref: '#/components/headers/OpalSessionIdHeader'
-        X-Opal-Transaction-Id:
-          $ref: '#/components/headers/OpalTransactionIdHeader'
-        X-Opal-Request-Id:
-          $ref: '#/components/headers/OpalRequestIdHeader'
-        X-Opal-Causation-Id:
-          $ref: '#/components/headers/OpalCausationIdHeader'
     GenerationFailed:
       description: TTS generation failed after the request was accepted for processing.
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/OpalError'
+            $ref: './shared/opal_kernel.yaml#/components/schemas/OpalError'
       headers:
         X-Opal-Session-Id:
-          $ref: '#/components/headers/OpalSessionIdHeader'
+          $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
         X-Opal-Transaction-Id:
-          $ref: '#/components/headers/OpalTransactionIdHeader'
+          $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
         X-Opal-Request-Id:
-          $ref: '#/components/headers/OpalRequestIdHeader'
+          $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
         X-Opal-Causation-Id:
-          $ref: '#/components/headers/OpalCausationIdHeader'
-    ServiceUnavailable:
-      description: The resolved engine or a required TTS runtime dependency is currently unavailable.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/OpalError'
-      headers:
-        X-Opal-Session-Id:
-          $ref: '#/components/headers/OpalSessionIdHeader'
-        X-Opal-Transaction-Id:
-          $ref: '#/components/headers/OpalTransactionIdHeader'
-        X-Opal-Request-Id:
-          $ref: '#/components/headers/OpalRequestIdHeader'
-        X-Opal-Causation-Id:
-          $ref: '#/components/headers/OpalCausationIdHeader'
-    OperationFailed:
-      description: The requested operational action failed.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/OpalError'
-      headers:
-        X-Opal-Session-Id:
-          $ref: '#/components/headers/OpalSessionIdHeader'
-        X-Opal-Transaction-Id:
-          $ref: '#/components/headers/OpalTransactionIdHeader'
-        X-Opal-Request-Id:
-          $ref: '#/components/headers/OpalRequestIdHeader'
-        X-Opal-Causation-Id:
-          $ref: '#/components/headers/OpalCausationIdHeader'
-    OpalError412:
-      description: OPAL standard error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/OpalError'
-      headers:
-        X-Opal-Session-Id:
-          $ref: '#/components/headers/OpalSessionIdHeader'
-        X-Opal-Transaction-Id:
-          $ref: '#/components/headers/OpalTransactionIdHeader'
-        X-Opal-Request-Id:
-          $ref: '#/components/headers/OpalRequestIdHeader'
-        X-Opal-Causation-Id:
-          $ref: '#/components/headers/OpalCausationIdHeader'
-    OpalError428:
-      description: OPAL standard error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/OpalError'
-      headers:
-        X-Opal-Session-Id:
-          $ref: '#/components/headers/OpalSessionIdHeader'
-        X-Opal-Transaction-Id:
-          $ref: '#/components/headers/OpalTransactionIdHeader'
-        X-Opal-Request-Id:
-          $ref: '#/components/headers/OpalRequestIdHeader'
-        X-Opal-Causation-Id:
-          $ref: '#/components/headers/OpalCausationIdHeader'
-    OpalError422:
-      description: OPAL standard error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/OpalError'
-      headers:
-        X-Opal-Session-Id:
-          $ref: '#/components/headers/OpalSessionIdHeader'
-        X-Opal-Transaction-Id:
-          $ref: '#/components/headers/OpalTransactionIdHeader'
-        X-Opal-Request-Id:
-          $ref: '#/components/headers/OpalRequestIdHeader'
-        X-Opal-Causation-Id:
-          $ref: '#/components/headers/OpalCausationIdHeader'
+          $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
   schemas:
     AudioFormat:
       type: string
@@ -2368,68 +918,6 @@ components:
         '
       example:
         noise_scale: 0.667
-    EngineRead:
-      type: object
-      required:
-      - engine_id
-      - name
-      - enabled
-      - available
-      - options
-      - metadata
-      properties:
-        engine_id:
-          type: string
-          minLength: 1
-          description: Stable engine identifier used by API requests and voice registrations.
-          example: piper
-        name:
-          type: string
-          minLength: 1
-          description: Human-readable engine name.
-          example: Piper
-        description:
-          anyOf:
-          - type: string
-          - type: 'null'
-          description: Optional human-readable engine description.
-          example: Local neural text-to-speech engine
-        enabled:
-          type: boolean
-          description: Whether OPAL Say is administratively allowed to route generation to this engine.
-          example: true
-        available:
-          type: boolean
-          description: Whether the implementation can currently initialize and use the engine.
-          example: true
-        options:
-          $ref: '#/components/schemas/EngineOptions'
-        metadata:
-          type: object
-          additionalProperties: true
-          readOnly: true
-          description: 'Read-only implementation-reported engine metadata such as runtime version or
-
-            adapter information. Clients must not require engine-specific metadata keys.
-
-            '
-          example:
-            version: 1.3.0
-    EngineUpdate:
-      type: object
-      minProperties: 1
-      additionalProperties: false
-      description: Mutable engine configuration.
-      properties:
-        enabled:
-          type: boolean
-          description: Enable or disable routing to this installed engine.
-        options:
-          $ref: '#/components/schemas/EngineOptions'
-      example:
-        enabled: true
-        options:
-          use_cuda: false
     VoiceCreate:
       type: object
       additionalProperties: false
@@ -2634,172 +1122,6 @@ components:
             '
         engine_options:
           $ref: '#/components/schemas/EngineOptions'
-    ProfileCreate:
-      type: object
-      additionalProperties: false
-      required:
-      - name
-      - voice_id
-      description: Create a reusable TTS generation preset.
-      properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 100
-          description: Unique or human-distinguishable profile name.
-          example: default
-        description:
-          anyOf:
-          - type: string
-            maxLength: 1000
-          - type: 'null'
-        is_active:
-          type: boolean
-          default: false
-          description: If true, activate this profile and deactivate all others.
-        voice_id:
-          type: string
-          minLength: 1
-          description: Registered voice used by default for this profile.
-          example: en-us-lessac-medium
-        speed:
-          type: number
-          format: float
-          minimum: 0.25
-          maximum: 4.0
-          default: 1.0
-        volume:
-          type: number
-          format: float
-          minimum: 0.0
-          maximum: 2.0
-          default: 1.0
-        output_format:
-          allOf:
-          - $ref: '#/components/schemas/AudioFormat'
-          default: wav
-          description: Default format for completed `/generate` requests using this profile.
-        sample_rate:
-          anyOf:
-          - type: integer
-            minimum: 8000
-            maximum: 192000
-          - type: 'null'
-          default: null
-          description: Optional default output sample rate. Null lets the service choose.
-        engine_options:
-          $ref: '#/components/schemas/EngineOptions'
-      example:
-        name: default
-        description: General-purpose local speech profile
-        is_active: true
-        voice_id: en-us-lessac-medium
-        speed: 1.0
-        volume: 1.0
-        output_format: wav
-        sample_rate: null
-        engine_options: {}
-    ProfileUpdate:
-      type: object
-      minProperties: 1
-      additionalProperties: false
-      description: Partial update to a generation profile.
-      properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 100
-        description:
-          anyOf:
-          - type: string
-            maxLength: 1000
-          - type: 'null'
-        is_active:
-          type: boolean
-          description: Setting true activates this profile and deactivates all others.
-        voice_id:
-          type: string
-          minLength: 1
-        speed:
-          type: number
-          format: float
-          minimum: 0.25
-          maximum: 4.0
-        volume:
-          type: number
-          format: float
-          minimum: 0.0
-          maximum: 2.0
-        output_format:
-          $ref: '#/components/schemas/AudioFormat'
-        sample_rate:
-          anyOf:
-          - type: integer
-            minimum: 8000
-            maximum: 192000
-          - type: 'null'
-        engine_options:
-          $ref: '#/components/schemas/EngineOptions'
-    ProfileRead:
-      type: object
-      required:
-      - id
-      - name
-      - is_active
-      - voice_id
-      - speed
-      - volume
-      - output_format
-      - engine_options
-      - created_at
-      - updated_at
-      properties:
-        id:
-          type: integer
-          minimum: 1
-        name:
-          type: string
-        description:
-          anyOf:
-          - type: string
-          - type: 'null'
-        is_active:
-          type: boolean
-        voice_id:
-          type: string
-        speed:
-          type: number
-          format: float
-        volume:
-          type: number
-          format: float
-        output_format:
-          $ref: '#/components/schemas/AudioFormat'
-        sample_rate:
-          anyOf:
-          - type: integer
-          - type: 'null'
-        engine_options:
-          $ref: '#/components/schemas/EngineOptions'
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-      example:
-        id: 1
-        name: default
-        description: General-purpose local speech profile
-        is_active: true
-        voice_id: en-us-lessac-medium
-        speed: 1.0
-        volume: 1.0
-        output_format: wav
-        sample_rate: null
-        engine_options: {}
-        created_at: '2026-10-04T23:00:00Z'
-        updated_at: '2026-10-04T23:00:00Z'
     GenerateRequest:
       type: object
       additionalProperties: false
@@ -3008,59 +1330,6 @@ components:
           type: object
           additionalProperties: true
           description: Optional implementation-specific diagnostic context.
-    ValidationResult:
-      type: object
-      required:
-      - valid
-      - errors
-      - warnings
-      - details
-      properties:
-        valid:
-          type: boolean
-          description: True when the validated object/configuration is usable under current validation rules.
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/ValidationMessage'
-        warnings:
-          type: array
-          items:
-            $ref: '#/components/schemas/ValidationMessage'
-        details:
-          type: object
-          additionalProperties: true
-          description: Optional implementation-specific validation details.
-      example:
-        valid: true
-        errors: []
-        warnings: []
-        details: {}
-    SettingRead:
-      type: object
-      required:
-      - id
-      - key
-      - value
-      - updated_at
-      properties:
-        id:
-          type: integer
-        key:
-          type: string
-        value:
-          description: Native JSON setting value, typed per the setting's own semantics.
-        updated_at:
-          type: string
-          format: date-time
-    SettingUpdate:
-      type: object
-      additionalProperties: false
-      required:
-      - value
-      properties:
-        value:
-          description: New native JSON value for the setting.
     EngineHealthRead:
       type: object
       required:
@@ -3078,143 +1347,6 @@ components:
           anyOf:
           - type: string
           - type: 'null'
-    HealthRead:
-      type: object
-      required:
-      - status
-      - version
-      - engines
-      properties:
-        status:
-          type: string
-          enum:
-          - ok
-          - degraded
-          - error
-          description: 'Overall readiness state. `ok` means required service functions are ready;
-
-            `degraded` means the service is running but one or more configured resources
-
-            are unavailable; `error` means normal generation is not currently usable.
-
-            '
-        version:
-          type: string
-          example: 1.0.0
-        active_profile_id:
-          anyOf:
-          - type: integer
-            minimum: 1
-          - type: 'null'
-        engines:
-          type: array
-          items:
-            $ref: '#/components/schemas/EngineHealthRead'
-        details:
-          type: object
-          additionalProperties: true
-          description: Optional non-portable diagnostic information.
-      example:
-        status: ok
-        version: 1.0.0
-        active_profile_id: 1
-        engines:
-        - engine_id: piper
-          enabled: true
-          available: true
-          message: null
-        details: {}
-    BackupRead:
-      type: object
-      required:
-      - filename
-      - created_at
-      properties:
-        filename:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-        size_bytes:
-          anyOf:
-          - type: integer
-            minimum: 0
-          - type: 'null'
-      example:
-        filename: opal-say-2026-10-04T230000Z.tar.gz
-        created_at: '2026-10-04T23:00:00Z'
-        size_bytes: 18432
-    BackupCreateResponse:
-      type: object
-      required:
-      - filename
-      properties:
-        filename:
-          type: string
-        message:
-          type: string
-      example:
-        filename: opal-say-2026-10-04T230000Z.tar.gz
-        message: Backup created successfully.
-    ConfigExport:
-      type: object
-      required:
-      - version
-      - exported_at
-      - engines
-      - voices
-      - profiles
-      - settings
-      description: 'Portable logical configuration snapshot. Engine/voice host assets are referenced,
-
-        not embedded. Consumers should tolerate future additive fields.
-
-        '
-      properties:
-        version:
-          type: string
-          description: OPAL Say configuration schema/service version.
-          example: 1.0.0
-        exported_at:
-          type: string
-          format: date-time
-        engines:
-          type: array
-          items:
-            $ref: '#/components/schemas/EngineRead'
-        voices:
-          type: array
-          items:
-            $ref: '#/components/schemas/VoiceRead'
-        profiles:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProfileRead'
-        settings:
-          type: object
-          additionalProperties: true
-    ConfigImportResult:
-      type: object
-      required:
-      - success
-      - validation
-      properties:
-        success:
-          type: boolean
-        validation:
-          $ref: '#/components/schemas/ValidationResult'
-        message:
-          anyOf:
-          - type: string
-          - type: 'null'
-      example:
-        success: true
-        validation:
-          valid: true
-          errors: []
-          warnings: []
-          details: {}
-        message: Configuration imported successfully.
     OperationResult:
       type: object
       required:
@@ -3261,67 +1393,6 @@ components:
           enum:
           - ok
           example: ok
-    OpalError:
-      type: object
-      additionalProperties: false
-      required:
-      - error
-      properties:
-        error:
-          type: object
-          additionalProperties: false
-          required:
-          - code
-          - message
-          - request_id
-          - transaction_id
-          properties:
-            code:
-              type: string
-            message:
-              type: string
-            details: {}
-            request_id:
-              type: string
-            transaction_id:
-              type: string
-            session_id:
-              type:
-              - string
-              - 'null'
-            causation_id:
-              type:
-              - string
-              - 'null'
-    OpalCursorPageMetadata:
-      type: object
-      required:
-      - next_cursor
-      - has_more
-      properties:
-        next_cursor:
-          type:
-          - string
-          - 'null'
-        has_more:
-          type: boolean
-    OpalHealthProbe:
-      type: object
-      required:
-      - status
-      - ready
-      properties:
-        status:
-          type: string
-          enum:
-          - ok
-          - degraded
-          - unavailable
-        ready:
-          type: boolean
-        details:
-          type: object
-          additionalProperties: true
 x-opal-context-standard:
   version: '1.2'
   headers:
@@ -3333,14 +1404,8 @@ x-opal-context-standard:
   id_format: opaque-printable-ascii-1-to-128
   transaction_atomicity: false
   events:
-    propagate:
-    - session_id
-    - transaction_id
-    - request_id
-    - causation_id
+    $ref: './shared/opal_kernel.yaml#/x-opal-event-envelope'
     metadata_schema_version: '1.0'
-    zero_mq_frames: 2
-    compatibility: 'metadata_schema_version versions the optional data.metadata block only; the two-frame wire envelope (topic + JSON with topic/data) is unchanged across versions. Consumers extract known correlation keys (session_id, transaction_id, request_id, causation_id) and MUST ignore unknown metadata fields; producers may emit any metadata_schema_version without breaking the wire contract.'
   pagination:
     history: cursor
     configuration: none
@@ -3354,19 +1419,4 @@ x-opal-context-standard:
     transport-specific terminal events or stream termination; no invented resumability.
 security:
 - BearerAuth: []
-x-opal-authorization:
-  version: '1.0'
-  description: Suite REST authentication and authorization semantics. Loopback-only
-    deployments may explicitly disable authentication; non-loopback deployments require
-    authentication. Privileged configuration operations require authorization. 401
-    means missing or invalid authentication; 403 means authenticated but not permitted.
-    Correlation IDs are never authorization credentials. Secret values must not appear
-    in responses, exports, or error details.
-  semantics:
-    missing_or_invalid_credentials: '401'
-    authenticated_but_not_permitted: '403'
-    loopback: authentication may be explicitly disabled on loopback deployments
-    non_loopback: authentication required
-    privileged_operations: authorization required for configuration mutations
-    credentials: correlation headers are transport context, never authorization credentials
-    secrets: secret values must not appear in responses, exports, or error details
+x-opal-authorization: {$ref: './shared/opal_kernel.yaml#/x-opal-authorization'}

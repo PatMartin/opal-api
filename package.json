@@ -7,16 +7,18 @@
     "validate": "redocly lint \"openapi/*.yaml\"",
     "lint": "spectral lint -r .spectral.yaml \"openapi/*.yaml\"",
     "lint:opal": "spectral lint -r .spectral.opal.yaml \"openapi/*.yaml\"",
-    "check": "npm run validate && npm run lint && npm run lint:opal && npm run lint:look && npm run lint:think && npm run test:lint && npm run test:event141 && npm run test:think-event && npm run test:look-cli && npm run test:listen141 && npm run test:say141 && npm run test:rest-security",
+    "check": "npm run validate && npm run lint && npm run lint:opal && npm run lint:kernel && npm run lint:look && npm run lint:think && npm run bundle && npm run test:lint && npm run test:event150 && npm run test:think-event && npm run test:look-cli && npm run test:listen150 && npm run test:say150 && npm run test:rest-security",
     "lint:look": "spectral lint -r .spectral.opal.look.yaml openapi/opal_look.yaml",
     "test:lint": "python tests/test_lint.py",
-    "test:event141": "python tests/test_event_141.py",
+    "test:event150": "python tests/test_event_150.py",
     "test:think-event": "python tests/test_think_event.py",
     "test:look-cli": "python tests/test_look_cli.py",
-    "test:listen141": "python tests/test_listen_141.py",
-    "test:say141": "python tests/test_say_141.py",
+    "test:listen150": "python tests/test_listen_150.py",
+    "test:say150": "python tests/test_say_150.py",
     "test:rest-security": "python tests/test_rest_security.py",
-    "lint:think": "spectral lint -r .spectral.opal.think.yaml openapi/opal_think.yaml"
+    "lint:think": "spectral lint -r .spectral.opal.think.yaml openapi/opal_think.yaml",
+    "lint:kernel": "spectral lint -r .spectral.opal.yaml openapi/shared/opal_kernel.yaml",
+    "bundle": "redocly bundle openapi/opal_event.yaml -o dist/opal_event.yaml && redocly bundle openapi/opal_listen.yaml -o dist/opal_listen.yaml && redocly bundle openapi/opal_look.yaml -o dist/opal_look.yaml && redocly bundle openapi/opal_say.yaml -o dist/opal_say.yaml && redocly bundle openapi/opal_think.yaml -o dist/opal_think.yaml"
   },
   "repository": {
     "type": "git",

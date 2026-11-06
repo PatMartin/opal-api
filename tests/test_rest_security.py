@@ -10,6 +10,8 @@ import sys
 import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import spec_util  # noqa: E402
 FILES = sorted(glob.glob(os.path.join(ROOT, "openapi", "opal_*.yaml"))
                + glob.glob(os.path.join(ROOT, "openapi", "proposals", "*.yaml")))
 
@@ -25,7 +27,7 @@ def check(ok, name, detail=""):
 def main():
     for f in FILES:
         short = os.path.basename(f)
-        d = yaml.safe_load(open(f, encoding="utf-8"))
+        d = spec_util.load(f)
         ss = d.get("components", {}).get("securitySchemes", {})
         check("BearerAuth" in ss, f"{short}: BearerAuth declared")
         check(ss.get("BearerAuth", {}).get("scheme") == "bearer",
@@ -66,8 +68,7 @@ def main():
               f"{short}: correlation headers not credentials documented")
 
     # EVENT keeps the stronger scoped model
-    ev = yaml.safe_load(open(os.path.join(ROOT, "openapi", "opal_event.yaml"),
-                             encoding="utf-8"))
+    ev = spec_util.load(os.path.join(ROOT, "openapi", "opal_event.yaml"))
     ea = ev.get("x-opal-authorization", {})
     check(bool(ea.get("scopes")), "event: scoped authorization model preserved")
     check(bool(ea.get("principals", {}).get("think")),

@@ -1,4 +1,4 @@
-"""Contract-level interoperability tests for OPAL Think <-> EVENT v1.4.1.
+"""Contract-level interoperability tests for OPAL Think <-> EVENT v1.5.0.
 
 Verifies the THINK principal's declared integration surface against the
 versioned EVENT contract's authorization model and action schemas — without
@@ -10,6 +10,8 @@ import sys
 import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import spec_util  # noqa: E402
 THINK = os.path.join(ROOT, "openapi", "opal_think.yaml")
 EVENT = os.path.join(ROOT, "openapi", "opal_event.yaml")
 
@@ -23,8 +25,8 @@ def check(ok, name, detail=""):
 
 
 def main():
-    think = yaml.safe_load(open(THINK, encoding="utf-8"))
-    event = yaml.safe_load(open(EVENT, encoding="utf-8"))
+    think = spec_util.load(THINK)
+    event = spec_util.load(EVENT)
     integ = think.get("x-opal-event-integration", {})
     auth = event.get("x-opal-authorization", {})
 

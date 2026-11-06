@@ -1,6 +1,6 @@
 """Contract regression tests for the unified opal_listen.yaml (settings management).
 
-Verifies the published 1.4.1 spec:
+Verifies the published 1.5.0 spec:
 - native JSON settings values, required If-Match, declared precondition codes;
 - backup/import reconciled with the same strong-revision preconditions.
 """
@@ -10,6 +10,8 @@ import sys
 import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import spec_util  # noqa: E402
 SPEC = os.path.join(ROOT, "openapi", "opal_listen.yaml")
 
 failures = 0
@@ -27,9 +29,9 @@ def param_names(op):
 
 
 def main():
-    spec = yaml.safe_load(open(SPEC, encoding="utf-8"))
+    spec = spec_util.load(SPEC)
 
-    check(spec["info"]["version"] == "1.4.1", "info.version is 1.4.1")
+    check(spec["info"]["version"] == "1.5.0", "info.version is 1.5.0")
 
     sk = spec["paths"]["/api/v1/settings/{key}"]
     check(set(sk) & {"get", "put", "delete"} == {"get", "put", "delete"},
