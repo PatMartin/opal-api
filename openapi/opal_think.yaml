@@ -792,6 +792,21 @@ paths:
               $ref: '#/components/headers/XOpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: '#/components/headers/XOpalCausationIdHeader'
+        '503':
+          description: Process is not live.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthProbe'
+          headers:
+            X-Opal-Session-Id:
+              $ref: '#/components/headers/XOpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: '#/components/headers/XOpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: '#/components/headers/XOpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: '#/components/headers/XOpalCausationIdHeader'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
   /api/v1/health/ready:
@@ -892,9 +907,11 @@ components:
       name: If-Match
       in: header
       required: true
+      description: Required current strong configuration ETag. Missing returns 428, stale
+        returns 412, malformed/weak/list/wildcard returns 422.
       schema:
         type: string
-      description: Required strong configuration ETag from GET /api/v1/settings/ or GET setting.
+        pattern: '^"[^"]+"$'
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -978,24 +995,28 @@ components:
   headers:
     XOpalSessionIdHeader:
       description: OPAL logical tracing identifier.
+      required: false
       schema:
         type: string
         minLength: 1
         maxLength: 128
     XOpalTransactionIdHeader:
       description: OPAL logical tracing identifier.
+      required: true
       schema:
         type: string
         minLength: 1
         maxLength: 128
     XOpalRequestIdHeader:
       description: OPAL logical tracing identifier.
+      required: true
       schema:
         type: string
         minLength: 1
         maxLength: 128
     XOpalCausationIdHeader:
       description: OPAL logical tracing identifier.
+      required: false
       schema:
         type: string
         minLength: 1
@@ -1707,3 +1728,37 @@ x-opal-authorization:
     privileged_operations: authorization required for configuration mutations
     credentials: correlation headers are transport context, never authorization credentials
     secrets: secret values must not appear in responses, exports, or error details
+
+x-opal-context-standard:
+  version: '1.4'
+  headers:
+  - X-Opal-Session-Id
+  - X-Opal-Transaction-Id
+  - X-Opal-Request-Id
+  - X-Opal-Causation-Id
+  session_mode: context-only
+  id_format: opaque-printable-ascii-1-to-128
+  transaction_atomicity: false
+  events:
+    propagate:
+    - session_id
+    - transaction_id
+    - request_id
+    - causation_id
+    metadata_schema_version: '1.0'
+    zero_mq_frames: 2
+    compatibility: metadata_schema_version versions the optional data.metadata block only; the two-frame
+      wire envelope (topic + JSON with topic/data) is unchanged across versions. Consumers extract known
+      correlation keys (session_id, transaction_id, request_id, causation_id) and MUST ignore unknown
+      metadata fields; producers may emit any metadata_schema_version without breaking the wire contract.
+  pagination:
+    history: cursor
+    configuration: none
+    default_limit: 100
+    max_limit: 500
+  concurrency:
+    settings_and_config_mutations: strong-etag-if-match-required
+    missing_status: 428
+    stale_status: 412
+  streaming: Include HTTP context headers before bytes; after headers are sent, failures are represented
+    by transport-specific terminal events or stream termination; no invented resumability.

@@ -1,0 +1,154 @@
+extends:
+- - spectral:oas
+  - off
+rules:
+
+  opal-think-config-ifmatch:
+    description: OPAL Think configuration mutations must require a strong If-Match precondition.
+    severity: error
+    given: $.paths[?(@property.match(/api\/v1\/settings(\/\{key\}|\/)?$/))][?(@property.match(/^(post|put|patch|delete)$/))]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - parameters
+          properties:
+            parameters:
+              type: array
+              contains:
+                type: object
+                required:
+                  - name
+                  - required
+                properties:
+                  name:
+                    const: If-Match
+                  required:
+                    const: true
+
+  opal-think-cursor-page:
+    description: OPAL Think cursor-paginated collections must return items, next_cursor and has_more.
+    severity: error
+    given:
+      - $.paths['/api/v1/tasks/'].get.responses['200'].content
+      - $.paths['/api/v1/sessions/'].get.responses['200'].content
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - application/json
+          properties:
+            application/json:
+              type: object
+              required:
+                - schema
+              properties:
+                schema:
+                  type: object
+                  required:
+                    - properties
+                  properties:
+                    properties:
+                      type: object
+                      required:
+                        - items
+                        - next_cursor
+                        - has_more
+
+  opal-think-health-probe:
+    description: OPAL Think liveness/readiness probes must return status+ready bodies on 200 and 503.
+    severity: error
+    given: $.paths[?(@property.match(/\/health\/(live|ready)$/))].get.responses
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - '200'
+            - '503'
+          properties:
+            '200':
+              type: object
+              properties:
+                content:
+                  type: object
+                  properties:
+                    application/json:
+                      type: object
+                      properties:
+                        schema:
+                          type: object
+                          properties:
+                            required:
+                              type: array
+                              allOf:
+                                - contains:
+                                    const: status
+                                - contains:
+                                    const: ready
+            '503':
+              type: object
+              properties:
+                content:
+                  type: object
+                  properties:
+                    application/json:
+                      type: object
+                      properties:
+                        schema:
+                          type: object
+                          properties:
+                            required:
+                              type: array
+                              allOf:
+                                - contains:
+                                    const: status
+                                - contains:
+                                    const: ready
+
+  opal-think-ifmatch-strong-schema:
+    description: OPAL Think If-Match parameters must constrain to one exact strong quoted ETag (pattern required).
+    severity: error
+    given: $.paths[*][*].parameters[?(@.name == 'If-Match')].schema
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - pattern
+
+  opal-think-header-required-ids:
+    description: OPAL Think request/transaction response headers must be declared required.
+    severity: error
+    given: $.components.headers[?(@property.match(/Opal(Request|Transaction)IdHeader$/))]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - required
+          properties:
+            required:
+              const: true
+
+  opal-think-header-conditional-ids:
+    description: OPAL Think session/causation response headers must stay conditional (required false).
+    severity: error
+    given: $.components.headers[?(@property.match(/Opal(Session|Causation)IdHeader$/))]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - required
+          properties:
+            required:
+              const: false

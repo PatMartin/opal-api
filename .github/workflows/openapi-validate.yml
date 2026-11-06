@@ -53,6 +53,12 @@ jobs:
         continue-on-error: true
         run: npm run lint:look
 
+      # Think-specific contract guarantees (.spectral.opal.think.yaml).
+      - name: Lint OPAL Think contract
+        id: lint_think
+        continue-on-error: true
+        run: npm run lint:think
+
       # Python runtime for the regression harness (requirements.txt).
       - uses: actions/setup-python@v5
         with:
@@ -115,6 +121,7 @@ jobs:
             "lint=${{ steps.lint.outcome }}" \
             "lint_opal=${{ steps.lint_opal.outcome }}" \
             "lint_look=${{ steps.lint_look.outcome }}" \
+            "lint_think=${{ steps.lint_think.outcome }}" \
             "deps=${{ steps.deps.outcome }}" \
             "test_lint=${{ steps.test_lint.outcome }}" \
             "test_event141=${{ steps.test_event141.outcome }}" \
