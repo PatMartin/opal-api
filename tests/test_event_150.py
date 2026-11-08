@@ -244,7 +244,7 @@ def main():
               f"settings/{{key}} {mth.upper()} declares 412 + 428")
         check("404" in op["responses"], f"settings/{{key}} {mth.upper()} declares 404")
     check("422" in sk["put"]["responses"], "settings/{{key}} PUT declares 422 invalid value")
-    check("422" not in sk["delete"]["responses"], "settings/{{key}} DELETE needs no 422")
+    check("422" in sk["delete"]["responses"], "settings/{{key}} DELETE declares 422 malformed If-Match")
     check("SettingRead" in spec["components"]["schemas"] and
           "SettingUpdate" in spec["components"]["schemas"],
           "SettingRead/SettingUpdate schemas exist")

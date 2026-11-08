@@ -47,7 +47,7 @@ def main():
               f"settings/{{key}} {mth.upper()} declares 412 + 428")
         check("404" in sk[mth]["responses"], f"settings/{{key}} {mth.upper()} declares 404")
     check("422" in sk["put"]["responses"], "settings/{key} PUT declares 422 invalid value")
-    check("422" not in sk["delete"]["responses"], "settings/{key} DELETE needs no 422")
+    check("422" in sk["delete"]["responses"], "settings/{key} DELETE declares 422 malformed If-Match")
 
     sr = spec["components"]["schemas"]["SettingRead"]
     check("value" in sr["properties"] and "type" not in sr["properties"]["value"],
