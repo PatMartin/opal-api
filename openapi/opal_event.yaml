@@ -223,10 +223,12 @@ paths:
         in: query
         schema:
           type: string
+          format: date-time
       - name: to
         in: query
         schema:
           type: string
+          format: date-time
     delete:
       tags:
       - Events
@@ -1806,42 +1808,41 @@ components:
           type:
           - string
           - 'null'
+        has_more:
+          type: boolean
       additionalProperties: false
       required:
       - items
       - next_cursor
+      - has_more
     ListRules:
       type: object
-      description: Cursor-paginated list.
+      description: Complete bounded collection.
       properties:
         items:
           type: array
           items:
             $ref: '#/components/schemas/Rule'
-        next_cursor:
-          type:
-          - string
-          - 'null'
+        has_more:
+          type: boolean
       additionalProperties: false
       required:
       - items
-      - next_cursor
+      - has_more
     ListActions:
       type: object
-      description: Cursor-paginated list.
+      description: Complete bounded collection.
       properties:
         items:
           type: array
           items:
             $ref: '#/components/schemas/Action'
-        next_cursor:
-          type:
-          - string
-          - 'null'
+        has_more:
+          type: boolean
       additionalProperties: false
       required:
       - items
-      - next_cursor
+      - has_more
     ListExecutions:
       type: object
       description: Cursor-paginated list.
