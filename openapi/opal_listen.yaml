@@ -88,7 +88,7 @@ paths:
             X-Opal-Causation-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
             ETag:
-              description: Strong revision of this collection's portable configuration.
+              description: Strong revision of the portable logical configuration.
               schema:
                 type: string
               example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
@@ -99,6 +99,8 @@ paths:
       - wakewords
       summary: Create Wakeword
       operationId: create_wakeword_api_v1_wakewords__post
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
         content:
           application/json:
@@ -131,6 +133,10 @@ paths:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '409':
           $ref: './shared/opal_kernel.yaml#/components/responses/Conflict'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
   /api/v1/wakewords/{wakeword_id}:
@@ -166,7 +172,7 @@ paths:
             X-Opal-Causation-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
             ETag:
-              description: Strong revision of this resource's portable configuration; required as If-Match for its mutations.
+              description: Strong revision of the portable logical configuration; required as If-Match for mutations.
               schema:
                 type: string
               example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
@@ -283,7 +289,7 @@ paths:
             X-Opal-Causation-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
             ETag:
-              description: Strong revision of this collection's portable configuration.
+              description: Strong revision of the portable logical configuration.
               schema:
                 type: string
               example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
@@ -294,6 +300,8 @@ paths:
       - intents
       summary: Create Intent
       operationId: create_intent_api_v1_intents__post
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
         content:
           application/json:
@@ -326,6 +334,10 @@ paths:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '409':
           $ref: './shared/opal_kernel.yaml#/components/responses/Conflict'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
   /api/v1/intents/{intent_id}:
@@ -361,7 +373,7 @@ paths:
             X-Opal-Causation-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
             ETag:
-              description: Strong revision of this resource's portable configuration; required as If-Match for its mutations.
+              description: Strong revision of the portable logical configuration; required as If-Match for mutations.
               schema:
                 type: string
               example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
@@ -479,7 +491,7 @@ paths:
             X-Opal-Causation-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
             ETag:
-              description: Strong revision of this collection; required as If-Match for member deletions.
+              description: Strong revision of the portable logical configuration; required as If-Match for member deletions.
               schema:
                 type: string
               example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
@@ -492,6 +504,8 @@ paths:
       - intents
       summary: Add Phrase
       operationId: add_phrase_api_v1_intents__intent_id__phrases_post
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -526,6 +540,10 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
         '409':
           $ref: './shared/opal_kernel.yaml#/components/responses/Conflict'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
   /api/v1/intents/{intent_id}/phrases/{phrase_id}:
@@ -607,7 +625,7 @@ paths:
             X-Opal-Causation-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
             ETag:
-              description: Strong revision of this collection's portable configuration.
+              description: Strong revision of the portable logical configuration.
               schema:
                 type: string
               example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
@@ -618,6 +636,8 @@ paths:
       - slots
       summary: Create Slot
       operationId: create_slot_api_v1_slots__post
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
         content:
           application/json:
@@ -650,6 +670,10 @@ paths:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '409':
           $ref: './shared/opal_kernel.yaml#/components/responses/Conflict'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
   /api/v1/slots/{slot_id}:
@@ -685,7 +709,7 @@ paths:
             X-Opal-Causation-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
             ETag:
-              description: Strong revision of this resource's portable configuration; required as If-Match for its mutations.
+              description: Strong revision of the portable logical configuration; required as If-Match for mutations.
               schema:
                 type: string
               example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
@@ -803,7 +827,7 @@ paths:
             X-Opal-Causation-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
             ETag:
-              description: Strong revision of this collection; required as If-Match for member deletions.
+              description: Strong revision of the portable logical configuration; required as If-Match for member deletions.
               schema:
                 type: string
               example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
@@ -816,6 +840,8 @@ paths:
       - slots
       summary: Add Slot Value
       operationId: add_slot_value_api_v1_slots__slot_id__values_post
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -850,6 +876,10 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
         '409':
           $ref: './shared/opal_kernel.yaml#/components/responses/Conflict'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
   /api/v1/slots/{slot_id}/values/{value_id}:
@@ -929,7 +959,7 @@ paths:
             X-Opal-Causation-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
             ETag:
-              description: Strong revision of this collection; required as If-Match for member deletions.
+              description: Strong revision of the portable logical configuration; required as If-Match for member deletions.
               schema:
                 type: string
               example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
@@ -942,6 +972,8 @@ paths:
       - slots
       summary: Add Alias
       operationId: add_alias_api_v1_slots__slot_id__values__value_id__aliases_post
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -976,6 +1008,10 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
         '409':
           $ref: './shared/opal_kernel.yaml#/components/responses/Conflict'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
   /api/v1/slots/{slot_id}/values/{value_id}/aliases/{alias_id}:
@@ -1787,6 +1823,8 @@ paths:
       - regression
       summary: Create Regression Test
       operationId: create_regression_test_api_v1_regression__post
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
         content:
           application/json:
@@ -1817,6 +1855,10 @@ paths:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
   /api/v1/regression/run:

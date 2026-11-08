@@ -491,12 +491,18 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
         '500':
           $ref: './shared/opal_kernel.yaml#/components/responses/OperationFailed'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Rule'
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
     parameters:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
@@ -797,12 +803,18 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
         '500':
           $ref: './shared/opal_kernel.yaml#/components/responses/OperationFailed'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Action'
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
     parameters:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
