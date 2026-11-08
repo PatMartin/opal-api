@@ -1436,9 +1436,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: true
-                title: Response List Logs Api V1 Logs  Get
+                $ref: '#/components/schemas/LogPage'
           headers:
             X-Opal-Session-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
@@ -2123,10 +2121,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: true
-                title: Response Get Performance History Api V1 Performance History
-                  Get
+                $ref: '#/components/schemas/PerformancePage'
           headers:
             X-Opal-Session-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
@@ -2665,6 +2660,42 @@ components:
       - p95
       - max
       title: LatencyStats
+    LogPage:
+      type: object
+      description: Cursor-paginated recognition log history.
+      required:
+      - items
+      - next_cursor
+      - has_more
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecognitionLogRead'
+        next_cursor:
+          type:
+          - string
+          - 'null'
+        has_more:
+          type: boolean
+    PerformancePage:
+      type: object
+      description: Cursor-paginated performance result history.
+      required:
+      - items
+      - next_cursor
+      - has_more
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PerformanceResultRead'
+        next_cursor:
+          type:
+          - string
+          - 'null'
+        has_more:
+          type: boolean
     PerformanceResultRead:
       properties:
         id:
