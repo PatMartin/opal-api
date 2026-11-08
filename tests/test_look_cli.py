@@ -64,18 +64,18 @@ def main():
           "standard verbs present")
 
     # 1) register an RTSP source -> POST /sources/ accepts a uri/url body
-    check(op(d, "post", "/api/v1/sources/") is not None, "POST /sources/ exists")
+    check(op(d, "post", "/api/v1/source/") is not None, "POST /sources/ exists")
     src = d["components"]["schemas"].get("SourceCreate", {})
     check(any(k in str(src) for k in ("uri", "url", "rtsp")),
           "SourceCreate accepts a stream URI/RTSP")
 
     # 2) view live feed without creating a session
-    check(op(d, "get", "/api/v1/sources/{source_id}/stream") is not None,
+    check(op(d, "get", "/api/v1/source/{source_id}/stream") is not None,
           "GET /sources/{id}/stream exists")
-    check(any("/sessions" in p for p in paths), "session lifecycle endpoints are available")
+    check(any("/session/" in p for p in paths), "session lifecycle endpoints are available")
 
     # 3) enable/disable annotations on the live stream
-    sp = params(d, "get", "/api/v1/sources/{source_id}/stream")
+    sp = params(d, "get", "/api/v1/source/{source_id}/stream")
     check("annotations" in sp or "show_labels" in sp or "show_boxes" in sp,
           "stream exposes annotation toggles")
 
@@ -83,7 +83,7 @@ def main():
     check(op(d, "post", "/api/v1/analyze/image") is not None, "POST /analyze/image exists")
 
     # 5) filter observations for people only -> label/task filters on /observations/
-    fp = params(d, "get", "/api/v1/observations/")
+    fp = params(d, "get", "/api/v1/observation/")
     check("label" in fp or "task" in fp, "observations filterable by label/task")
 
     # 6) motion condition -> motion filter schema exists (unknown != no-motion)
@@ -91,17 +91,17 @@ def main():
           "motion filter schema exists")
 
     # 7) start persistent monitor
-    check(op(d, "post", "/api/v1/monitors/") is not None, "POST /monitors/ exists")
+    check(op(d, "post", "/api/v1/monitor/") is not None, "POST /monitors/ exists")
 
     # 8) capture a still image
-    check(op(d, "post", "/api/v1/sources/{source_id}/capture") is not None or
-          op(d, "get", "/api/v1/sources/{source_id}/frame") is not None or
-          op(d, "post", "/api/v1/sources/{source_id}/captures/") is not None,
+    check(op(d, "post", "/api/v1/source/{source_id}/capture") is not None or
+          op(d, "get", "/api/v1/source/{source_id}/frame") is not None or
+          op(d, "post", "/api/v1/source/{source_id}/capture/") is not None,
           "still-capture endpoint exists")
 
     # 9) start + stop recording
-    check(op(d, "post", "/api/v1/recordings/") is not None and
-          op(d, "post", "/api/v1/recordings/{recording_id}/stop") is not None,
+    check(op(d, "post", "/api/v1/recording/") is not None and
+          op(d, "post", "/api/v1/recording/{recording_id}/stop") is not None,
           "recording start + stop exist")
 
     # 10) retrieve recorded media
@@ -110,7 +110,7 @@ def main():
           "media retrieval exists")
 
     # 11) query retained observations -> cursor-paginated
-    qp = params(d, "get", "/api/v1/observations/")
+    qp = params(d, "get", "/api/v1/observation/")
     check("cursor" in qp or "limit" in qp, "observations cursor-paginated")
 
     # 12) unsupported capabilities -> capabilities endpoint exists
@@ -119,18 +119,18 @@ def main():
     # negatives: unsupported features, invalid filters, unavailable models,
     # missing resources, stream interruption -> all must produce declared errors
     for m, p, code in (
-        ("get", "/api/v1/sources/{source_id}", "404"),
-        ("get", "/api/v1/monitors/{monitor_id}", "404"),
-        ("get", "/api/v1/recordings/{recording_id}", "404"),
+        ("get", "/api/v1/source/{source_id}", "404"),
+        ("get", "/api/v1/monitor/{monitor_id}", "404"),
+        ("get", "/api/v1/recording/{recording_id}", "404"),
         ("post", "/api/v1/analyze/", "422"),
         ("post", "/api/v1/analyze/image", "422"),
         ("post", "/api/v1/analyze/image", "406"),
-        ("get", "/api/v1/observations/", "422"),
+        ("get", "/api/v1/observation/", "422"),
     ):
         check(code in (op(d, m, p) or {}).get("responses", {}),
               f"{m.upper()} {p} declares {code}")
     # stream interruption -> documented terminal error path on stream ops
-    stream_desc = str(op(d, "get", "/api/v1/sources/{source_id}/stream") or "")
+    stream_desc = str(op(d, "get", "/api/v1/source/{source_id}/stream") or "")
     check("error" in stream_desc.lower() or "event-stream" in stream_desc.lower(),
           "stream documents in-band/terminal failure behavior")
 

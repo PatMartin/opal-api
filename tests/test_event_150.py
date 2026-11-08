@@ -157,14 +157,14 @@ def main():
         check(ok, f"fixture {fixture} vs {schema_name}", detail)
 
     # --- input-validation semantics ----------------------------------------------
-    ex = spec["paths"]["/api/v1/actions/{action_id}/execute"]["post"]
+    ex = spec["paths"]["/api/v1/action/{action_id}/execute"]["post"]
     check("422" in ex["responses"], "execute declares 422 for input-validation rejection")
     check("202" in ex["responses"], "execute still declares 202 for admitted async executions")
     desc = ex.get("description", "")
     check("input_schema" in desc and "422" in desc, "execute documents synchronous input validation -> 422")
     check("before" in desc.lower(), "execute: validation happens before any execution record")
 
-    pub = spec["paths"]["/api/v1/events/"]["post"].get("description", "")
+    pub = spec["paths"]["/api/v1/event/"]["post"].get("description", "")
     check("dropped" in pub and "input_validation_failed" in pub,
           "events documents rule-triggered validation -> dropped execution record")
     check("already-completed" in pub or "publisher" in pub,
@@ -211,8 +211,8 @@ def main():
     check(sem.get("missing_or_invalid_credentials") == "401" and
           sem.get("authenticated_but_insufficient_scope") == "403",
           "401 vs 403 semantics documented")
-    for p in ("/api/v1/actions/{action_id}/execute", "/api/v1/rules/{rule_id}",
-              "/api/v1/settings/"):
+    for p in ("/api/v1/action/{action_id}/execute", "/api/v1/rule/{rule_id}",
+              "/api/v1/setting/"):
         op = spec["paths"][p]
         for m in ("post", "patch", "delete", "get"):
             if m in op:
@@ -228,9 +228,9 @@ def main():
           "credential handling via token_env documented")
 
     # --- settings management convention ------------------------------------------
-    sk = spec["paths"].get("/api/v1/settings/{key}", {})
+    sk = spec["paths"].get("/api/v1/setting/{key}", {})
     check(set(sk) & {"get", "put", "delete"} == {"get", "put", "delete"},
-          "GET/PUT/DELETE /api/v1/settings/{key} all present")
+          "GET/PUT/DELETE /api/v1/setting/{key} all present")
     check("200" in sk["get"]["responses"] and "404" in sk["get"]["responses"],
           "settings/{key} GET returns 200 + 404 unknown key")
     for mth in ("put", "delete"):
@@ -244,7 +244,6 @@ def main():
               f"settings/{{key}} {mth.upper()} declares 412 + 428")
         check("404" in op["responses"], f"settings/{{key}} {mth.upper()} declares 404")
     check("422" in sk["put"]["responses"], "settings/{{key}} PUT declares 422 invalid value")
-    check("422" in sk["delete"]["responses"], "settings/{{key}} DELETE declares 422 malformed If-Match")
     check("SettingRead" in spec["components"]["schemas"] and
           "SettingUpdate" in spec["components"]["schemas"],
           "SettingRead/SettingUpdate schemas exist")

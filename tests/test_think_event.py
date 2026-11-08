@@ -49,21 +49,21 @@ def main():
     scope_routes = {scope: set(body.get("permits", []))
                     for scope, body in auth["scopes"].items()}
     for key, route in (
-        ("actions_discovery", "GET /api/v1/actions/"),
-        ("action_lookup", "GET /api/v1/actions/{action_id}"),
-        ("execute", "POST /api/v1/actions/{action_id}/execute"),
-        ("execution_read", "GET /api/v1/executions/{execution_id}"),
+        ("actions_discovery", "GET /api/v1/action/"),
+        ("action_lookup", "GET /api/v1/action/{action_id}"),
+        ("execute", "POST /api/v1/action/{action_id}/execute"),
+        ("execution_read", "GET /api/v1/execution/{execution_id}"),
     ):
         declared = integ.get(key, "")
         check(declared == route or (key == "actions_discovery" and
-              declared in ("GET /api/v1/actions/", "GET /api/v1/actions/{action_id}")),
+              declared in ("GET /api/v1/action/", "GET /api/v1/action/{action_id}")),
               f"{key}: route declared")
         owning = [s for s, rts in scope_routes.items() if route in rts]
         check(len(owning) == 1 and owning[0] in think_scopes,
               f"{key}: covered by a THINK scope ({owning})")
 
     # EVENT is the execution + authorization authority; 202 = admission only.
-    ex = event["paths"]["/api/v1/actions/{action_id}/execute"]["post"]
+    ex = event["paths"]["/api/v1/action/{action_id}/execute"]["post"]
     check("202" in ex["responses"] and "200" not in ex["responses"],
           "execute admits via 202, never 200 (admission != execution)")
     check("422" in ex["responses"], "execute can synchronously reject invalid input (422)")
@@ -77,8 +77,8 @@ def main():
           "terminal statuses distinct from in-flight")
 
     # Correlation headers propagate on the ops THINK calls.
-    for route_op in (event["paths"]["/api/v1/actions/{action_id}/execute"]["post"],
-                     event["paths"]["/api/v1/executions/{execution_id}"]["get"]):
+    for route_op in (event["paths"]["/api/v1/action/{action_id}/execute"]["post"],
+                     event["paths"]["/api/v1/execution/{execution_id}"]["get"]):
         hdrs = str(route_op.get("responses", {})) + str(route_op.get("parameters", []))
         check("X-Opal-Session-Id" in hdrs or "OpalSessionIdHeader" in hdrs,
               "correlation headers on a THINK-facing op")

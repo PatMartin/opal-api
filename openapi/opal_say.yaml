@@ -1,14 +1,14 @@
 openapi: 3.1.0
 info:
   title: OPAL Say API
-  version: 1.5.0
+  version: 1.6.0
   description: "Implementation-neutral text-to-speech (TTS) service for the OPAL suite.\n\nOPAL Say provides\
-    \ a stable REST contract over one or more host-installed TTS\nengines such as Piper or Kokoro. Clients\
-    \ interact with OPAL concepts—engines,\nvoices, profiles, generation settings, and audio output—without\
+    \ a stable REST contract over one or more host-installed TTS\nengine such as Piper or Kokoro. Clients\
+    \ interact with OPAL concepts—engine,\nvoice, profile, generation setting, and audio output—without\
     \ depending on a\nspecific engine's command line, model layout, Python API, or native output format.\n\n\
     Design principles:\n\n* The OpenAPI contract is the public source of truth for service behavior.\n* Engines\
     \ are installed and discovered by the implementation; they are not created\n  or deleted through this API.\n\
-    * Voices are registrations that point at voice/model resources already available\n  on the host. The API\
+    * Voice are registrations that point at voice/model resources already available\n  on the host. The API\
     \ never uploads or deletes model files.\n* A voice has a globally unique OPAL `voice_id` and normally determines\
     \ which\n  engine is used.\n* Requests may optionally specify an `engine_id` override for testing or advanced\n\
     \  routing. The selected engine must be compatible with the registered voice.\n* The portable controls\
@@ -32,8 +32,8 @@ info:
     \ session ID if known and transaction/request IDs. Never trust these values for access control. Propagate\
     \ them into derived ZeroMQ envelope metadata. All identifiers are opaque 1..128-character printable ASCII\
     \ tokens with no control/whitespace characters; client-supplied invalid values yield 422.\nStandard health\
-    \ routes: /api/v1/health/, /api/v1/health/live, /api/v1/health/ready. Settings: GET and PATCH /api/v1/settings/\
-    \ for the whole map, plus GET, PUT and DELETE /api/v1/settings/{key} for individual keys retained\
+    \ routes: /api/v1/health/, /api/v1/health/live, /api/v1/health/ready. Setting: GET and PATCH /api/v1/setting/\
+    \ for the whole map, plus GET, PUT and DELETE /api/v1/setting/{key} for individual keys retained\
     \ for OPAL suite consistency; PATCH is atomic. Mutable configuration uses strong ETags and mandatory If-Match with 428\
     \ missing, 412 stale. For bounded configuration catalogs return full arrays (subject to explicit deployment\
     \ caps); for growing histories use cursor pagination with stable deterministic ordering, opaque next_cursor\
@@ -42,24 +42,34 @@ info:
     \ keeps media-specific transports but exposes correlation headers, defined failure behavior, and no unsupported\
     \ replay guarantee. Configuration export/import/validation excludes secrets and history.\n"
 tags:
-- name: engines
-  description: 'Discover and configure TTS engines installed by the service implementation.
+- name: engine
+  description: 'Discover and configure TTS engine installed by the service implementation.
 
     Engines are not created or deleted through this API.
 
     '
-- name: voices
-  description: 'Register and manage OPAL voices backed by engine-specific resources already
+- name: voice
+  description: 'Register and manage OPAL voice backed by engine-specific resources already
 
     present on the host. Voice operations never upload, modify, or delete model files.
 
     '
-- name: profiles
+- name: profile
   description: 'Manage reusable generation presets. Exactly one profile may be active at a time.
 
     The active profile supplies defaults when a generation request does not name a
 
     profile explicitly.
+
+    '
+- name: persona
+  description: 'Manage named persona: identities that bind a registered voice so requests can
+
+    select a consistent character with a single `persona` field. The schema is kept
+
+    flat for Say v1; sister OPAL services may adopt the same persona identifiers for
+
+    their own resources in future contract versions.
 
     '
 - name: generate
@@ -68,8 +78,10 @@ tags:
     SSML is not supported by version 1 of this contract.
 
     '
-- name: settings
-  description: Service-wide key/value settings.
+- name: setting
+  description: Service-wide key/value setting.
+- name: info
+  description: Service identity, version and liveness probes.
 - name: health
   description: Service readiness and health information. Playback devices are out of scope.
 - name: backup
@@ -78,11 +90,11 @@ servers:
 - url: http://127.0.0.1:8080
   description: Illustrative local endpoint; actual bind address and port are configurable.
 paths:
-  /api/v1/engines/:
+  /api/v1/engine/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/engines_collection'
-  /api/v1/engines/{engine_id}:
+  /api/v1/engine/{engine_id}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/engine_item'
-  /api/v1/engines/{engine_id}/validate:
+  /api/v1/engine/{engine_id}/validate:
     parameters:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/EngineId'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
@@ -91,7 +103,7 @@ paths:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
     post:
       tags:
-      - engines
+      - engine
       summary: Validate Engine
       description: 'Validate that the engine is correctly configured and usable by the service.
 
@@ -103,7 +115,7 @@ paths:
         diagnostic messages because the validation operation itself completed normally.
 
         '
-      operationId: validate_engine_api_v1_engines__engine_id__validate_post
+      operationId: opal_engine_validate
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -128,12 +140,12 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/voices/:
+  /api/v1/voice/:
     get:
       tags:
-      - voices
-      summary: List Voices
-      description: 'List registered OPAL voices. Registrations describe host-resident voice/model
+      - voice
+      summary: List Voice
+      description: 'List registered OPAL voice. Registrations describe host-resident voice/model
 
         resources and their engine association; they do not contain the model data itself.
 
@@ -142,12 +154,20 @@ paths:
         may reject catalog sizes over an advertised deployment cap, rather than silently truncate.
 
         '
-      operationId: list_voices_api_v1_voices__get
+      operationId: opal_voice_list
       parameters:
       - name: engine_id
         in: query
         required: false
-        description: If supplied, return only voices registered to this engine.
+        description: If supplied, return only voice registered to this engine.
+        schema:
+          type: string
+          minLength: 1
+      - name: language
+        in: query
+        required: false
+        description: 'If supplied, filter by language/locale. Matches stored language codes as a
+          case-insensitive prefix, so `en` selects all English locales and `en_US` only US English.'
         schema:
           type: string
           minLength: 1
@@ -163,7 +183,7 @@ paths:
         '403':
           $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
         '200':
-          description: Registered voices.
+          description: Registered voice.
           content:
             application/json:
               schema:
@@ -187,7 +207,7 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
     post:
       tags:
-      - voices
+      - voice
       summary: Register Voice
       description: 'Register a host-resident voice/model resource with OPAL Say.
 
@@ -208,7 +228,7 @@ paths:
         resolved before accepting the registration.
 
         '
-      operationId: create_voice_api_v1_voices__post
+      operationId: opal_voice_create
       requestBody:
         required: true
         content:
@@ -282,7 +302,7 @@ paths:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
-  /api/v1/voices/{voice_id}:
+  /api/v1/voice/{voice_id}:
     parameters:
     - $ref: '#/components/parameters/VoiceId'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
@@ -291,10 +311,10 @@ paths:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
     get:
       tags:
-      - voices
+      - voice
       summary: Get Voice
       description: Return one registered voice.
-      operationId: get_voice_api_v1_voices__voice_id__get
+      operationId: opal_voice_get
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -325,7 +345,7 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
     patch:
       tags:
-      - voices
+      - voice
       summary: Update Voice
       description: 'Update a voice registration. The engine association and opaque
 
@@ -334,7 +354,7 @@ paths:
         never modified by this API.
 
         '
-      operationId: update_voice_api_v1_voices__voice_id__patch
+      operationId: opal_voice_patch
       requestBody:
         required: true
         content:
@@ -388,7 +408,7 @@ paths:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
     delete:
       tags:
-      - voices
+      - voice
       summary: Unregister Voice
       description: 'Remove the OPAL voice registration only.
 
@@ -402,7 +422,7 @@ paths:
         is changed or removed.
 
         '
-      operationId: delete_voice_api_v1_voices__voice_id__delete
+      operationId: opal_voice_delete
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -444,7 +464,7 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
-  /api/v1/voices/{voice_id}/validate:
+  /api/v1/voice/{voice_id}/validate:
     parameters:
     - $ref: '#/components/parameters/VoiceId'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
@@ -453,7 +473,7 @@ paths:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
     post:
       tags:
-      - voices
+      - voice
       summary: Validate Voice
       description: 'Ask the registered engine to validate that this voice registration can be
 
@@ -462,7 +482,7 @@ paths:
         lightweight engine-specific load check but does not return generated speech.
 
         '
-      operationId: validate_voice_api_v1_voices__voice_id__validate_post
+      operationId: opal_voice_validate
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -487,7 +507,7 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/voices/{voice_id}/test:
+  /api/v1/voice/{voice_id}/test:
     parameters:
     - $ref: '#/components/parameters/VoiceId'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
@@ -496,7 +516,7 @@ paths:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
     post:
       tags:
-      - voices
+      - voice
       summary: Test Voice
       description: 'Generate a short test utterance with this voice.
 
@@ -508,7 +528,7 @@ paths:
         returns completed WAV or PCM audio.
 
         '
-      operationId: test_voice_api_v1_voices__voice_id__test_post
+      operationId: opal_voice_test
       requestBody:
         required: false
         content:
@@ -530,12 +550,310 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
         '503':
           $ref: './shared/opal_kernel.yaml#/components/responses/ServiceUnavailable'
-  /api/v1/profiles/:
+  /api/v1/profile/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profiles_collection'
-  /api/v1/profiles/{profile_id}:
+  /api/v1/profile/{profile_id}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_item'
-  /api/v1/profiles/{profile_id}/activate:
+  /api/v1/profile/{profile_id}/activate:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_activate'
+  /api/v1/persona/:
+    get:
+      tags:
+      - persona
+      summary: List Personas
+      description: 'List registered OPAL persona. A persona is a named character that binds a
+
+        registered voice (and, in future contract versions, per-service fragments for
+
+        sister OPAL services) so that generation requests can select a consistent
+
+        identity with a single `persona` field.
+
+
+        Return the complete bounded configuration collection; pagination is not supported.
+
+        '
+      operationId: opal_persona_list
+      parameters:
+      - name: enabled
+        in: query
+        required: false
+        description: If supplied, filter by enabled state.
+        schema:
+          type: boolean
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '200':
+          description: Registered persona.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonaRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+            ETag:
+              description: Strong revision of logical portable configuration
+              schema:
+                type: string
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+    post:
+      tags:
+      - persona
+      summary: Create Persona
+      description: 'Register a persona that binds a registered voice to a stable identity.
+
+        The referenced `voice_id` must already exist; implementations SHOULD reject a
+
+        persona whose voice cannot be resolved rather than registering a broken
+
+        binding. Strong If-Match is mandatory.
+
+        '
+      operationId: opal_persona_create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonaCreate'
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '201':
+          description: Persona created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+            Location:
+              description: Resource URL
+              schema:
+                type: string
+        '404':
+          description: The specified `voice_id` is not registered.
+          content:
+            application/json:
+              schema:
+                $ref: './shared/opal_kernel.yaml#/components/schemas/OpalError'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+        '409':
+          description: The requested `persona_id` is already registered.
+          content:
+            application/json:
+              schema:
+                $ref: './shared/opal_kernel.yaml#/components/schemas/OpalError'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
+    parameters:
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
+  /api/v1/persona/{persona_id}/validate:
+    post:
+      summary: Validate Persona
+      description: 'Check that a persona resolves for generation: the persona is registered
+        and enabled, its bound voice exists and validates against its engine. No audio is
+        synthesized.'
+      operationId: opal_persona_validate
+      tags:
+      - persona
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '404':
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '200':
+          description: Persona validation report.
+          content:
+            application/json:
+              schema:
+                $ref: './shared/opal_kernel.yaml#/components/schemas/OpalValidationReport'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+    parameters:
+    - $ref: '#/components/parameters/PersonaId'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
+  /api/v1/persona/{persona_id}:
+    parameters:
+    - $ref: '#/components/parameters/PersonaId'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
+    get:
+      tags:
+      - persona
+      summary: Get Persona
+      description: Return one registered persona.
+      operationId: opal_persona_get
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '200':
+          description: Persona.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+            ETag:
+              description: Strong revision of logical portable configuration
+              schema:
+                type: string
+        '404':
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+    patch:
+      tags:
+      - persona
+      summary: Update Persona
+      description: Partially update a persona. If `voice_id` changes, the new voice must
+        resolve. Strong If-Match is mandatory.
+      operationId: opal_persona_patch
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonaUpdate'
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '200':
+          description: Updated persona.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '409':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Conflict'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
+    delete:
+      tags:
+      - persona
+      summary: Delete Persona
+      description: Remove a persona. The bound voice registration is unaffected. Strong
+        If-Match is mandatory.
+      operationId: opal_persona_delete
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '204':
+          description: Persona deleted.
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
   /api/v1/generate:
     post:
       tags:
@@ -544,12 +862,13 @@ paths:
       description: "Generate completed speech audio from plain text.\n\nThe service may internally split long\
         \ text into multiple engine calls, but it\nMUST preserve the original text order and return one logically\
         \ continuous audio\nresult. Internal chunk boundaries are not part of the public API.\n\nGeneration\
-        \ settings are resolved in this order, from lowest to highest precedence:\n\n1. Service defaults.\n\
+        \ setting are resolved in this order, from lowest to highest precedence:\n\n1. Service defaults.\n\
         2. The active profile, when `profile_id` is omitted and an active profile exists.\n3. The explicitly\
-        \ selected `profile_id`, when present.\n4. Fields supplied directly in this request.\n\nRequest-level\
+        \ selected `profile_id`, when present.\n4. The `persona`'s bound voice, when `persona` is present\
+        \ (voice field only).\n5. Fields supplied directly in this request.\n\nRequest-level\
         \ `engine_options` are shallow-merged over profile-level\n`engine_options`; request keys win. Other\
         \ request fields directly replace their\ncorresponding profile defaults.\n\nVoice and engine selection:\n\
-        \n* A request-level `voice_id` overrides the profile voice.\n* The resolved voice normally determines\
+        \n* A request-level `voice_id` overrides the `persona` voice; the persona voice\n  overrides the profile voice.\n* An unknown or disabled `persona` is rejected with `422 Unprocessable Entity`.\n* The resolved voice normally determines\
         \ the engine.\n* `engine_id` is an optional advanced override. The service MUST reject an\n  override\
         \ that cannot use the resolved voice rather than silently substituting\n  another voice.\n* If no voice\
         \ can be resolved from either the request or a profile, generation\n  fails with `409 Conflict`.\n\n\
@@ -559,7 +878,7 @@ paths:
         \ the service either returns audio\n  at that rate or rejects the request; it must not silently return\
         \ another rate.\n* Plain text only is accepted. SSML markup has no special meaning and is not a\n \
         \ supported input mode.\n"
-      operationId: generate_audio_api_v1_generate_post
+      operationId: opal_generate
       requestBody:
         required: true
         content:
@@ -608,7 +927,7 @@ paths:
         \ 200 response has begun, the service terminates the\n  stream. Clients MUST treat premature termination\
         \ as a failed generation; the\n  protocol does not inject an error object into the audio byte stream.\n\
         * Service-side text chunking MUST NOT reset sample format or sample rate between\n  internal chunks.\n"
-      operationId: stream_audio_api_v1_generate_stream_post
+      operationId: opal_generate_stream
       requestBody:
         required: true
         content:
@@ -637,9 +956,9 @@ paths:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
-  /api/v1/settings/:
+  /api/v1/setting/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_collection'
-  /api/v1/settings/{key}:
+  /api/v1/setting/{key}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_key'
   /api/v1/health/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health'
@@ -659,76 +978,10 @@ paths:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_import'
   /api/v1/backup/validate:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_validate'
-  /:
-    get:
-      summary: Root
-      description: Return basic service identity and API version information.
-      operationId: root__get
-      responses:
-        '401':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
-        '403':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
-        '200':
-          description: Service identity.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceInfo'
-          headers:
-            X-Opal-Session-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
-        '422':
-          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-    parameters:
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
-  /healthz:
-    get:
-      summary: Healthz
-      description: 'Lightweight liveness endpoint suitable for process supervisors and container
-
-        probes. This endpoint indicates that the HTTP service is alive; callers needing
-
-        engine readiness should use `/api/v1/health/`.
-
-        '
-      operationId: healthz_healthz_get
-      responses:
-        '401':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
-        '403':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
-        '200':
-          description: Service process is alive.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LivenessRead'
-          headers:
-            X-Opal-Session-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
-        '422':
-          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-    parameters:
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
+  /api/v1/info/:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/info'
+  /api/v1/info/ping:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/info_ping'
   /api/v1/health/live:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health_live'
   /api/v1/health/ready:
@@ -748,6 +1001,17 @@ components:
         maxLength: 200
         pattern: ^[A-Za-z0-9][A-Za-z0-9._-]*$
       example: en-us-lessac-medium
+    PersonaId:
+      name: persona_id
+      in: path
+      required: true
+      description: Globally unique OPAL persona identifier.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 200
+        pattern: ^[A-Za-z0-9][A-Za-z0-9._-]*$
+      example: amy
   headers:
     AudioFormat:
       description: Logical output format returned in the response body.
@@ -957,7 +1221,7 @@ components:
             clients must treat the value as an opaque string.
 
             '
-          example: /opt/opal/voices/en_US-lessac-medium.onnx
+          example: /opt/opal/voice/en_US-lessac-medium.onnx
         language:
           anyOf:
           - type: string
@@ -975,7 +1239,7 @@ components:
         voice_id: en-us-lessac-medium
         name: Lessac Medium
         engine_id: piper
-        engine_voice_ref: /opt/opal/voices/en_US-lessac-medium.onnx
+        engine_voice_ref: /opt/opal/voice/en_US-lessac-medium.onnx
         language: en-US
         enabled: true
         engine_options: {}
@@ -1044,7 +1308,7 @@ components:
         engine_voice_ref:
           type: string
           description: Opaque engine-specific reference to the host-resident voice/model resource.
-          example: /opt/opal/voices/en_US-lessac-medium.onnx
+          example: /opt/opal/voice/en_US-lessac-medium.onnx
         language:
           anyOf:
           - type: string
@@ -1070,6 +1334,100 @@ components:
           description: Read-only engine-reported voice metadata. Keys are not standardized.
           example:
             quality: medium
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    PersonaCreate:
+      type: object
+      additionalProperties: false
+      required:
+      - persona_id
+      - name
+      - voice_id
+      properties:
+        persona_id:
+          type: string
+          minLength: 1
+          maxLength: 200
+          pattern: ^[A-Za-z0-9][A-Za-z0-9._-]*$
+          description: Globally unique OPAL persona identifier.
+          example: amy
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Human-readable persona name.
+          example: Amy
+        description:
+          anyOf:
+          - type: string
+            maxLength: 1000
+          - type: 'null'
+          description: Optional human-readable description or character notes.
+        voice_id:
+          type: string
+          minLength: 1
+          description: Registered voice this persona speaks with.
+          example: en-gb-alan-low
+        enabled:
+          type: boolean
+          default: true
+          description: Whether this persona may be selected for generation.
+      example:
+        persona_id: amy
+        name: Amy
+        voice_id: en-gb-alan-low
+        enabled: true
+    PersonaUpdate:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      description: Partial update to a persona.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          anyOf:
+          - type: string
+            maxLength: 1000
+          - type: 'null'
+        voice_id:
+          type: string
+          minLength: 1
+          description: Rebind the persona to a different registered voice.
+        enabled:
+          type: boolean
+    PersonaRead:
+      type: object
+      required:
+      - persona_id
+      - name
+      - voice_id
+      - enabled
+      - created_at
+      - updated_at
+      properties:
+        persona_id:
+          type: string
+          example: amy
+        name:
+          type: string
+          example: Amy
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+        voice_id:
+          type: string
+          description: Registered voice this persona speaks with.
+          example: en-gb-alan-low
+        enabled:
+          type: boolean
         created_at:
           type: string
           format: date-time
@@ -1111,16 +1469,29 @@ components:
           - type: 'null'
           description: Request-level voice override. Takes precedence over the profile voice.
           example: en-us-lessac-medium
+        persona:
+          anyOf:
+          - type: string
+            minLength: 1
+            maxLength: 200
+            pattern: ^[A-Za-z0-9][A-Za-z0-9._-]*$
+          - type: 'null'
+          description: 'Named persona supplying a default voice. An explicit `voice_id` in this
+
+            request takes precedence over the persona voice; the persona voice takes
+
+            precedence over profile-supplied voice. An unknown or disabled persona is
+
+            rejected with `422 Unprocessable Entity`.
+
+            '
+          example: amy
         engine_id:
           anyOf:
           - type: string
             minLength: 1
           - type: 'null'
-          description: 'Optional advanced engine override. Normally the resolved voice selects its
-
-            registered engine. Incompatible overrides are rejected with `409 Conflict`.
-
-            '
+          description: Optional advanced engine override; incompatible overrides are rejected.
         speed:
           anyOf:
           - type: number
@@ -1186,6 +1557,15 @@ components:
             minLength: 1
           - type: 'null'
           description: Request-level voice override.
+        persona:
+          anyOf:
+          - type: string
+            minLength: 1
+            maxLength: 200
+            pattern: ^[A-Za-z0-9][A-Za-z0-9._-]*$
+          - type: 'null'
+          description: Named persona supplying a default voice; `voice_id` takes precedence.
+          example: amy
         engine_id:
           anyOf:
           - type: string
@@ -1260,47 +1640,9 @@ components:
           default: null
         engine_options:
           $ref: '#/components/schemas/EngineOptions'
-    ServiceInfo:
-      type: object
-      required:
-      - name
-      - version
-      - api_version
-      properties:
-        name:
-          type: string
-          example: opal-say-svc
-        version:
-          type: string
-          example: 1.0.0
-        api_version:
-          type: string
-          example: v1
-        description:
-          type: string
-          example: Implementation-neutral OPAL text-to-speech service
-    LivenessRead:
-      type: object
-      required:
-      - status
-      properties:
-        status:
-          type: string
-          enum:
-          - ok
-          example: ok
 x-opal-context-standard:
   version: '1.2'
   headers:
-  - X-Opal-Session-Id
-  - X-Opal-Transaction-Id
-  - X-Opal-Request-Id
-  - X-Opal-Causation-Id
-  session_mode: context-only
-  id_format: opaque-printable-ascii-1-to-128
-  transaction_atomicity: false
-  events:
-    $ref: './shared/opal_kernel.yaml#/x-opal-event-envelope'
     metadata_schema_version: '1.0'
   pagination:
     history: cursor
@@ -1308,7 +1650,7 @@ x-opal-context-standard:
     default_limit: 100
     max_limit: 500
   concurrency:
-    settings_and_config_mutations: strong-etag-if-match-required
+    setting_and_config_mutations: strong-etag-if-match-required
     missing_status: 428
     stale_status: 412
   streaming: Include HTTP context headers before bytes; after headers are sent, failures are represented by

@@ -53,7 +53,7 @@ info:
     \ by default (event_publication_enabled); a pending\n    wakeword candidate no\
     \ longer produces a command outcome without confirmation.\n    "
 paths:
-  /api/v1/wakewords/:
+  /api/v1/wakeword/:
     parameters:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
@@ -139,7 +139,7 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/wakewords/{wakeword_id}:
+  /api/v1/wakeword/{wakeword_id}:
     parameters:
     - $ref: '#/components/parameters/WakewordId'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
@@ -254,7 +254,7 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/intents/:
+  /api/v1/intent/:
     parameters:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
@@ -340,7 +340,7 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/intents/{intent_id}:
+  /api/v1/intent/{intent_id}:
     parameters:
     - $ref: '#/components/parameters/IntentId'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
@@ -455,7 +455,7 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/intents/{intent_id}/phrases:
+  /api/v1/intent/{intent_id}/phrase:
     parameters:
     - $ref: '#/components/parameters/IntentId'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
@@ -546,7 +546,7 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/intents/{intent_id}/phrases/{phrase_id}:
+  /api/v1/intent/{intent_id}/phrase/{phrase_id}:
     parameters:
     - $ref: '#/components/parameters/IntentId'
     - name: phrase_id
@@ -590,7 +590,7 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/slots/:
+  /api/v1/slot/:
     parameters:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
@@ -676,7 +676,7 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/slots/{slot_id}:
+  /api/v1/slot/{slot_id}:
     parameters:
     - $ref: '#/components/parameters/SlotId'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
@@ -791,7 +791,7 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/slots/{slot_id}/values:
+  /api/v1/slot/{slot_id}/value:
     parameters:
     - $ref: '#/components/parameters/SlotId'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
@@ -882,7 +882,7 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/slots/{slot_id}/values/{value_id}:
+  /api/v1/slot/{slot_id}/value/{value_id}:
     parameters:
     - $ref: '#/components/parameters/SlotId'
     - $ref: '#/components/parameters/ValueId'
@@ -921,7 +921,7 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/slots/{slot_id}/values/{value_id}/aliases:
+  /api/v1/slot/{slot_id}/value/{value_id}/alias:
     parameters:
     - $ref: '#/components/parameters/SlotId'
     - $ref: '#/components/parameters/ValueId'
@@ -1014,7 +1014,7 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/slots/{slot_id}/values/{value_id}/aliases/{alias_id}:
+  /api/v1/slot/{slot_id}/value/{value_id}/alias/{alias_id}:
     parameters:
     - $ref: '#/components/parameters/SlotId'
     - $ref: '#/components/parameters/ValueId'
@@ -1059,15 +1059,15 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/profiles/:
+  /api/v1/profile/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profiles_collection'
-  /api/v1/profiles/{profile_id}:
+  /api/v1/profile/{profile_id}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_item'
-  /api/v1/profiles/{profile_id}/activate:
+  /api/v1/profile/{profile_id}/activate:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_activate'
-  /api/v1/settings/:
+  /api/v1/setting/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_collection'
-  /api/v1/settings/{key}:
+  /api/v1/setting/{key}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_key'
   /api/v1/recognition/test_text:
     parameters:
@@ -1376,7 +1376,7 @@ paths:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/logs/:
+  /api/v1/log/:
     parameters:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
@@ -1448,7 +1448,7 @@ paths:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/logs/count:
+  /api/v1/log/count:
     parameters:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
@@ -1484,7 +1484,7 @@ paths:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/logs/{log_id}:
+  /api/v1/log/{log_id}:
     parameters:
     - name: log_id
       in: path
@@ -1525,7 +1525,7 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/failed_utterances/:
+  /api/v1/failed_utterance/:
     parameters:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
@@ -1631,7 +1631,7 @@ paths:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/failed_utterances/{fu_id}:
+  /api/v1/failed_utterance/{fu_id}:
     parameters:
     - $ref: '#/components/parameters/FuId'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
@@ -1727,7 +1727,7 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/failed_utterances/{fu_id}/promote:
+  /api/v1/failed_utterance/{fu_id}/promote:
     parameters:
     - $ref: '#/components/parameters/FuId'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
@@ -2188,6 +2188,10 @@ paths:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+  /api/v1/info/:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/info'
+  /api/v1/info/ping:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/info_ping'
   /api/v1/health/live:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health_live'
   /api/v1/health/ready:
@@ -2208,29 +2212,33 @@ paths:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_import'
   /api/v1/backup/validate:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_validate'
-  /:
-    parameters:
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
+  /api/v1/persona/:
     get:
-      summary: Root
-      operationId: root__get
+      tags:
+      - persona
+      summary: List Personas
+      description: List registered OPAL persona. A persona is a named speaker identity for voice-interaction context; may bind an OPAL Say voice identifier so spoken feedback uses a consistent character. Return the complete bounded configuration collection; pagination is not supported.
+      operationId: opal_persona_list
+      parameters:
+      - name: enabled
+        in: query
+        required: false
+        description: If supplied, filter by enabled state.
+        schema:
+          type: boolean
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
         '403':
           $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
         '200':
-          description: Successful Response
+          description: Registered persona.
           content:
             application/json:
               schema:
-                additionalProperties:
-                  type: string
-                type: object
-                title: Response Root  Get
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonaRead'
           headers:
             X-Opal-Session-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
@@ -2240,31 +2248,36 @@ paths:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+            ETag:
+              description: Strong revision of logical portable configuration
+              schema:
+                type: string
+
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /healthz:
-    parameters:
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
-    get:
-      summary: Healthz
-      operationId: healthz_healthz_get
+    post:
+      tags:
+      - persona
+      summary: Create Persona
+      description: Register a persona. If `voice_id` is supplied, it names an OPAL Say voice identifier; this service does not validate voice existence locally. Strong If-Match is mandatory.
+      operationId: opal_persona_create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonaCreate'
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
         '403':
           $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
-        '200':
-          description: Successful Response
+        '201':
+          description: Persona created.
           content:
             application/json:
               schema:
-                additionalProperties:
-                  type: string
-                type: object
-                title: Response Healthz Healthz Get
+                $ref: '#/components/schemas/PersonaRead'
           headers:
             X-Opal-Session-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
@@ -2274,10 +2287,208 @@ paths:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
             X-Opal-Causation-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+            Location:
+              description: Resource URL
+              schema:
+                type: string
+        '409':
+          description: The requested `persona_id` is already registered.
+          content:
+            application/json:
+              schema:
+                $ref: './shared/opal_kernel.yaml#/components/schemas/OpalError'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
+    parameters:
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
+  /api/v1/persona/{persona_id}/validate:
+    post:
+      summary: Validate Persona
+      description: Check that a persona is registered and enabled and that its declared bindings can be resolved.
+      operationId: opal_persona_validate
+      tags:
+      - persona
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '404':
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '200':
+          description: Persona validation report.
+          content:
+            application/json:
+              schema:
+                $ref: './shared/opal_kernel.yaml#/components/schemas/OpalValidationReport'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+    parameters:
+    - $ref: '#/components/parameters/PersonaId'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
+  /api/v1/persona/{persona_id}:
+    parameters:
+    - $ref: '#/components/parameters/PersonaId'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
+    get:
+      tags:
+      - persona
+      summary: Get Persona
+      description: Return one registered persona.
+      operationId: opal_persona_get
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '200':
+          description: Persona.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+            ETag:
+              description: Strong revision of logical portable configuration
+              schema:
+                type: string
+
+        '404':
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+    patch:
+      tags:
+      - persona
+      summary: Update Persona
+      description: Partially update a persona.
+      operationId: opal_persona_patch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonaUpdate'
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '200':
+          description: Updated persona.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+
+        '404':
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
+    delete:
+      tags:
+      - persona
+      summary: Delete Persona
+      description: Remove a persona registration. Strong If-Match is mandatory.
+      operationId: opal_persona_delete
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '204':
+          description: Persona removed.
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+
+        '404':
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
 components:
   parameters:
+    PersonaId:
+      name: persona_id
+      in: path
+      required: true
+      description: Globally unique OPAL persona identifier.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 200
+        pattern: ^[A-Za-z0-9][A-Za-z0-9._-]*$
+      example: amy
     WakewordId:
       name: wakeword_id
       in: path
@@ -3657,6 +3868,116 @@ components:
           title: Confidence Threshold
       type: object
       title: WakewordUpdate
+    PersonaCreate:
+      type: object
+      additionalProperties: false
+      required:
+      - persona_id
+      - name
+      properties:
+        persona_id:
+          type: string
+          minLength: 1
+          maxLength: 200
+          pattern: ^[A-Za-z0-9][A-Za-z0-9._-]*
+          description: Globally unique OPAL persona identifier.
+          example: amy
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Human-readable persona name.
+          example: Amy
+        description:
+          anyOf:
+          - type: string
+            maxLength: 1000
+          - type: 'null'
+          description: Optional human-readable description or character notes.
+        voice_id:
+          anyOf:
+          - type: string
+            minLength: 1
+          - type: 'null'
+          description: Optional OPAL Say voice identifier associated with this persona.
+          example: en-gb-alan-low
+        enabled:
+          type: boolean
+          default: true
+          description: Whether this persona may be selected.
+      example:
+        persona_id: amy
+        name: Amy
+        voice_id: en-gb-alan-low
+        enabled: true
+    PersonaUpdate:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      description: Partial update to a persona.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          anyOf:
+          - type: string
+            maxLength: 1000
+          - type: 'null'
+        voice_id:
+          anyOf:
+          - type: string
+            minLength: 1
+          - type: 'null'
+          description: Rebind the persona to a different OPAL Say voice identifier.
+        enabled:
+          type: boolean
+    PersonaRead:
+      type: object
+      required:
+      - persona_id
+      - name
+      - enabled
+      - created_at
+      - updated_at
+      properties:
+        persona_id:
+          type: string
+          description: Globally unique OPAL persona identifier.
+          example: amy
+        name:
+          type: string
+          example: Amy
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+        voice_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Optional OPAL Say voice identifier associated with this persona.
+        enabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+tags:
+- name: failed_utterances
+- name: health
+- name: intents
+- name: logs
+- name: performance
+- name: persona
+- name: recognition
+- name: regression
+- name: slots
+- name: wakewords
+- name: info
 servers:
 - url: http://localhost:8000
 x-opal-context-standard:

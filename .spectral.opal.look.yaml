@@ -6,7 +6,7 @@ rules:
   opal-look-config-ifmatch:
     description: OPAL Look configuration mutations must require a strong If-Match precondition.
     severity: error
-    given: $.paths[?(@property.match(/api\/v1\/((engines|models|sources|pipelines|profiles|zones|rules|monitors)(\/\{[^}]+\}|\/)|profiles\/\{[^}]+\}\/activate|settings(\/\{key\}|\/)|configuration\/import)$/))][?(@property.match(/^(post|put|patch|delete)$/))]
+    given: $.paths[?(@property.match(/api\/v1\/((engine|model|source|pipeline|profile|zone|rule|monitor)(\/\{[^}]+\}|\/)|profile\/{[^}]+}\/activate|setting(\/{key}|\/)|configuration\/import)$/))][?(@property.match(/^(post|put|patch|delete)$/))]
     then:
       function: schema
       functionOptions:
@@ -32,14 +32,14 @@ rules:
     description: OPAL Look cursor-paginated collections must return items, next_cursor and has_more.
     severity: error
     given:
-      - $.paths['/api/v1/sessions/'].get.responses['200'].content
-      - $.paths['/api/v1/sessions/{session_id}/observations/'].get.responses['200'].content
-      - $.paths['/api/v1/jobs/'].get.responses['200'].content
-      - $.paths['/api/v1/observations/'].get.responses['200'].content
+      - $.paths['/api/v1/session/'].get.responses['200'].content
+      - $.paths['/api/v1/session/{session_id}/observation/'].get.responses['200'].content
+      - $.paths['/api/v1/job/'].get.responses['200'].content
+      - $.paths['/api/v1/observation/'].get.responses['200'].content
       - $.paths['/api/v1/media/'].get.responses['200'].content
-      - $.paths['/api/v1/captures/'].get.responses['200'].content
-      - $.paths['/api/v1/artifacts/'].get.responses['200'].content
-      - $.paths['/api/v1/recordings/'].get.responses['200'].content
+      - $.paths['/api/v1/capture/'].get.responses['200'].content
+      - $.paths['/api/v1/artifact/'].get.responses['200'].content
+      - $.paths['/api/v1/recording/'].get.responses['200'].content
     then:
       function: schema
       functionOptions:

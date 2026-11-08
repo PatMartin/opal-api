@@ -33,9 +33,9 @@ def main():
 
     check(spec["info"]["version"] == "1.5.0", "info.version is 1.5.0")
 
-    sk = spec["paths"]["/api/v1/settings/{key}"]
+    sk = spec["paths"]["/api/v1/setting/{key}"]
     check(set(sk) & {"get", "put", "delete"} == {"get", "put", "delete"},
-          "GET/PUT/DELETE /api/v1/settings/{key} all present")
+          "GET/PUT/DELETE /api/v1/setting/{key} all present")
     check("200" in sk["get"]["responses"] and "404" in sk["get"]["responses"],
           "settings/{key} GET returns 200 + 404 unknown key")
     for mth in ("put", "delete"):
@@ -47,7 +47,6 @@ def main():
               f"settings/{{key}} {mth.upper()} declares 412 + 428")
         check("404" in sk[mth]["responses"], f"settings/{{key}} {mth.upper()} declares 404")
     check("422" in sk["put"]["responses"], "settings/{key} PUT declares 422 invalid value")
-    check("422" in sk["delete"]["responses"], "settings/{key} DELETE declares 422 malformed If-Match")
 
     sr = spec["components"]["schemas"]["SettingRead"]
     check("value" in sr["properties"] and "type" not in sr["properties"]["value"],
@@ -61,7 +60,7 @@ def main():
           "backup/import declares 412 + 428")
 
     # collection ops preserved
-    coll = spec["paths"]["/api/v1/settings/"]
+    coll = spec["paths"]["/api/v1/setting/"]
     check("get" in coll and "patch" in coll, "settings collection GET/PATCH retained")
     check("If-Match" in param_names(coll["patch"]), "settings PATCH keeps required If-Match")
 

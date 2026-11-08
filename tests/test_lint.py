@@ -77,7 +77,7 @@ def mutate(doc, fn):
 
 
 def m_ifmatch(d):
-    op = d["paths"]["/api/v1/models/{model_id}"]["patch"]
+    op = d["paths"]["/api/v1/model/{model_id}"]["patch"]
     keep = [x for x in op["parameters"]
             if "/IfMatch" not in str(x.get("$ref", ""))
             and not (isinstance(x, dict) and x.get("name") == "If-Match")]
@@ -123,7 +123,7 @@ def m_corr_406(d):
 
 
 def m_error_env(d):
-    op = d["paths"]["/api/v1/models/{model_id}"]["get"]["responses"]["404"]
+    op = d["paths"]["/api/v1/model/{model_id}"]["get"]["responses"]["404"]
     op.pop("$ref", None)
     op["content"] = {"application/json": {"schema": {
         "type": "object", "properties": {"detail": {"type": "string"}}}}}
@@ -136,13 +136,13 @@ def m_location(d):
 
 def m_dup_opid(d):
     # Copy an existing operationId onto a second operation -> duplicate.
-    d["paths"]["/api/v1/jobs/{job_id}"]["get"]["operationId"] = \
-        d["paths"]["/api/v1/jobs/"]["get"]["operationId"]
+    d["paths"]["/api/v1/job/{job_id}"]["get"]["operationId"] = \
+        d["paths"]["/api/v1/job/"]["get"]["operationId"]
 
 
 def m_ifmatch_pattern(d):
     # Resolved doc: drop the strong-ETag pattern from an inlined If-Match parameter.
-    op = d["paths"]["/api/v1/settings/"]["patch"]
+    op = d["paths"]["/api/v1/setting/"]["patch"]
     ifm = next(x for x in op["parameters"] if x.get("name") == "If-Match")
     assert "pattern" in ifm["schema"]
     ifm["schema"].pop("pattern")
@@ -173,7 +173,7 @@ def m_probe_body(d):
 
 def m_precond(d):
     # A required-If-Match config mutation stops declaring 412/428.
-    res = d["paths"]["/api/v1/models/{model_id}"]["patch"]["responses"]
+    res = d["paths"]["/api/v1/model/{model_id}"]["patch"]["responses"]
     res.pop("412", None)
     res.pop("428", None)
 
@@ -237,7 +237,7 @@ def main():
     lis = spec_util.load(os.path.join(ROOT, "openapi", "opal_listen.yaml"))
 
     def key_op(spec, method):
-        return spec["paths"]["/api/v1/settings/{key}"][method]
+        return spec["paths"]["/api/v1/setting/{key}"][method]
 
     upd = lambda spec: key_op(spec, "put")["requestBody"]["content"][
         "application/json"]["schema"]
@@ -247,7 +247,7 @@ def main():
         "type" not in upd(say)["properties"]["value"]
         and "type" not in rd(say)["properties"]["value"]
         and "type" not in upd(lis)["properties"]["value"]
-        and lis["paths"]["/api/v1/settings/"]["get"]["responses"]["200"]["content"]
+        and lis["paths"]["/api/v1/setting/"]["get"]["responses"]["200"]["content"]
             ["application/json"]["schema"]["additionalProperties"] is True
     )
     print(("PASS" if native else "FAIL"),
