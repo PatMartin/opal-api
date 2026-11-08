@@ -1756,6 +1756,7 @@ paths:
           default: true
           title: Create Regression
         description: Also add a regression test for this utterance
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1778,6 +1779,10 @@ paths:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '404':
           $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
   /api/v1/regression/:
@@ -1942,6 +1947,8 @@ paths:
       - regression
       summary: Update Regression Test
       operationId: update_regression_test_api_v1_regression__test_id__patch
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -1970,6 +1977,10 @@ paths:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '404':
           $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
     delete:
@@ -1977,6 +1988,8 @@ paths:
       - regression
       summary: Delete Regression Test
       operationId: delete_regression_test_api_v1_regression__test_id__delete
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1995,6 +2008,10 @@ paths:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '404':
           $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
   /api/v1/performance/last:
@@ -3662,6 +3679,7 @@ x-opal-context-standard:
     max_limit: 500
   concurrency:
     settings_and_config_mutations: strong-etag-if-match-required
+    failed_utterances_review_state: runtime-history-data-if-match-exempt
     missing_status: 428
     stale_status: 412
   streaming: Include HTTP context headers before bytes; after headers are sent, failures
