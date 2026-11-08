@@ -7,3 +7,8 @@ rules:
   # OPAL convention REQUIRES a trailing slash on collection roots
   # (documented in each spec's "OPAL shared conventions").
   path-keys-no-trailing-slash: off
+  # Spectral resolver false positive: external $ref path-item mounts
+  # (openapi/shared/opal_kernel.yaml#/components/pathItems/*) are legal
+  # OAS 3.1 and are validated structurally by redocly lint
+  # (npm run validate), which stays enabled.
+  oas3-schema: off
