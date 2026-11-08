@@ -141,7 +141,11 @@ def main():
         ("python_bad_input_schema.yaml", "PythonAction", False),
     ]
     for fixture, schema_name, expected in cases:
-        payload = load(os.path.join(FIXTURES, fixture))
+        # Fixtures are action payloads, not specs: spec_util.load() would
+        # merge kernel components into the instance and trip
+        # additionalProperties: false on every action schema.
+        with open(os.path.join(FIXTURES, fixture), encoding="utf-8") as fh:
+            payload = yaml.safe_load(fh)
         schema = resolve_local_refs(spec["components"]["schemas"][schema_name], spec)
         try:
             Draft202012Validator(schema).validate(payload)
