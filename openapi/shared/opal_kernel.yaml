@@ -1495,6 +1495,8 @@ components:
                 $ref: '#/components/headers/OpalRequestIdHeader'
               X-Opal-Causation-Id:
                 $ref: '#/components/headers/OpalCausationIdHeader'
+              ETag:
+                $ref: '#/components/headers/ETag'
             content:
               application/json:
                 schema:
@@ -1533,6 +1535,8 @@ components:
                 $ref: '#/components/headers/OpalRequestIdHeader'
               X-Opal-Causation-Id:
                 $ref: '#/components/headers/OpalCausationIdHeader'
+              ETag:
+                $ref: '#/components/headers/ETag'
           '401':
             $ref: '#/components/responses/Unauthorized'
           '403':
@@ -1543,6 +1547,8 @@ components:
             $ref: '#/components/responses/Conflict'
           '412':
             $ref: '#/components/responses/PreconditionFailed'
+          '422':
+            $ref: '#/components/responses/UnprocessableEntity'
           '428':
             $ref: '#/components/responses/PreconditionRequired'
     backup_create:
@@ -2133,6 +2139,8 @@ components:
                 $ref: '#/components/headers/OpalRequestIdHeader'
               X-Opal-Causation-Id:
                 $ref: '#/components/headers/OpalCausationIdHeader'
+              ETag:
+                $ref: '#/components/headers/ETag'
           '401':
             $ref: '#/components/responses/Unauthorized'
           '403':
@@ -2143,6 +2151,8 @@ components:
             $ref: '#/components/responses/Conflict'
           '412':
             $ref: '#/components/responses/PreconditionFailed'
+          '422':
+            $ref: '#/components/responses/UnprocessableEntity'
           '428':
             $ref: '#/components/responses/PreconditionRequired'
     profile_activate:
@@ -2172,6 +2182,8 @@ components:
                 $ref: '#/components/headers/OpalRequestIdHeader'
               X-Opal-Causation-Id:
                 $ref: '#/components/headers/OpalCausationIdHeader'
+              ETag:
+                $ref: '#/components/headers/ETag'
             content:
               application/json:
                 schema:
