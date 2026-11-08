@@ -177,10 +177,14 @@ components:
       name: profile_id
       in: path
       required: true
-      description: Numeric profile identifier.
+      description: Profile identifier; integer or string per service.
       schema:
-        type: integer
-        minimum: 1
+        anyOf:
+        - type: integer
+          minimum: 1
+        - type: string
+          minLength: 1
+          maxLength: 128
       example: 1
     EngineId:
       name: engine_id
