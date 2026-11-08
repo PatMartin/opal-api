@@ -180,15 +180,7 @@ paths:
       summary: Update Wakeword
       operationId: update_wakeword_api_v1_wakewords__wakeword_id__patch
       parameters:
-      - name: If-Match
-        in: header
-        required: true
-        schema:
-          type: string
-          minLength: 1
-          title: If-Match
-        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the resource's ETag returned by GET /api/v1/wakewords/{wakeword_id}.
-        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -231,15 +223,7 @@ paths:
       summary: Delete Wakeword
       operationId: delete_wakeword_api_v1_wakewords__wakeword_id__delete
       parameters:
-      - name: If-Match
-        in: header
-        required: true
-        schema:
-          type: string
-          minLength: 1
-          title: If-Match
-        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the resource's ETag returned by GET /api/v1/wakewords/{wakeword_id}.
-        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -391,15 +375,7 @@ paths:
       summary: Update Intent
       operationId: update_intent_api_v1_intents__intent_id__patch
       parameters:
-      - name: If-Match
-        in: header
-        required: true
-        schema:
-          type: string
-          minLength: 1
-          title: If-Match
-        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the resource's ETag returned by GET /api/v1/intents/{intent_id}.
-        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -442,15 +418,7 @@ paths:
       summary: Delete Intent
       operationId: delete_intent_api_v1_intents__intent_id__delete
       parameters:
-      - name: If-Match
-        in: header
-        required: true
-        schema:
-          type: string
-          minLength: 1
-          title: If-Match
-        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the resource's ETag returned by GET /api/v1/intents/{intent_id}.
-        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -579,15 +547,7 @@ paths:
       summary: Delete Phrase
       operationId: delete_phrase_api_v1_intents__intent_id__phrases__phrase_id__delete
       parameters:
-      - name: If-Match
-        in: header
-        required: true
-        schema:
-          type: string
-          minLength: 1
-          title: If-Match
-        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the phrase collection's ETag returned by GET /api/v1/intents/{intent_id}/phrases.
-        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -739,15 +699,7 @@ paths:
       summary: Update Slot
       operationId: update_slot_api_v1_slots__slot_id__patch
       parameters:
-      - name: If-Match
-        in: header
-        required: true
-        schema:
-          type: string
-          minLength: 1
-          title: If-Match
-        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the resource's ETag returned by GET /api/v1/slots/{slot_id}.
-        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -790,15 +742,7 @@ paths:
       summary: Delete Slot
       operationId: delete_slot_api_v1_slots__slot_id__delete
       parameters:
-      - name: If-Match
-        in: header
-        required: true
-        schema:
-          type: string
-          minLength: 1
-          title: If-Match
-        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the resource's ETag returned by GET /api/v1/slots/{slot_id}.
-        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -922,15 +866,7 @@ paths:
       summary: Delete Slot Value
       operationId: delete_slot_value_api_v1_slots__slot_id__values__value_id__delete
       parameters:
-      - name: If-Match
-        in: header
-        required: true
-        schema:
-          type: string
-          minLength: 1
-          title: If-Match
-        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the slot-value collection's ETag returned by GET /api/v1/slots/{slot_id}/values.
-        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1062,15 +998,7 @@ paths:
       summary: Delete Alias
       operationId: delete_alias_api_v1_slots__slot_id__values__value_id__aliases__alias_id__delete
       parameters:
-      - name: If-Match
-        in: header
-        required: true
-        schema:
-          type: string
-          minLength: 1
-          title: If-Match
-        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. Supply the alias collection's ETag returned by GET /api/v1/slots/{slot_id}/values/{value_id}/aliases.
-        example: '"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'

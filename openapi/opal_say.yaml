@@ -376,14 +376,7 @@ paths:
         '428':
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
       parameters:
-      - name: If-Match
-        in: header
-        required: true
-        schema:
-          type: string
-          minLength: 1
-        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. DELETE without
-          existence is still subject to the precondition.
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
     delete:
       tags:
       - voices
@@ -441,14 +434,7 @@ paths:
         '428':
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
       parameters:
-      - name: If-Match
-        in: header
-        required: true
-        schema:
-          type: string
-          minLength: 1
-        description: Required strong ETag for optimistic concurrency; missing 428, stale 412. DELETE without
-          existence is still subject to the precondition.
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
   /api/v1/voices/{voice_id}/validate:
     parameters:
     - $ref: '#/components/parameters/VoiceId'
