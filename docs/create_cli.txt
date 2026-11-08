@@ -1,10 +1,9 @@
-This is a science experiment to see who creates the best documentation from
-this prompt:
-
-write docs/CLI.md which discusses a hypothetical Typer CLI composed of each of the openapi specifications.
+write docs/CLI.swe2.md which discusses a hypothetical Typer CLI composed of each of the openapi specifications.
 
 Discuss each independently and what they can do, include details like how to install engines where applicable and cover each CLI command and option.
 
-Discuss the usecases that this module can handle alone.
+Discuss the usecases that this module can handle alone. Show the CLI commands to achieve the task.
 
 Next, the ecosystem and general usecases such as "ask opal a question" or "drop in on camera-1". Come up with 20 compelling usecases across different areas such as home automation, education, voice assistant, custom etc...
+
+Include the sequence of CLI commands to achieve the task.
