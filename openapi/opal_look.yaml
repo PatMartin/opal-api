@@ -22,7 +22,7 @@ info:
 
 
     Configuration: portable logical configuration has one strong ETag, returned on configuration GETs and successful
-    writes; all configuration mutations require If-Match strong validator (or ''*''). Missing 428, stale 412, malformed
+    writes; all configuration mutations require If-Match strong validator. Missing 428, stale 412, malformed
     422. Validation never mutates and returns valid=false with issues. Runtime state does not advance portable configuration
     revision; concurrent runtime jobs/sessions may block incompatible configuration mutation with 409. Write operations
     are atomic. Source locators are redacted in GET/exports; secrets are never exportable. Filesystem/provider resources
@@ -4511,12 +4511,6 @@ paths:
       - *id032
       - *id033
       - *id034
-      - name: Content-Type
-        in: header
-        required: true
-        schema:
-          type: string
-        description: Required supported media MIME type e.g. video/mp4, image/jpeg.
       responses:
         '401':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Unauthorized
@@ -4550,6 +4544,18 @@ paths:
       requestBody:
         required: true
         content:
+          video/mp4:
+            schema:
+              type: string
+              format: binary
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/png:
+            schema:
+              type: string
+              format: binary
           application/octet-stream:
             schema:
               type: string
