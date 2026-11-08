@@ -8,6 +8,20 @@ shell block. Replace capitalized IDs with values from your deployment. Add
 Mutating configuration requires a current, quoted strong ETag:
 `--if-match '"CURRENT_CONFIG_ETAG"'`. Do not use `*`.
 
+## Contents
+
+1. [Discover The Deployment](#1-discover-the-deployment)
+2. [Recognize Speech](#2-recognize-speech)
+3. [Build A Vocabulary](#3-build-a-vocabulary)
+4. [Generate Speech](#4-generate-speech)
+5. [Inspect Visual Sources](#5-inspect-visual-sources)
+6. [Run Visual Work](#6-run-visual-work)
+7. [Automate With Events](#7-automate-with-events)
+8. [Ask THINK](#8-ask-think)
+9. [Audit History And Evidence](#9-audit-history-and-evidence)
+10. [Safely Handle Configuration](#10-safely-handle-configuration)
+- [Practical Notes](#practical-notes)
+
 ## 1. Discover The Deployment
 
 ### 1. Check Listen health
