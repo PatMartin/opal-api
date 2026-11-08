@@ -139,13 +139,6 @@ tags:
 - name: operations
 components:
   schemas:
-    Id:
-      type: string
-      minLength: 1
-      maxLength: 128
-    Timestamp:
-      type: string
-      format: date-time
     CapabilityDescriptor:
       type: object
       properties:
@@ -445,25 +438,6 @@ components:
           items:
             $ref: '#/components/schemas/PipelineStage'
       additionalProperties: false
-    ValidationIssue:
-      type: object
-      properties:
-        code:
-          type: string
-        message:
-          type: string
-        path:
-          type: string
-        severity:
-          type: string
-          enum:
-          - error
-          - warning
-      additionalProperties: false
-      required:
-      - code
-      - message
-      - severity
     InferenceOptions:
       type: object
       properties:
@@ -1475,19 +1449,6 @@ components:
         restart_policy: *id025
         options: *id026
       additionalProperties: false
-    SettingValue:
-      description: Typed JSON leaf value; key determines required type. Unknown keys and incorrect types return
-        422.
-      oneOf:
-      - type: string
-      - type: integer
-        minimum: 0
-      - type: number
-      - type: boolean
-      - type: array
-        items:
-          type: string
-      - type: 'null'
     Metrics:
       type: object
       properties:
@@ -1770,34 +1731,6 @@ components:
             ranges.
       description: Portable filter type and parameter object. Unknown types/parameters and unsupported implementations
         yield 422.
-    MotionFilterParameters:
-      type: object
-      additionalProperties: false
-      properties:
-        sensitivity:
-          type: number
-          minimum: 0
-          maximum: 1
-          default: 0.5
-        minimum_area:
-          type: integer
-          minimum: 1
-          default: 500
-        warmup_frames:
-          type: integer
-          minimum: 1
-          default: 3
-        visualization:
-          type: string
-          enum:
-          - none
-          - highlight
-          - mask
-          default: highlight
-        roi:
-          $ref: '#/components/schemas/NormalizedPolygon'
-      description: Motion compares frames from the same source, in sequence. Missing baseline/warmup produces motion_state=unknown,
-        never false.
     MotionGateOptions:
       type: object
       additionalProperties: false
@@ -1836,32 +1769,6 @@ components:
           $ref: '#/components/schemas/VideoProcessingOptions'
       description: Portable stage controls. Stage kind determines which keys are valid; the generic options object
         on PipelineStage remains for existing engine-specific options.
-    FrameDiagnostics:
-      type: object
-      additionalProperties: false
-      properties:
-        source_fps:
-          type: number
-          minimum: 0
-        output_fps:
-          type: number
-          minimum: 0
-        processing_latency_ms:
-          type: number
-          minimum: 0
-        dropped_frames:
-          type: integer
-          minimum: 0
-        motion_state:
-          type: string
-          enum:
-          - unknown
-          - present
-          - absent
-        inference_skipped_frames:
-          type: integer
-          minimum: 0
-      description: Non-guaranteed live counters; may reset when a source reconnects.
   parameters:
     IdempotencyKey:
       name: Idempotency-Key

@@ -3,7 +3,7 @@ info:
   title: Voice Intent API
   version: 1.5.0
   description: "Wakeword, STT, intent recognition, and slot extraction engine\n\n\
-    OPAL SUITE STANDARD v1.3 (normative)\nX-Opal-Session-Id is an optional logical\
+    OPAL SUITE STANDARD v1.2 (normative; follows the shared kernel version)\nX-Opal-Session-Id is an optional logical\
     \ context identifier; it does not create a server-managed session or grant authorization.\
     \ Entry-point services generate one when absent where a workflow requires it,\
     \ and propagate it unchanged. A preexisting service-local session resource has\
@@ -28,10 +28,10 @@ info:
     \ admission 202, empty deletion 204. Streaming keeps media-specific transports\
     \ but exposes correlation headers, defined failure behavior, and no unsupported\
     \ replay guarantee. Configuration export/import/validation excludes secrets and\
-    \ history.\n\n\n    OPAL LISTEN 1.3.0 (normative additions)\n\n    Versioning:\
-    \ this document's info.version (1.3.0) is the REST contract version, independent\
+    \ history.\n\n\n    OPAL LISTEN (normative additions)\n\n    Versioning:\
+    \ this document's info.version is the authoritative REST contract version, independent\
     \ of the\n    Python package version and of the event-envelope metadata schema_version\
-    \ (currently '2.0' \u2014 the\n    envelope emitted on opal.listen.intent.match).\n\
+    \ (currently '2.0' \u2014 the\n    envelope emitted on opal.listen.intent.match). The OPAL suite standard follows the shared kernel version (currently v1.2).\n\
     \n    Event publication: external intent-match events are published only when\
     \ setting\n    event_publication_enabled is true (default false, live-toggleable\
     \ via PATCH /api/v1/settings/).\n    Recognition results from the diagnostic sources\
