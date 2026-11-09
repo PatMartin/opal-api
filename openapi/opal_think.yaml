@@ -519,6 +519,21 @@ paths:
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
       x-opal-cli: model show
+  /api/v1/profile/:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/profiles_collection'
+    x-opal-cli:
+      get: 'profile list'
+      post: 'profile add'
+  /api/v1/profile/{profile_id}:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_item'
+    x-opal-cli:
+      get: 'profile show'
+      patch: 'profile update'
+      delete: 'profile remove'
+  /api/v1/profile/{profile_id}/activate:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_activate'
+    x-opal-cli:
+      post: 'profile activate'
   /api/v1/setting/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_collection'
     x-opal-cli:

@@ -1211,6 +1211,12 @@ paths:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
+  /api/v1/profile/:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/profiles_collection'
+  /api/v1/profile/{profile_id}:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_item'
+  /api/v1/profile/{profile_id}/activate:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_activate'
   /api/v1/setting/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_collection'
   /api/v1/setting/{key}:
