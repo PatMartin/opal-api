@@ -13,8 +13,8 @@ show a **Copy** button. Replace capitalized IDs (`VOICE_ID`, `CAMERA_ID`,
 set these once per shell:
 
 ```bash
-VOICE_ID=narrator                 # from: opal say voices list --json
-CAMERA_ID=pantry-1                # from: opal look sources list --json
+VOICE_ID=narrator                 # from: opal config voice list --json
+CAMERA_ID=pantry-1                # from: opal look source list --json
 OCR_PIPELINE=text-pipeline        # from: opal look info capabilities --json
 PIPELINE_ID=detector-pipeline     # from: opal look info capabilities --json
 ```
@@ -82,9 +82,9 @@ Publish the trip's item count as a dated event for the household record.
 
 ```bash
 COUNT=$(wc -l < grocery-list.txt)
-opal event events publish --topic shopping.trip \
+opal data event publish --topic shopping.trip \
   --source household --data "{\"items\":$COUNT}" --json
-opal event events list --topic shopping.trip --limit 10 --json
+opal data event list --topic shopping.trip --limit 10 --json
 ```
 
 ### 5. Fridge contents check — what's already home
@@ -191,7 +191,7 @@ TID=$(opal think task create \
   --prompt 'Extract the store name and total from this receipt text.' \
   --context "{\"text\":\"$TEXT\"}" --timeout-seconds 60 --json | jq -er '.id')
 opal think task watch "$TID"
-opal event events publish --topic shopping.receipt \
+opal data event publish --topic shopping.receipt \
   --source scanner --data "$(opal think task show "$TID" --json | jq -c '{receipt:.answer}')" --json
 ```
 
@@ -217,7 +217,7 @@ Save the receipt date as an event so the return deadline is recorded.
 ```bash
 opal look analyze image --image return-receipt.jpg --pipeline-id "$OCR_PIPELINE" --json > rr.json
 TEXT=$(jq -r '.observations[0].text // .observations[0].label' rr.json)
-opal event events publish --topic shopping.return \
+opal data event publish --topic shopping.return \
   --source receipts --data "{\"receipt\":\"$TEXT\"}" --json
 ```
 
@@ -228,7 +228,7 @@ Photograph a warranty card or serial number for the file.
 ```bash
 opal look analyze image --image warranty.jpg --pipeline-id "$OCR_PIPELINE" --json > w.json
 TEXT=$(jq -r '.observations[0].text // .observations[0].label' w.json)
-opal event events publish --topic shopping.warranty \
+opal data event publish --topic shopping.warranty \
   --source receipts --data "{\"card\":\"$TEXT\"}" --json
 ```
 
@@ -237,7 +237,7 @@ opal event events publish --topic shopping.warranty \
 Summarize the month's receipt events aloud.
 
 ```bash
-opal event events list --topic shopping.receipt --limit 30 --json > month.json
+opal data event list --topic shopping.receipt --limit 30 --json > month.json
 TID=$(opal think task create \
   --prompt 'Summarize this month of receipts in two sentences for the household.' \
   --context "$(jq -c '{items:.items}' month.json)" \
@@ -287,9 +287,9 @@ Say what was just used up; it becomes a restock signal.
 
 ```bash
 TRANSCRIPT=$(opal listen recognition test-text --text 'we are out of eggs' --json | jq -r '.transcript')
-opal event events publish --topic shopping.restock \
+opal data event publish --topic shopping.restock \
   --source kitchen-voice --data "{\"item\":\"$TRANSCRIPT\"}" --json
-opal event events list --topic shopping.restock --limit 10 --json
+opal data event list --topic shopping.restock --limit 10 --json
 ```
 
 ### 19. Leftover rescue — what to cook with what's left
