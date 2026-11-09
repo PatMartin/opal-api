@@ -1,6 +1,6 @@
 """Contract regression tests for the unified opal_listen.yaml (settings management).
 
-Verifies the published 1.5.0 spec:
+Verifies the published 1.7.0 spec:
 - native JSON settings values, required If-Match, declared precondition codes;
 - backup/import reconciled with the same strong-revision preconditions.
 """
@@ -31,7 +31,7 @@ def param_names(op):
 def main():
     spec = spec_util.load(SPEC)
 
-    check(spec["info"]["version"] == "1.6.0", "info.version is 1.6.0")
+    check(spec["info"]["version"] == "1.7.0", "info.version is 1.7.0")
 
     sk = spec["paths"]["/api/v1/setting/{key}"]
     check(set(sk) & {"get", "put", "delete"} == {"get", "put", "delete"},

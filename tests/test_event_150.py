@@ -1,6 +1,6 @@
 """Contract regression tests for the unified opal_event.yaml (self-describing actions).
 
-Verifies the published 1.5.0 spec:
+Verifies the published 1.7.0 spec:
 - all four optional metadata fields are present on each action type;
 - all $refs are internal and resolve; no duplicate YAML mapping keys;
 - positive/negative fixture payloads validate against each action schema.
@@ -95,7 +95,7 @@ def main():
     spec = load(SPEC)
 
     # --- version and metadata ---------------------------------------------------
-    check(spec["info"]["version"] == "1.6.0", "info.version is 1.6.0")
+    check(spec["info"]["version"] == "1.7.0", "info.version is 1.7.0")
     check(spec["openapi"].startswith("3.1"), "openapi 3.1 declared")
     schemas = spec["components"]["schemas"]
 
