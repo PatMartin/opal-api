@@ -11,7 +11,7 @@ show a **Copy** button. Replace capitalized IDs (`VOICE_ID`, `CAMERA_ID`,
 shell:
 
 ```bash
-VOICE_ID=narrator                 # from: opal say voice list --json
+VOICE_ID=narrator                 # from: opal say config voice list --json
 CAMERA_ID=classroom-1             # from: opal look source list --json
 OCR_PIPELINE=text-pipeline        # from: opal look info capabilities --json
 MODEL_ID=default                  # from: opal think model list --json
@@ -38,7 +38,7 @@ attendance record.
 ```bash
 opal listen recognition test-audio --file student-name.wav --save-log true --json > name.json
 NAME=$(jq -r '.transcript' name.json)
-opal event event publish --topic classroom.attendance \
+opal event data event publish --topic classroom.attendance \
   --source roll-call --data "{\"student\":\"$NAME\",\"present\":true}" --json
 ```
 
@@ -164,7 +164,7 @@ opal say generate --voice-id "$VOICE_ID" --text 'Bonjour, comment allez-vous?' \
   --output-format wav --output-file phrase-target.wav
 TRANSCRIPT=$(opal listen recognition test-audio --file phrase-attempt.wav --json \
   | jq -r '.transcript')
-opal event event publish --topic language.practice \
+opal event data event publish --topic language.practice \
   --source phrase-drill \
   --data "{\"target\":\"Bonjour, comment allez-vous?\",\"heard\":\"$TRANSCRIPT\"}" --json
 ```
@@ -241,9 +241,9 @@ entry on the event bus.
 ```bash
 opal look analyze image --image specimen.jpg --pipeline-id PIPELINE_ID --json > find.json
 OBS=$(jq -c '.observations' find.json)
-opal event event publish --topic field.journal \
+opal event data event publish --topic field.journal \
   --source nature-walk --data "{\"observations\":$OBS}" --json
-opal event event list --topic field.journal --limit 20 --json
+opal event data event list --topic field.journal --limit 20 --json
 ```
 
 ### 18. Science fair rubric scoring
@@ -264,7 +264,7 @@ an event whose action can trigger a spoken reminder through Say.
 
 ```bash
 opal look data observation list --source-id <camera_id> --label person \
-opal event event publish --topic lab.safety --source lab-monitor \
+opal event data event publish --topic lab.safety --source lab-monitor \
 opal say generate --voice-id <voice_id> \
 ```
 

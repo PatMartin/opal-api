@@ -73,19 +73,19 @@ opal listen recognition status --json
 
 ### 10. Review failed utterances
 ```bash
-opal listen failed-utterance list --limit 25 --json
+opal listen data failed-utterance list --limit 25 --json
 ```
 
 ## 3. Build A Vocabulary
 
 ### 11. List intents
 ```bash
-opal listen intent list --json
+opal listen config intent list --json
 ```
 
 ### 12. Add a greeting intent
 ```bash
-opal listen intent add --name greeting --phrases '["hello opal","good morning"]' --enabled true --if-match '"CURRENT_CONFIG_ETAG"' --json
+opal listen config intent add --name greeting --phrases '["hello opal","good morning"]' --enabled true --if-match '"CURRENT_CONFIG_ETAG"' --json
 ```
 
 ### 13. List an intent's phrases
@@ -100,19 +100,19 @@ opal listen phrases add INTENT_ID --phrase 'start the daily briefing' --if-match
 
 ### 15. Run regression tests
 ```bash
-opal listen regression run --enabled-only true --json
+opal listen config regression run --enabled-only true --json
 ```
 
 ## 4. Generate Speech
 
 ### 16. List voices
 ```bash
-opal say voice list --json
+opal say config voice list --json
 ```
 
 ### 17. Validate a voice
 ```bash
-opal say voice validate VOICE_ID --json
+opal say config voice validate VOICE_ID --json
 ```
 
 ### 18. Create a WAV announcement
@@ -122,7 +122,7 @@ opal say generate --voice-id VOICE_ID --text 'Your OPAL services are ready.' --o
 
 ### 19. Tune voice pacing
 ```bash
-opal say voice test VOICE_ID --text 'Testing a comfortable pace.' --speed 0.9 --volume 0.8 --output-format wav --output-file voice-test.wav
+opal say config voice test VOICE_ID --text 'Testing a comfortable pace.' --speed 0.9 --volume 0.8 --output-format wav --output-file voice-test.wav
 ```
 
 ### 20. Play a PCM stream
@@ -188,27 +188,27 @@ opal look session stop SESSION_ID --json
 
 ### 31. Publish a sensor event
 ```bash
-opal event event publish --topic sensor.greenhouse --source greenhouse-1 --data '{"temperature_c":31.4,"humidity_pct":42}' --json
+opal event data event publish --topic sensor.greenhouse --source greenhouse-1 --data '{"temperature_c":31.4,"humidity_pct":42}' --json
 ```
 
 ### 32. Filter event history by topic
 ```bash
-opal event event list --topic sensor.greenhouse --limit 20 --json
+opal event data event list --topic sensor.greenhouse --limit 20 --json
 ```
 
 ### 33. List automation rules
 ```bash
-opal event rule list --json
+opal event config rule list --json
 ```
 
 ### 34. Test a rule safely
 ```bash
-opal event rule test RULE_ID --event '{"topic":"sensor.greenhouse","data":{"temperature_c":31.4}}' --json
+opal event config rule test RULE_ID --event '{"topic":"sensor.greenhouse","data":{"temperature_c":31.4}}' --json
 ```
 
 ### 35. Inspect action executions
 ```bash
-opal event execution list --action-id ACTION_ID --limit 20 --json
+opal event data execution list --action-id ACTION_ID --limit 20 --json
 ```
 
 ## 8. Ask THINK
@@ -247,12 +247,12 @@ opal listen backup export --json
 
 ### 42. Inspect latest recognition performance
 ```bash
-opal listen performance last --json
+opal listen data performance last --json
 ```
 
 ### 43. Page performance history
 ```bash
-opal listen performance history --limit 50 --json
+opal listen data performance history --limit 50 --json
 ```
 
 ### 44. List uploaded media
@@ -279,7 +279,7 @@ opal listen backup validate --request @listen-config.json --json
 
 ### 48. Inspect a Say setting
 ```bash
-opal say setting show SETTING_KEY --json
+opal say config setting show SETTING_KEY --json
 ```
 
 ### 49. Export Look configuration
@@ -289,7 +289,7 @@ opal look configuration export --json > look-config.json
 
 ### 50. Inspect Event statistics
 ```bash
-opal event stats show --json
+opal event data stats show --json
 ```
 
 ## Practical Notes

@@ -198,7 +198,7 @@ briefing.
 ```bash
 CAM=$(opal look sources status "$CAMERA_ID" --json | jq -c '{state:.state}')
 REC=$(opal listen recognition status --json | jq -c '{running:.running}')
-EVT=$(opal event stats show --json | jq -c '{observed:.observed_events}')
+EVT=$(opal event data stats show --json | jq -c '{observed:.observed_events}')
 TID=$(opal think task create \
   --prompt 'Write a friendly two-sentence morning house briefing from this status.' \
   --context "{\"camera\":$CAM,\"recognition\":$REC,\"events\":$EVT}" \
@@ -325,9 +325,9 @@ opal event events list --topic home.maintenance.camera --limit 10 --json
 Review recent recognitions and failed utterances to tune the vocabulary.
 
 ```bash
-opal listen failed-utterance list --limit 25 --json > misses.json
+opal listen data failed-utterance list --limit 25 --json > misses.json
 jq '.items[] | {transcript, expected_intent}' misses.json
-opal listen failed-utterance list --reviewed false --limit 25 --json > review.json
+opal listen data failed-utterance list --reviewed false --limit 25 --json > review.json
 jq '.items[] | {id, transcript, expected_intent}' review.json
 ```
 

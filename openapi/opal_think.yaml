@@ -522,28 +522,28 @@ paths:
   /api/v1/profile/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profiles_collection'
     x-opal-cli:
-      get: 'profile list'
-      post: 'profile add'
+      get: 'config profile list'
+      post: 'config profile add'
   /api/v1/profile/{profile_id}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_item'
     x-opal-cli:
-      get: 'profile show'
-      patch: 'profile update'
-      delete: 'profile remove'
+      get: 'config profile show'
+      patch: 'config profile update'
+      delete: 'config profile remove'
   /api/v1/profile/{profile_id}/activate:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_activate'
     x-opal-cli:
-      post: 'profile activate'
+      post: 'config profile activate'
   /api/v1/setting/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_collection'
     x-opal-cli:
-      get: 'setting list'
+      get: 'config setting list'
   /api/v1/setting/{key}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_key'
     x-opal-cli:
-      get: 'setting show'
-      put: 'setting set'
-      delete: 'setting remove'
+      get: 'config setting show'
+      put: 'config setting set'
+      delete: 'config setting remove'
   /api/v1/health/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health'
     x-opal-cli:

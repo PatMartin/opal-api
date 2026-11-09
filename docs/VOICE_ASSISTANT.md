@@ -13,7 +13,7 @@ show a **Copy** button. Replace capitalized IDs (`VOICE_ID`, `CAMERA_ID`,
 per shell:
 
 ```bash
-VOICE_ID=narrator                 # from: opal say voice list --json
+VOICE_ID=narrator                 # from: opal say config voice list --json
 CAMERA_ID=hallway-1               # from: opal look source list --json
 PIPELINE_ID=detector-pipeline     # from: opal look info capabilities --json
 ```
@@ -107,9 +107,9 @@ act on.
 
 ```bash
 TRANSCRIPT=$(opal listen recognition test-audio --file reminder.wav --save-log true --json | jq -r '.transcript')
-opal event event publish --topic assistant.reminder \
+opal event data event publish --topic assistant.reminder \
   --source voice-memo --data "{\"note\":\"$TRANSCRIPT\"}" --json
-opal event event list --topic assistant.reminder --limit 10 --json
+opal event data event list --topic assistant.reminder --limit 10 --json
 ```
 
 ### 7. Shopping list dictation
@@ -131,7 +131,7 @@ cat groceries.txt
 Summarize pending reminder events aloud.
 
 ```bash
-opal event event list --topic assistant.reminder --limit 20 --json > rem.json
+opal event data event list --topic assistant.reminder --limit 20 --json > rem.json
 opal think task watch <tid>
 opal say generate --voice-id <voice_id> \
 ```
@@ -244,7 +244,7 @@ summary.
 ```bash
 opal look source status <camera_id> --json | jq -c '{state:.state}'
 opal listen recognition status --json | jq -c '{running:.running}'
-opal event stats show --json | jq -c '{observed:.observed_events}'
+opal event data stats show --json | jq -c '{observed:.observed_events}'
 ```
 
 ### 17. Event digest — what happened today
@@ -252,7 +252,7 @@ opal event stats show --json | jq -c '{observed:.observed_events}'
 Summarize the day's event log into a spoken digest.
 
 ```bash
-opal event event list --topic <topic> --limit 10 --json
+opal event data event list --topic <topic> --limit 10 --json
 opal think task watch <tid>
 opal say generate --voice-id <voice_id> \
 ```

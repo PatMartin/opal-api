@@ -151,7 +151,7 @@ opal listen recognition test-audio --file question.wav --save-log true --json
 ### L5 — Add an intent with phrases
 
 ```bash
-opal listen intent add --name greeting \
+opal listen config intent add --name greeting \
   --phrases '["hello opal","good morning"]' \
   --enabled true --if-match '"CURRENT_CONFIG_ETAG"' --json
 ```
@@ -159,7 +159,7 @@ opal listen intent add --name greeting \
 ### L6 — Run regression tests
 
 ```bash
-opal listen regression run --enabled-only true --json
+opal listen config regression run --enabled-only true --json
 ```
 
 ## OPAL Say
@@ -169,13 +169,13 @@ Speech synthesis and voice management. These recipes use `opal say` only.
 ### S1 — List voices
 
 ```bash
-opal say voice list --json
+opal say config voice list --json
 ```
 
 ### S2 — Validate a voice
 
 ```bash
-opal say voice validate VOICE_ID --json
+opal say config voice validate VOICE_ID --json
 ```
 
 ### S3 — Generate a WAV file
@@ -189,7 +189,7 @@ opal say generate --voice-id VOICE_ID \
 ### S4 — Test voice settings
 
 ```bash
-opal say voice test VOICE_ID \
+opal say config voice test VOICE_ID \
   --text 'Testing a comfortable pace.' \
   --speed 0.9 --volume 0.8 \
   --output-format wav --output-file voice-test.wav
@@ -216,7 +216,7 @@ Event history, rules, and actions. These recipes use `opal event` only.
 ### E1 — Publish an event
 
 ```bash
-opal event event publish --topic sensor.greenhouse \
+opal event data event publish --topic sensor.greenhouse \
   --source greenhouse-1 \
   --data '{"temperature_c":31.4}' --json
 ```
@@ -224,33 +224,33 @@ opal event event publish --topic sensor.greenhouse \
 ### E2 — List events by topic
 
 ```bash
-opal event event list --topic sensor.greenhouse --limit 20 --json
+opal event data event list --topic sensor.greenhouse --limit 20 --json
 ```
 
 ### E3 — List automation rules
 
 ```bash
-opal event rule list --json
+opal event config rule list --json
 ```
 
 ### E4 — Test a rule
 
 ```bash
-opal event rule test RULE_ID \
+opal event config rule test RULE_ID \
   --event '{"topic":"sensor.greenhouse","data":{"temperature_c":31.4}}' --json
 ```
 
 ### E5 — Execute an action
 
 ```bash
-opal event action execute ACTION_ID \
+opal event config action execute ACTION_ID \
   --event '{"topic":"home.command","data":{"intent":"lights_on"}}' --json
 ```
 
 ### E6 — Inspect executions
 
 ```bash
-opal event execution list --action-id ACTION_ID --limit 20 --json
+opal event data execution list --action-id ACTION_ID --limit 20 --json
 ```
 
 ## OPAL Look
@@ -349,7 +349,7 @@ Fifty workflows that combine two or more interfaces. Set these once per
 shell:
 
 ```bash
-VOICE_ID=narrator       # opal say voice list --json
+VOICE_ID=narrator       # opal say config voice list --json
 CAMERA_ID=front-door    # opal look source list --json
 PIPELINE_ID=detector    # opal look info capabilities --json
 OCR_PIPELINE=text-ocr   # opal look info capabilities --json
@@ -363,7 +363,7 @@ Spoken intent resolved by Listen, executed by an Event action.
 
 ```bash
 opal listen recognition test-text --text 'turn on the kitchen light' --json > cmd.json
-opal event action execute kitchen-light-on \
+opal event config action execute kitchen-light-on \
   --event "$(jq -c '{topic:"home.command",data:{intent:.intent_name}}' cmd.json)" --json
 ```
 
@@ -384,7 +384,7 @@ Package observation triggers a household event and a spoken notice.
 ```bash
 COUNT=$(opal look data observation list --source-id "$CAMERA_ID" --label package --limit 5 --json | jq '.items | length')
 if [ "$COUNT" -gt 0 ]; then
-  opal event event publish --topic home.delivery --source front-door \
+  opal event data event publish --topic home.delivery --source front-door \
     --data "{\"packages\":$COUNT}" --json
   opal say generate --voice-id "$VOICE_ID" --text 'A package was spotted.' \
     --output-format wav --output-file delivery.wav
@@ -398,7 +398,7 @@ Status from three services narrated as one briefing.
 ```bash
 opal look source status <camera_id> --json | jq -c '{state:.state}'
 opal listen recognition status --json | jq -c '{running:.running}'
-opal event stats show --json | jq -c '{observed:.observed_events}'
+opal event data stats show --json | jq -c '{observed:.observed_events}'
 ```
 
 ### H5 — Water leak warning
@@ -406,7 +406,7 @@ opal event stats show --json | jq -c '{observed:.observed_events}'
 Sensor event becomes a triaged spoken alert.
 
 ```bash
-opal event event publish --topic home.sensor.water \
+opal event data event publish --topic home.sensor.water \
 opal think task watch <tid>
 opal say generate --voice-id <voice_id> \
 ```
@@ -429,7 +429,7 @@ Spoken problem report becomes a ticket event.
 
 ```bash
 TRANSCRIPT=$(opal listen recognition test-audio --file report.wav --save-log true --json | jq -r '.transcript')
-opal event event publish --topic it.incident \
+opal event data event publish --topic it.incident \
   --source helpdesk --data "{\"report\":\"$TRANSCRIPT\"}" --json
 ```
 
@@ -442,7 +442,7 @@ opal look source frame rack-1 --output-file rack.jpg
 opal look analyze image --image rack.jpg --pipeline-id "$PIPELINE_ID" --json > rack.json
 ALERT=$(jq '[.observations[] | select(.label=="led_red")] | length' rack.json)
 if [ "$ALERT" -gt 0 ]; then
-  opal event event publish --topic it.hardware.alert \
+  opal event data event publish --topic it.hardware.alert \
     --source rack-cam --data "{\"warning_leds\":$ALERT}" --json
 fi
 ```
@@ -466,7 +466,7 @@ opal think task show "$TID" --json | jq -er '.answer' > triage.txt
 Week of incident events narrated for the team.
 
 ```bash
-opal event event list --topic it.incident --limit 20 --json > week.json
+opal event data event list --topic it.incident --limit 20 --json > week.json
 opal think task watch <tid>
 opal say generate --voice-id <voice_id> \
 ```
@@ -493,7 +493,7 @@ Dictate a reminder; store it as a dated event.
 
 ```bash
 TRANSCRIPT=$(opal listen recognition test-audio --file reminder.wav --save-log true --json | jq -r '.transcript')
-opal event event publish --topic assistant.reminder \
+opal event data event publish --topic assistant.reminder \
   --source voice-memo --data "{\"note\":\"$TRANSCRIPT\"}" --json
 ```
 
@@ -578,7 +578,7 @@ opal say generate --voice-id "$VOICE_ID" \
 opal say generate --voice-id "$VOICE_ID" --text 'Bonjour, comment allez-vous?' \
   --output-format wav --output-file target.wav
 TRANSCRIPT=$(opal listen recognition test-audio --file attempt.wav --json | jq -r '.transcript')
-opal event event publish --topic language.practice \
+opal event data event publish --topic language.practice \
   --source drill --data "{\"target\":\"Bonjour\",\"heard\":\"$TRANSCRIPT\"}" --json
 ```
 
@@ -618,7 +618,7 @@ opal say generate --voice-id "$VOICE_ID" \
 ```bash
 opal listen recognition test-audio --file dictation.wav --save-log true --json > d.json
 jq -r '.transcript' d.json >> notes.txt
-opal event event publish --topic access.notes \
+opal event data event publish --topic access.notes \
   --source dictation --data "$(jq -c '{transcript:.transcript}' d.json)" --json
 ```
 
@@ -626,7 +626,7 @@ opal event event publish --topic access.notes \
 
 ```bash
 opal listen recognition test-text --text 'dim the bedroom lights' --json > x.json
-opal event action execute bedroom-dim \
+opal event config action execute bedroom-dim \
   --event "$(jq -c '{topic:"home.command",data:{intent:.intent_name}}' x.json)" --json
 ```
 
@@ -653,7 +653,7 @@ opal think task watch <tid>
 ```bash
 opal listen recognition test-audio --file bark.wav --save-log true --json > bk.json
 if [ "$(jq -r '.matched' bk.json)" = "true" ]; then
-  opal event event publish --topic pet.bark --source yard-mic \
+  opal event data event publish --topic pet.bark --source yard-mic \
     --data '{"bark":true}' --json
 fi
 ```
@@ -665,7 +665,7 @@ opal look source frame crate-cam --output-file crate.jpg
 opal look analyze image --image crate.jpg --pipeline-id "$PIPELINE_ID" --json > cr.json
 EMPTY=$(jq '[.observations[] | select(.label=="crate_empty")] | length' cr.json)
 if [ "$EMPTY" -gt 0 ]; then
-  opal event event publish --topic pet.escape --source crate-cam \
+  opal event data event publish --topic pet.escape --source crate-cam \
     --data '{"crate":"empty"}' --json
 fi
 ```
@@ -673,7 +673,7 @@ fi
 ### P4 — Vet visit prep
 
 ```bash
-opal event event list --topic <topic> --limit 10 --json
+opal event data event list --topic <topic> --limit 10 --json
 opal think task watch <tid>
 opal think task show <tid> --json | jq -er '.answer' > vet-prep.txt
 ```
@@ -681,7 +681,7 @@ opal think task show <tid> --json | jq -er '.answer' > vet-prep.txt
 ### P5 — Alone-time report
 
 ```bash
-opal event event list --topic pet.bark --limit 20 --json > solo.json
+opal event data event list --topic pet.bark --limit 20 --json > solo.json
 opal think task watch <tid>
 opal say generate --voice-id <voice_id> \
 ```
@@ -706,7 +706,7 @@ opal think task show "$TID" --json | jq -er '.answer'
 ```bash
 opal look analyze image --image under-sink.jpg --pipeline-id <pipeline_id> --json > lk.json
 opal think task watch <tid>
-opal event event publish --topic property.maintenance.leak \
+opal event data event publish --topic property.maintenance.leak \
 ```
 
 ### M3 — Parking count
@@ -714,7 +714,7 @@ opal event event publish --topic property.maintenance.leak \
 ```bash
 opal look analyze image --image lot.jpg --pipeline-id "$PIPELINE_ID" --json > lot.json
 CARS=$(jq '[.observations[] | select(.label=="car" or .label=="truck")] | length' lot.json)
-opal event event publish --topic property.parking \
+opal event data event publish --topic property.parking \
   --source lot-cam --data "{\"vehicles\":$CARS}" --json
 ```
 
@@ -723,13 +723,13 @@ opal event event publish --topic property.parking \
 ```bash
 opal look source frame <src> --output-file "patrol-<src>.jpg"
 opal look analyze image --image "patrol-<src>.jpg" \
-opal event event publish --topic property.patrol \
+opal event data event publish --topic property.patrol \
 ```
 
 ### M5 — Landlord digest
 
 ```bash
-opal event event list --topic <topic> --limit 10 --json
+opal event data event list --topic <topic> --limit 10 --json
 opal think task watch <tid>
 opal say generate --voice-id <voice_id> \
 ```
@@ -771,7 +771,7 @@ opal say generate --voice-id "$VOICE_ID" \
 
 ```bash
 opal look analyze image --image receipt.jpg --pipeline-id "$OCR_PIPELINE" --json > rc.json
-opal event event publish --topic shopping.receipt \
+opal event data event publish --topic shopping.receipt \
   --source scanner --data "{\"text\":\"$(jq -r '.observations[0].text // empty' rc.json)\"}" --json
 ```
 
@@ -797,7 +797,7 @@ opal think task watch <tid>
 
 ```bash
 TRANSCRIPT=$(opal listen recognition test-audio --file sighting.wav --save-log true --json | jq -r '.transcript')
-opal event event publish --topic sky.sighting \
+opal event data event publish --topic sky.sighting \
   --source eyepiece-mic --data "{\"note\":\"$TRANSCRIPT\"}" --json
 ```
 
@@ -807,7 +807,7 @@ opal event event publish --topic sky.sighting \
 opal look analyze image --image sky.jpg --pipeline-id "$PIPELINE_ID" --json > au.json
 GLOW=$(jq '[.observations[] | select(.label=="aurora" or .label=="glow")] | length' au.json)
 if [ "$GLOW" -gt 0 ]; then
-  opal event event publish --topic sky.aurora --source allsky --data '{"glow":true}' --json
+  opal event data event publish --topic sky.aurora --source allsky --data '{"glow":true}' --json
   opal say generate --voice-id "$VOICE_ID" --text 'Possible aurora on the north camera.' \
     --output-format wav --output-file aurora.wav
 fi
@@ -817,14 +817,14 @@ fi
 
 ```bash
 COUNT=$(opal look data observation list --source-id allsky-1 --label streak --limit 50 --json | jq '.items | length')
-opal event event publish --topic sky.meteor \
+opal event data event publish --topic sky.meteor \
   --source allsky-cam --data "{\"streaks\":$COUNT}" --json
 ```
 
 ### N5 — Session recap
 
 ```bash
-opal event event list --topic <topic> --limit 10 --json
+opal event data event list --topic <topic> --limit 10 --json
 opal think task watch <tid>
 opal say generate --voice-id <voice_id> \
 ```
@@ -869,7 +869,7 @@ opal say generate --voice-id "$VOICE_ID" \
 opal listen info ready --json | jq -r '.status'
 opal look info ready --json | jq -r '.status'
 opal say info ready --json | jq -r '.status'
-opal event stats show --json | jq -c '{observed:.observed_events}'
+opal event data stats show --json | jq -c '{observed:.observed_events}'
 ```
 
 ### O5 — Report read-aloud
