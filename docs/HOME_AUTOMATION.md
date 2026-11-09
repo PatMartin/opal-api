@@ -12,7 +12,7 @@ show a **Copy** button. Replace capitalized IDs (`VOICE_ID`, `CAMERA_ID`,
 these once per shell:
 
 ```bash
-VOICE_ID=narrator                 # from: opal config voice list --json
+VOICE_ID=narrator                 # from: opal say config voice list --json
 CAMERA_ID=front-door              # from: opal look source list --json
 PIPELINE_ID=detector-pipeline     # from: opal look info capabilities --json
 ```
@@ -40,7 +40,7 @@ opal listen recognition test-text \
   --text 'turn on the kitchen light' --save-log true --json > cmd.json
 jq -r '{intent_name, matched, slot_values}' cmd.json
 # when matched, trigger the mapped automation action
-opal config action execute kitchen-light-on \
+opal event config action execute kitchen-light-on \
   --event "$(jq -c '{topic:"home.command",data:{intent:.intent_name,slots:.slot_values}}' cmd.json)" \
   --json
 ```
@@ -54,7 +54,7 @@ climate-control action.
 opal listen recognition test-text \
   --text 'set the thermostat to 21 degrees' --json > hvac.json
 TEMP=$(jq -r '.slot_values.degrees // empty' hvac.json)
-opal config action execute thermostat-set \
+opal event config action execute thermostat-set \
   --event "$(jq -nc --arg t "$TEMP" '{topic:"home.climate",data:{setpoint_c:$t}}')" \
   --json
 ```
@@ -70,7 +70,7 @@ opal say generate --voice-id "$VOICE_ID" \
   --text "You asked to run intent $INTENT. Confirm on the panel to proceed." \
   --output-format wav --output-file confirm.wav
 # after local confirmation:
-opal config action execute front-door-unlock \
+opal event config action execute front-door-unlock \
   --event "$(jq -c '{topic:"home.access",data:{intent:.intent_name}}' req.json)" --json
 ```
 
@@ -82,10 +82,10 @@ are inspected afterwards.
 ```bash
 opal listen recognition test-text --text 'movie night' --json > scene.json
 for ACTION in lights-dim blinds-close projector-on; do
-  opal config action execute "$ACTION" \
+  opal event config action execute "$ACTION" \
     --event "$(jq -c '{topic:"home.scene",data:{scene:.intent_name}}' scene.json)" --json
 done
-opal data execution list --limit 10 --json
+opal event data execution list --limit 10 --json
 ```
 
 ### 5. Guest wakeword — custom intent for visitors
@@ -93,7 +93,7 @@ opal data execution list --limit 10 --json
 Register a guest-friendly intent phrase and verify it matches.
 
 ```bash
-opal config intent add --name guest-lights \
+opal listen config intent add --name guest-lights \
   --phrases '["lights please","can you turn the lights on"]' \
   --enabled true --if-match '"CURRENT_CONFIG_ETAG"' --json
 opal listen recognition test-text --text 'lights please' --json
@@ -124,11 +124,11 @@ Look detects a package observation and Event notifies the household
 timeline.
 
 ```bash
-opal data observation list --source-id "$CAMERA_ID" --label package \
+opal look data observation list --source-id "$CAMERA_ID" --label package \
   --limit 10 --json > pkgs.json
 COUNT=$(jq '.items | length' pkgs.json)
 if [ "$COUNT" -gt 0 ]; then
-  opal data event publish --topic home.delivery --source front-door \
+  opal event data event publish --topic home.delivery --source front-door \
     --data "{\"packages_seen\":$COUNT}" --json
   opal say generate --voice-id "$VOICE_ID" \
     --text 'A delivery was spotted at the front door.' \
@@ -178,14 +178,14 @@ Unfamiliar-person observations publish a security topic for downstream
 rules and actions.
 
 ```bash
-opal data observation list --source-id "$CAMERA_ID" --label person \
+opal look data observation list --source-id "$CAMERA_ID" --label person \
   --limit 25 --json > people.json
 UNKNOWN=$(jq '[.items[] | select(.attributes.known==false)] | length' people.json)
 if [ "$UNKNOWN" -gt 0 ]; then
-  opal data event publish --topic home.security.unknown_person \
+  opal event data event publish --topic home.security.unknown_person \
     --source "$CAMERA_ID" --data "{\"count\":$UNKNOWN}" --json
 fi
-opal data event list --topic home.security.unknown_person --limit 10 --json
+opal event data event list --topic home.security.unknown_person --limit 10 --json
 ```
 
 ## 3. Household Status and Notifications
@@ -240,7 +240,7 @@ if [ "$STATE" = "cycle_done" ]; then
   opal say generate --voice-id "$VOICE_ID" \
     --text 'The laundry cycle is finished.' \
     --output-format wav --output-file laundry.wav
-  opal data event publish --topic home.chores --source laundry \
+  opal event data event publish --topic home.chores --source laundry \
     --data '{"washer":"cycle_done"}' --json
 fi
 ```
@@ -282,11 +282,11 @@ Register a rule that turns on the porch light when a person is detected
 after sunset, then test it before enabling.
 
 ```bash
-opal config rule test porch-light-rule \
+opal event config rule test porch-light-rule \
   --event '{"topic":"home.camera.front","data":{"label":"person","hour":21}}' --json
-opal config action execute porch-light-on \
+opal event config action execute porch-light-on \
   --event '{"topic":"home.camera.front","data":{"label":"person","hour":21}}' --json
-opal data execution list --action-id porch-light-on --limit 5 --json
+opal event data execution list --action-id porch-light-on --limit 5 --json
 ```
 
 ### 17. Water leak triage — sensor event to spoken warning
@@ -294,7 +294,7 @@ opal data execution list --action-id porch-light-on --limit 5 --json
 A leak sensor event becomes a THINK-triaged, spoken household warning.
 
 ```bash
-opal data event publish --topic home.sensor.water \
+opal event data event publish --topic home.sensor.water \
   --source basement-sensor --data '{"leak":true,"zone":"basement"}' --json
 TID=$(opal think task create \
   --prompt 'Draft a calm one-sentence spoken alert for a basement water leak and one immediate action.' \
@@ -313,11 +313,11 @@ Check each registered source and publish any degraded ones for follow-up.
 for SRC in $(opal look source list --json | jq -r '.items[].id'); do
   STATE=$(opal look source status "$SRC" --json | jq -r '.state')
   if [ "$STATE" != "ok" ] && [ "$STATE" != "online" ]; then
-    opal data event publish --topic home.maintenance.camera --source patrol \
+    opal event data event publish --topic home.maintenance.camera --source patrol \
       --data "{\"source\":\"$SRC\",\"state\":\"$STATE\"}" --json
   fi
 done
-opal data event list --topic home.maintenance.camera --limit 10 --json
+opal event data event list --topic home.maintenance.camera --limit 10 --json
 ```
 
 ### 19. Voice command audit — what did the house hear?
@@ -341,7 +341,7 @@ opal listen backup validate --request @listen-home.json --json
 # on the second hub:
 opal listen backup import --request @listen-home.json \
   --if-match '"TARGET_CONFIG_ETAG"' --json
-opal data event publish --topic home.admin --source migration \
+opal event data event publish --topic home.admin --source migration \
   --data '{"action":"config_handoff","service":"listen"}' --json
 ```
 

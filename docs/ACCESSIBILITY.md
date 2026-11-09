@@ -12,7 +12,7 @@ show a **Copy** button. Replace capitalized IDs (`VOICE_ID`, `CAMERA_ID`,
 per shell:
 
 ```bash
-VOICE_ID=narrator                 # from: opal config voice list --json
+VOICE_ID=narrator                 # from: opal say config voice list --json
 CAMERA_ID=hallway-1               # from: opal look source list --json
 PIPELINE_ID=detector-pipeline     # from: opal look info capabilities --json
 OCR_PIPELINE=text-pipeline        # from: opal look info capabilities --json
@@ -113,9 +113,9 @@ phones can react to.
 
 ```bash
 opal listen recognition test-audio --file doorbell.wav --save-log true --json > door.json
-opal data event publish --topic home.alert.sound \
+opal event data event publish --topic home.alert.sound \
   --source door-mic --data "$(jq -c '{heard:.transcript,matched:.matched}' door.json)" --json
-opal data event list --topic home.alert.sound --limit 10 --json
+opal event data event list --topic home.alert.sound --limit 10 --json
 ```
 
 ### 7. Spoken visitor reply to text
@@ -126,7 +126,7 @@ Transcribe what the visitor said so it can be read instead of heard.
 opal listen recognition test-audio --file visitor.wav --json > visitor.json
 jq -r '.transcript' visitor.json > visitor-said.txt
 cat visitor-said.txt
-opal data event publish --topic home.door.transcript \
+opal event data event publish --topic home.door.transcript \
   --source door-mic --data "$(jq -c '{transcript:.transcript}' visitor.json)" --json
 ```
 
@@ -147,9 +147,9 @@ events.
 
 ```bash
 opal listen recognition test-audio --file kitchen-sound.wav --save-log true --json > snd.json
-opal data event publish --topic home.sound.log \
+opal event data event publish --topic home.sound.log \
   --source kitchen-mic --data "$(jq -c '{heard:.transcript,matched:.matched}' snd.json)" --json
-opal data event list --topic home.sound.log --limit 20 --json
+opal event data event list --topic home.sound.log --limit 20 --json
 ```
 
 ### 10. Live caption feed
@@ -170,7 +170,7 @@ no hands needed.
 
 ```bash
 opal listen recognition test-text --text 'turn on the living room fan' --json > fan.json
-opal config action execute living-fan-on \
+opal event config action execute living-fan-on \
   --event "$(jq -c '{topic:"home.command",data:{intent:.intent_name,slots:.slot_values}}' fan.json)" --json
 ```
 
@@ -181,7 +181,7 @@ A spoken help intent publishes an alert and confirms out loud.
 ```bash
 opal listen recognition test-audio --file help-call.wav --save-log true --json > help.json
 if [ "$(jq -r '.matched' help.json)" = "true" ]; then
-  opal data event publish --topic home.alert.help \
+  opal event data event publish --topic home.alert.help \
     --source voice-button --data "$(jq -c '{intent:.intent_name}' help.json)" --json
   opal say generate --voice-id "$VOICE_ID" \
     --text 'Help request sent.' --output-format wav --output-file help-ack.wav
@@ -194,7 +194,7 @@ Change lighting with a phrase; the action executes on the event bus.
 
 ```bash
 opal listen recognition test-text --text 'dim the bedroom lights' --json > dim.json
-opal config action execute bedroom-lights-dim \
+opal event config action execute bedroom-lights-dim \
   --event "$(jq -c '{topic:"home.command",data:{intent:.intent_name}}' dim.json)" --json
 ```
 
@@ -219,7 +219,7 @@ INTENT=$(jq -r '.intent_name' cmd.json)
 opal say generate --voice-id "$VOICE_ID" \
   --text "Command recognized as $INTENT. Press confirm to run it." \
   --output-format wav --output-file confirm.wav
-opal config action execute "$INTENT" \
+opal event config action execute "$INTENT" \
   --event "$(jq -c '{topic:"home.command",data:{intent:.intent_name}}' cmd.json)" --json
 ```
 
@@ -298,9 +298,9 @@ or caregiver can review.
 
 ```bash
 TRANSCRIPT=$(opal listen recognition test-audio --file check-in.wav --save-log true --json | jq -r '.transcript')
-opal data event publish --topic care.check_in \
+opal event data event publish --topic care.check_in \
   --source daily-journal --data "{\"note\":\"$TRANSCRIPT\"}" --json
-opal data event list --topic care.check_in --limit 7 --json
+opal event data event list --topic care.check_in --limit 7 --json
 ```
 
 ## Practical Notes

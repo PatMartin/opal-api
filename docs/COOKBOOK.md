@@ -90,12 +90,12 @@ opal listen config intent add --name greeting --phrases '["hello opal","good mor
 
 ### 13. List an intent's phrases
 ```bash
-opal listen phrases list INTENT_ID --json
+opal listen config phrase list INTENT_ID --json
 ```
 
 ### 14. Add a phrase
 ```bash
-opal listen phrases add INTENT_ID --phrase 'start the daily briefing' --if-match '"CURRENT_CONFIG_ETAG"' --json
+opal listen config phrase add INTENT_ID --phrase 'start the daily briefing' --if-match '"CURRENT_CONFIG_ETAG"' --json
 ```
 
 ### 15. Run regression tests

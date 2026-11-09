@@ -13,7 +13,7 @@ show a **Copy** button. Replace capitalized IDs (`VOICE_ID`, `CAMERA_ID`,
 per shell:
 
 ```bash
-VOICE_ID=narrator                 # from: opal config voice list --json
+VOICE_ID=narrator                 # from: opal say config voice list --json
 CAMERA_ID=unit-101-entry          # from: opal look source list --json
 PIPELINE_ID=detector-pipeline     # from: opal look info capabilities --json
 OCR_PIPELINE=text-pipeline        # from: opal look info capabilities --json
@@ -56,9 +56,9 @@ the deposit file.
 opal look source frame unit-101-entry --output-file moveout-101.jpg
 opal look analyze image --image moveout-101.jpg --pipeline-id "$PIPELINE_ID" --json > c.json
 OBS=$(jq -c '.observations' c.json)
-opal data event publish --topic property.turnover \
+opal event data event publish --topic property.turnover \
   --source unit-101 --data "{\"unit\":\"101\",\"observations\":$OBS}" --json
-opal data event list --topic property.turnover --limit 10 --json
+opal event data event list --topic property.turnover --limit 10 --json
 ```
 
 ### 3. Pre-show readiness check
@@ -85,7 +85,7 @@ After move-out, check for abandoned furniture or boxes that need removal.
 opal look analyze image --image empty-unit.jpg --pipeline-id "$PIPELINE_ID" --json > left.json
 ITEMS=$(jq '[.observations[] | select(.label=="box" or .label=="furniture")] | length' left.json)
 if [ "$ITEMS" -gt 0 ]; then
-  opal data event publish --topic property.turnover.items \
+  opal event data event publish --topic property.turnover.items \
     --source unit-101 --data "{\"abandoned_items\":$ITEMS}" --json
   opal say generate --voice-id "$VOICE_ID" \
     --text "Unit 101 still contains $ITEMS items." \
@@ -123,7 +123,7 @@ TID=$(opal think task create \
   --context "{\"observations\":$OBS}" --timeout-seconds 60 --json | jq -er '.id')
 opal think task watch "$TID"
 VERDICT=$(opal think task show "$TID" --json | jq -er '.answer')
-opal data event publish --topic property.maintenance.leak \
+opal event data event publish --topic property.maintenance.leak \
   --source tenant-photo --data "{\"verdict\":\"$VERDICT\"}" --json
 ```
 
@@ -136,7 +136,7 @@ opal look source frame hallway-2 --output-file hall.jpg
 opal look analyze image --image hall.jpg --pipeline-id "$PIPELINE_ID" --json > h.json
 DARK=$(jq '[.observations[] | select(.label=="fixture_dark")] | length' h.json)
 if [ "$DARK" -gt 0 ]; then
-  opal data event publish --topic property.maintenance.lighting \
+  opal event data event publish --topic property.maintenance.lighting \
     --source hallway-2 --data '{"fixture":"hall-2","state":"dark"}' --json
 fi
 ```
@@ -167,7 +167,7 @@ opal look source frame unit-201-ceiling --output-file ceiling.jpg
 opal look analyze image --image ceiling.jpg --pipeline-id "$PIPELINE_ID" --json > ceil.json
 STAIN=$(jq '[.observations[] | select(.label=="water_stain")] | length' ceil.json)
 if [ "$STAIN" -gt 0 ]; then
-  opal data event publish --topic property.maintenance.stain \
+  opal event data event publish --topic property.maintenance.stain \
     --source unit-201 --data "{\"stains\":$STAIN}" --json
 fi
 ```
@@ -181,7 +181,7 @@ opal look source frame exterior-east --output-file ext.jpg
 opal look analyze image --image ext.jpg --pipeline-id "$PIPELINE_ID" --json > ext.json
 BROKEN=$(jq '[.observations[] | select(.label=="broken_glass")] | length' ext.json)
 if [ "$BROKEN" -gt 0 ]; then
-  opal data event publish --topic property.maintenance.glazing \
+  opal event data event publish --topic property.maintenance.glazing \
     --source exterior-east --data "{\"broken_windows\":$BROKEN}" --json
 fi
 ```
@@ -196,7 +196,7 @@ threshold before escalating.
 ```bash
 opal listen recognition test-audio --file hallway-noise.wav --save-log true --json > noise.json
 TRANSCRIPT=$(jq -r '.transcript' noise.json)
-opal data event publish --topic property.noise \
+opal event data event publish --topic property.noise \
   --source hallway-mic --data "{\"heard\":\"$TRANSCRIPT\"}" --json
 ```
 
@@ -209,7 +209,7 @@ tenants' parking complaints.
 opal look source frame parking-lot --output-file lot.jpg
 opal look analyze image --image lot.jpg --pipeline-id "$PIPELINE_ID" --json > lot.json
 CARS=$(jq '[.observations[] | select(.label=="car" or .label=="truck")] | length' lot.json)
-opal data event publish --topic property.parking \
+opal event data event publish --topic property.parking \
   --source lot-cam --data "{\"vehicles\":$CARS}" --json
 ```
 
@@ -237,7 +237,7 @@ opal look source frame common-room --output-file common.jpg
 opal look analyze image --image common.jpg --pipeline-id "$PIPELINE_ID" --json > cr.json
 PEOPLE=$(jq '[.observations[] | select(.label=="person")] | length' cr.json)
 if [ "$PEOPLE" -gt 6 ]; then
-  opal data event publish --topic property.common.crowd \
+  opal event data event publish --topic property.common.crowd \
     --source common-room --data "{\"count\":$PEOPLE}" --json
 fi
 ```
@@ -248,11 +248,11 @@ Detect a person in a restricted area after hours and log a security event
 plus a spoken alert.
 
 ```bash
-opal data observation list --source-id garage-door --label person \
+opal look data observation list --source-id garage-door --label person \
   --limit 5 --json > access.json
 FOUND=$(jq '[.items[] | select(.attributes.after_hours==true)] | length' access.json)
 if [ "$FOUND" -gt 0 ]; then
-  opal data event publish --topic property.security.access \
+  opal event data event publish --topic property.security.access \
     --source garage-door --data "{\"unauthorized\":$FOUND}" --json
   opal say generate --voice-id "$VOICE_ID" \
     --text 'Security notice: activity detected in the garage after hours.' \
@@ -273,7 +273,7 @@ for SRC in hall-1 hall-2 hall-3; do
     --pipeline-id "$PIPELINE_ID" --json > "patrol-$SRC.json"
 done
 OBS=$(jq -sc '[.[].observations]' patrol-*.json)
-opal data event publish --topic property.patrol \
+opal event data event publish --topic property.patrol \
   --source weekly-walk --data "{\"observations\":$OBS}" --json
 ```
 
@@ -284,7 +284,7 @@ Audio check for a chirping detector before it becomes a complaint.
 ```bash
 opal listen recognition test-audio --file detector-chirp.wav --save-log true --json > chirp.json
 if [ "$(jq -r '.matched' chirp.json)" = "true" ]; then
-  opal data event publish --topic property.safety.detector \
+  opal event data event publish --topic property.safety.detector \
     --source unit-101 --data '{"chirp":true}' --json
 fi
 ```
@@ -314,7 +314,7 @@ landlord's records.
 
 ```bash
 TRANSCRIPT=$(opal listen recognition test-audio --file movein.wav --save-log true --json | jq -r '.transcript')
-opal data event publish --topic property.tenant.checkin \
+opal event data event publish --topic property.tenant.checkin \
   --source unit-101 --data "{\"note\":\"$TRANSCRIPT\"}" --json
 ```
 
@@ -324,7 +324,7 @@ Roll up the month's property events into a spoken landlord digest.
 
 ```bash
 for TOPIC in property.maintenance.leak property.patrol property.turnover property.noise; do
-  opal data event list --topic "$TOPIC" --limit 10 --json
+  opal event data event list --topic "$TOPIC" --limit 10 --json
 done > month-events.jsonl
 TID=$(opal think task create \
   --prompt 'Summarize this month of property events for a landlord in three sentences.' \

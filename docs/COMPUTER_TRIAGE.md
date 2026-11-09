@@ -13,7 +13,7 @@ show a **Copy** button. Replace capitalized IDs (`VOICE_ID`, `CAMERA_ID`,
 per shell:
 
 ```bash
-VOICE_ID=narrator                 # from: opal config voice list --json
+VOICE_ID=narrator                 # from: opal say config voice list --json
 CAMERA_ID=rack-1                  # from: opal look source list --json
 OCR_PIPELINE=text-pipeline        # from: opal look info capabilities --json
 PIPELINE_ID=detector-pipeline     # from: opal look info capabilities --json
@@ -114,9 +114,9 @@ A user's spoken problem report becomes a timestamped incident event.
 
 ```bash
 TRANSCRIPT=$(opal listen recognition test-audio --file report.wav --save-log true --json | jq -r '.transcript')
-opal data event publish --topic it.incident.report \
+opal event data event publish --topic it.incident.report \
   --source helpdesk-mic --data "{\"report\":\"$TRANSCRIPT\"}" --json
-opal data event list --topic it.incident.report --limit 10 --json
+opal event data event list --topic it.incident.report --limit 10 --json
 ```
 
 ### 7. Photo evidence to the ticket
@@ -126,7 +126,7 @@ Attach a photo of the failing setup to the incident event.
 ```bash
 opal look analyze image --image setup-fault.jpg --pipeline-id "$OCR_PIPELINE" --json > ev.json
 OBS=$(jq -c '.observations' ev.json)
-opal data event publish --topic it.incident.evidence \
+opal event data event publish --topic it.incident.evidence \
   --source desk-photo --data "{\"observations\":$OBS}" --json
 ```
 
@@ -137,10 +137,10 @@ Collect service health and publish a degraded summary.
 ```bash
 LISTEN_STATE=$(opal listen info ready --json | jq -r '.status // "unknown"')
 LOOK_STATE=$(opal look info ready --json | jq -r '.status // "unknown"')
-opal data event publish --topic it.status \
+opal event data event publish --topic it.status \
   --source status-poll \
   --data "{\"listen\":\"$LISTEN_STATE\",\"look\":\"$LOOK_STATE\"}" --json
-opal data event list --topic it.status --limit 10 --json
+opal event data event list --topic it.status --limit 10 --json
 ```
 
 ### 9. Repeat-offender detection — same error again?
@@ -148,10 +148,10 @@ opal data event list --topic it.status --limit 10 --json
 Search incident events for a recurring error before escalating.
 
 ```bash
-opal data event list --topic it.incident.report --limit 50 --json > incidents.json
+opal event data event list --topic it.incident.report --limit 50 --json > incidents.json
 COUNT=$(jq '[.items[] | select(.data.report | test("printer"))] | length' incidents.json)
 if [ "$COUNT" -gt 3 ]; then
-  opal data event publish --topic it.incident.pattern \
+  opal event data event publish --topic it.incident.pattern \
     --source triage --data "{\"recurring\":\"printer\",\"count\":$COUNT}" --json
 fi
 ```
@@ -167,7 +167,7 @@ TID=$(opal think task create \
   --context "{\"report\":\"$TRANSCRIPT\"}" --timeout-seconds 60 --json | jq -er '.id')
 opal think task watch "$TID"
 PRIORITY=$(opal think task show "$TID" --json | jq -er '.answer')
-opal data event publish --topic it.incident.priority \
+opal event data event publish --topic it.incident.priority \
   --source triage --data "{\"priority\":\"$PRIORITY\"}" --json
 ```
 
@@ -182,7 +182,7 @@ opal look source frame "$CAMERA_ID" --output-file rack.jpg
 opal look analyze image --image rack.jpg --pipeline-id "$PIPELINE_ID" --json > rack.json
 ALERT=$(jq '[.observations[] | select(.label=="led_red" or .label=="led_amber")] | length' rack.json)
 if [ "$ALERT" -gt 0 ]; then
-  opal data event publish --topic it.hardware.alert \
+  opal event data event publish --topic it.hardware.alert \
     --source rack-cam --data "{\"warning_leds\":$ALERT}" --json
 fi
 ```
@@ -211,7 +211,7 @@ map.
 ```bash
 opal look analyze image --image printer-panel.jpg --pipeline-id "$OCR_PIPELINE" --json > pp.json
 TEXT=$(jq -r '.observations[0].text // .observations[0].label' pp.json)
-opal data event publish --topic it.printer.status \
+opal event data event publish --topic it.printer.status \
   --source floor-2 --data "{\"panel\":\"$TEXT\"}" --json
 ```
 
@@ -236,7 +236,7 @@ Audio-capture a rack fan's noise before it becomes a failure.
 ```bash
 opal listen recognition test-audio --file fan-noise.wav --save-log true --json > fan.json
 if [ "$(jq -r '.matched' fan.json)" = "true" ]; then
-  opal data event publish --topic it.hardware.fan \
+  opal event data event publish --topic it.hardware.fan \
     --source rack-mic --data '{"noisy_fan":true}' --json
 fi
 ```
@@ -264,7 +264,7 @@ Re-run the original check and confirm the incident cleared.
 ```bash
 opal listen info ready --json | jq -r '.status'
 opal look info ready --json | jq -r '.status'
-opal data event publish --topic it.incident.resolved \
+opal event data event publish --topic it.incident.resolved \
   --source post-check --data '{"verified":true}' --json
 ```
 
@@ -274,7 +274,7 @@ Dictate what fixed it; the transcript closes the incident record.
 
 ```bash
 TRANSCRIPT=$(opal listen recognition test-audio --file resolution.wav --save-log true --json | jq -r '.transcript')
-opal data event publish --topic it.incident.resolution \
+opal event data event publish --topic it.incident.resolution \
   --source helpdesk --data "{\"fix\":\"$TRANSCRIPT\"}" --json
 ```
 
@@ -283,7 +283,7 @@ opal data event publish --topic it.incident.resolution \
 THINK turns a solved incident thread into a KB article draft.
 
 ```bash
-opal data event list --topic it.incident.resolution --limit 10 --json > resolved.json
+opal event data event list --topic it.incident.resolution --limit 10 --json > resolved.json
 TID=$(opal think task create \
   --prompt 'Draft a short internal KB article from these resolutions: symptom, cause, fix.' \
   --context "$(jq -c '{items:.items}' resolved.json)" \
@@ -299,7 +299,7 @@ Summarize the week's incidents into a spoken team digest.
 
 ```bash
 for TOPIC in it.incident.report it.incident.priority it.incident.resolution; do
-  opal data event list --topic "$TOPIC" --limit 20 --json
+  opal event data event list --topic "$TOPIC" --limit 20 --json
 done > week.jsonl
 TID=$(opal think task create \
   --prompt 'Summarize this week of helpdesk events in three sentences for the team.' \

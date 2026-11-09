@@ -13,7 +13,7 @@ show a **Copy** button. Replace capitalized IDs (`VOICE_ID`, `CAMERA_ID`,
 per shell:
 
 ```bash
-VOICE_ID=narrator                 # from: opal config voice list --json
+VOICE_ID=narrator                 # from: opal say config voice list --json
 CAMERA_ID=kitchen-pet             # from: opal look source list --json
 PIPELINE_ID=detector-pipeline     # from: opal look info capabilities --json
 ```
@@ -59,7 +59,7 @@ opal look source frame "$CAMERA_ID" --output-file meal.jpg
 opal look analyze image --image meal.jpg --pipeline-id "$PIPELINE_ID" --json > m.json
 UNTOUCHED=$(jq '[.observations[] | select(.label=="bowl_full")] | length' m.json)
 if [ "$UNTOUCHED" -gt 0 ]; then
-  opal data event publish --topic pet.meal.missed \
+  opal event data event publish --topic pet.meal.missed \
     --source feeder-cam --data '{"bowl":"untouched"}' --json
   opal say generate --voice-id "$VOICE_ID" \
     --text 'The pet bowl is still full.' \
@@ -75,7 +75,7 @@ Verify the water station is full before leaving for the day.
 opal look analyze image --image water-bowl.jpg --pipeline-id "$PIPELINE_ID" --json > water.json
 LOW=$(jq '[.observations[] | select(.label=="water_low")] | length' water.json)
 if [ "$LOW" -gt 0 ]; then
-  opal data event publish --topic pet.water.low \
+  opal event data event publish --topic pet.water.low \
     --source water-cam --data '{"level":"low"}' --json
 fi
 ```
@@ -85,12 +85,12 @@ fi
 Every verified meal becomes a dated event for the feeding history.
 
 ```bash
-opal data observation list --source-id "$CAMERA_ID" --label bowl_empty \
+opal look data observation list --source-id "$CAMERA_ID" --label bowl_empty \
   --limit 10 --json > meals.json
 COUNT=$(jq '.items | length' meals.json)
-opal data event publish --topic pet.meal.log \
+opal event data event publish --topic pet.meal.log \
   --source feeder-cam --data "{\"empty_bowls\":$COUNT}" --json
-opal data event list --topic pet.meal.log --limit 20 --json
+opal event data event list --topic pet.meal.log --limit 20 --json
 ```
 
 ### 5. Portion photo for the vet diet plan
@@ -104,7 +104,7 @@ TID=$(opal think task create \
   --prompt 'Estimate whether this portion matches a medium-dog cup measure. One sentence.' \
   --context "{\"observations\":$OBS}" --timeout-seconds 60 --json | jq -er '.id')
 opal think task watch "$TID"
-opal data event publish --topic pet.diet \
+opal event data event publish --topic pet.diet \
   --source owner-photo --data "$(opal think task show "$TID" --json | jq -c '{portion_note:.answer}')" --json
 ```
 
@@ -117,7 +117,7 @@ A captured bark becomes a timestamped alert for the household timeline.
 ```bash
 opal listen recognition test-audio --file bark.wav --save-log true --json > bark.json
 if [ "$(jq -r '.matched' bark.json)" = "true" ]; then
-  opal data event publish --topic pet.bark \
+  opal event data event publish --topic pet.bark \
     --source yard-mic --data '{"bark":true}' --json
 fi
 ```
@@ -131,7 +131,7 @@ opal look source frame crate-cam --output-file crate.jpg
 opal look analyze image --image crate.jpg --pipeline-id "$PIPELINE_ID" --json > crate.json
 ESCAPED=$(jq '[.observations[] | select(.label=="crate_empty")] | length' crate.json)
 if [ "$ESCAPED" -gt 0 ]; then
-  opal data event publish --topic pet.escape \
+  opal event data event publish --topic pet.escape \
     --source crate-cam --data '{"crate":"empty"}' --json
 fi
 ```
@@ -142,13 +142,13 @@ Dog detected on the counter triggers a recorded deterrent and a logged
 event.
 
 ```bash
-opal data observation list --source-id kitchen-pet --label dog \
+opal look data observation list --source-id kitchen-pet --label dog \
   --limit 5 --json > counter.json
 ON_COUNTER=$(jq '[.items[] | select(.attributes.on_counter==true)] | length' counter.json)
 if [ "$ON_COUNTER" -gt 0 ]; then
   opal say generate --voice-id "$VOICE_ID" \
     --text 'Off the counter.' --output-format wav --output-file scold.wav
-  opal data event publish --topic pet.counter \
+  opal event data event publish --topic pet.counter \
     --source kitchen-pet --data '{"on_counter":true}' --json
 fi
 ```
@@ -200,7 +200,7 @@ TID=$(opal think task create \
   --prompt 'Does this pet show signs of limping or stiffness? One sentence for a vet note.' \
   --context "{\"observations\":$OBS}" --timeout-seconds 60 --json | jq -er '.id')
 opal think task watch "$TID"
-opal data event publish --topic pet.health.gait \
+opal event data event publish --topic pet.health.gait \
   --source gait-check --data "$(opal think task show "$TID" --json | jq -c '{note:.answer}')" --json
 ```
 
@@ -229,7 +229,7 @@ TID=$(opal think task create \
   --prompt 'Anything unusual for a pet health log in this pad photo? Answer normal or describe briefly.' \
   --context "{\"observations\":$OBS}" --timeout-seconds 60 --json | jq -er '.id')
 opal think task watch "$TID"
-opal data event publish --topic pet.health.pad \
+opal event data event publish --topic pet.health.pad \
   --source pad-check --data "$(opal think task show "$TID" --json | jq -c '{note:.answer}')" --json
 ```
 
@@ -255,7 +255,7 @@ Summarize the week's health and behavior events for the appointment.
 
 ```bash
 for TOPIC in pet.health.gait pet.health.pad pet.diet pet.bark; do
-  opal data event list --topic "$TOPIC" --limit 10 --json
+  opal event data event list --topic "$TOPIC" --limit 10 --json
 done > week.jsonl
 TID=$(opal think task create \
   --prompt 'Summarize this week of pet events for a vet visit in three bullets.' \
@@ -311,7 +311,7 @@ training record.
 opal say generate --voice-id "$VOICE_ID" --text 'Sit.' \
   --output-format wav --output-file cue.wav
 opal listen recognition test-audio --file response.wav --save-log true --json > resp.json
-opal data event publish --topic pet.training \
+opal event data event publish --topic pet.training \
   --source trick-session --data "$(jq -c '{cue:"sit",response:.transcript}' resp.json)" --json
 ```
 
@@ -320,8 +320,8 @@ opal data event publish --topic pet.training \
 Review bark and activity events for the day and summarize solo behavior.
 
 ```bash
-opal data event list --topic pet.bark --limit 20 --json > solo-bark.json
-opal data observation list --source-id "$CAMERA_ID" --label dog \
+opal event data event list --topic pet.bark --limit 20 --json > solo-bark.json
+opal look data observation list --source-id "$CAMERA_ID" --label dog \
   --limit 20 --json > solo-obs.json
 TID=$(opal think task create \
   --prompt 'From these events, summarize how the pet did alone today in one sentence.' \
@@ -344,9 +344,9 @@ INTENT=$(jq -r '.intent_name' treat.json)
 opal say generate --voice-id "$VOICE_ID" \
   --text "Giving a treat for intent $INTENT." \
   --output-format wav --output-file treat-ack.wav
-opal config action execute treat-dispense \
+opal event config action execute treat-dispense \
   --event "$(jq -c '{topic:"pet.reward",data:{intent:.intent_name}}' treat.json)" --json
-opal data execution list --action-id treat-dispense --limit 5 --json
+opal event data execution list --action-id treat-dispense --limit 5 --json
 ```
 
 ## Practical Notes
