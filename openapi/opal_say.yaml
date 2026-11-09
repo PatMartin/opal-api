@@ -1487,11 +1487,6 @@ components:
             '
           example: amy
         engine_id:
-          anyOf:
-          - type: string
-            minLength: 1
-          - type: 'null'
-          description: Optional advanced engine override; incompatible overrides are rejected.
         speed:
           anyOf:
           - type: number
