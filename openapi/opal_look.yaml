@@ -5289,7 +5289,7 @@ paths:
     x-opal-cli:
       get:
         group: info
-        command: show
+        command: version
   /api/v1/info/ping:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/info_ping'
     x-opal-cli:
