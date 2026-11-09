@@ -284,7 +284,7 @@ opal say config setting show SETTING_KEY --json
 
 ### 49. Export Look configuration
 ```bash
-opal look configuration export --json > look-config.json
+opal look backup export --json > look-config.json
 ```
 
 ### 50. Inspect Event statistics
