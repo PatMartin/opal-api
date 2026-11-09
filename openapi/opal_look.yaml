@@ -1966,8 +1966,8 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: capabilities
-        command: show
+        group: info
+        command: capabilities
   /api/v1/engine/:
     $ref: ./shared/opal_kernel.yaml#/components/pathItems/engines_collection
     x-opal-cli:
@@ -3975,57 +3975,6 @@ paths:
         type: string
         minLength: 1
         maxLength: 128
-  /api/v1/session/{session_id}/observation/:
-    get:
-      tags:
-      - sessions
-      summary: List observations produced by session
-      operationId: observations_sessions
-      description: ''
-      parameters:
-      - *id031
-      - *id032
-      - *id033
-      - *id034
-      - $ref: ./shared/opal_kernel.yaml#/components/parameters/Cursor
-      - $ref: ./shared/opal_kernel.yaml#/components/parameters/Limit
-      responses:
-        '401':
-          $ref: ./shared/opal_kernel.yaml#/components/responses/Unauthorized
-        '403':
-          $ref: ./shared/opal_kernel.yaml#/components/responses/Forbidden
-        '200':
-          description: OK
-          headers:
-            X-Opal-Session-Id: *id027
-            X-Opal-Transaction-Id: *id028
-            X-Opal-Request-Id: *id029
-            X-Opal-Causation-Id: *id030
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ObservationPage'
-        '422':
-          $ref: ./shared/opal_kernel.yaml#/components/responses/UnprocessableEntity
-        '429':
-          $ref: '#/components/responses/CapacityExceeded'
-        '404':
-          $ref: ./shared/opal_kernel.yaml#/components/responses/NotFound
-        '503':
-          $ref: ./shared/opal_kernel.yaml#/components/responses/ServiceUnavailable
-        '409':
-          $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
-      x-opal-cli:
-        group: session
-        command: observations
-    parameters:
-    - name: session_id
-      in: path
-      required: true
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 128
   /api/v1/session/{session_id}/stream:
     get:
       tags:
@@ -5260,24 +5209,6 @@ paths:
       delete:
         group: setting
         command: reset
-  /api/v1/configuration/export:
-    $ref: ./shared/opal_kernel.yaml#/components/pathItems/backup_export
-    x-opal-cli:
-      get:
-        group: configuration
-        command: export
-  /api/v1/configuration/validate:
-    $ref: ./shared/opal_kernel.yaml#/components/pathItems/backup_validate_post
-    x-opal-cli:
-      post:
-        group: configuration
-        command: validate
-  /api/v1/configuration/import:
-    $ref: ./shared/opal_kernel.yaml#/components/pathItems/backup_import
-    x-opal-cli:
-      post:
-        group: configuration
-        command: import
   /api/v1/backup/list:
     $ref: ./shared/opal_kernel.yaml#/components/pathItems/backup_list
     x-opal-cli:
@@ -5395,8 +5326,8 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: metrics
-        command: show
+        group: info
+        command: metrics
   /api/v1/events/status:
     get:
       tags:

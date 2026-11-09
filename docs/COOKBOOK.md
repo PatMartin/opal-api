@@ -36,7 +36,7 @@ opal listen info audio-devices --json
 
 ### 3. Discover Look capabilities
 ```bash
-opal look capabilities show --json
+opal look info capabilities --json
 ```
 
 ### 4. List speech engines
@@ -171,7 +171,7 @@ opal look session show SESSION_ID --json
 
 ### 28. List session observations
 ```bash
-opal look session observations SESSION_ID --limit 50 --json
+opal look observation list --session-id SESSION_ID --limit 50 --json
 ```
 
 ### 29. Submit a video job
@@ -300,7 +300,7 @@ opal event stats show --json
 - Keep JSON output separate from diagnostics: use `--json`, redirect to a
   file, or process it with `jq`.
 - Discover deployment-specific image labels, models, and options through
-  `opal look capabilities show --json`; do not guess them.
+  `opal look info capabilities --json`; do not guess them.
 - Run `opal SERVICE COMMAND --help` before composing a mutation.
 
 For the complete generated-command reference, see [CLI.astra.md](CLI.astra.md).

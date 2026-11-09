@@ -293,7 +293,7 @@ opal look observation list --source-id CAMERA_ID --limit 25 --json
 ```bash
 SID=$(opal look session start --source-id CAMERA_ID \
   --pipeline-id PIPELINE_ID --auto-start true --json | jq -er '.id')
-opal look session observations "$SID" --limit 25 --json
+opal look observation list --session-id "$SID" --limit 25 --json
 opal look session stop "$SID" --json
 ```
 
@@ -351,8 +351,8 @@ shell:
 ```bash
 VOICE_ID=narrator       # opal say voice list --json
 CAMERA_ID=front-door    # opal look source list --json
-PIPELINE_ID=detector    # opal look capabilities show --json
-OCR_PIPELINE=text-ocr   # opal look capabilities show --json
+PIPELINE_ID=detector    # opal look info capabilities --json
+OCR_PIPELINE=text-ocr   # opal look info capabilities --json
 ```
 
 ## Home Automation

@@ -13,7 +13,7 @@ shell:
 ```bash
 VOICE_ID=narrator                 # from: opal say voice list --json
 CAMERA_ID=classroom-1             # from: opal look source list --json
-OCR_PIPELINE=text-pipeline        # from: opal look capabilities show --json
+OCR_PIPELINE=text-pipeline        # from: opal look info capabilities --json
 MODEL_ID=default                  # from: opal think model list --json
 ```
 

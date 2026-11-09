@@ -14,8 +14,8 @@ per shell:
 ```bash
 VOICE_ID=narrator                 # from: opal say voices list --json
 CAMERA_ID=hallway-1               # from: opal look sources list --json
-PIPELINE_ID=detector-pipeline     # from: opal look capabilities show --json
-OCR_PIPELINE=text-pipeline        # from: opal look capabilities show --json
+PIPELINE_ID=detector-pipeline     # from: opal look info capabilities --json
+OCR_PIPELINE=text-pipeline        # from: opal look info capabilities --json
 ```
 
 Field notes used below: Listen results carry `transcript`, `intent_name`,
