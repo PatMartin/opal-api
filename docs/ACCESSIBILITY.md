@@ -158,7 +158,7 @@ Stream the latest recognized transcripts to a text display or file.
 
 ```bash
 opal listen recognition status --json | jq -r '.running'
-opal listen logs list --limit 5 --json | jq -r '.items[] | .transcript'
+opal listen recognition stream --json
 ```
 
 ## 3. Motor and Mobility Support

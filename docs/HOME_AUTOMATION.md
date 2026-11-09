@@ -325,9 +325,9 @@ opal event events list --topic home.maintenance.camera --limit 10 --json
 Review recent recognitions and failed utterances to tune the vocabulary.
 
 ```bash
-opal listen logs list --matched false --limit 25 --json > misses.json
-jq '.items[] | {transcript, intent_name}' misses.json
-opal listen failed list --reviewed false --limit 25 --json > review.json
+opal listen failed-utterance list --limit 25 --json > misses.json
+jq '.items[] | {transcript, expected_intent}' misses.json
+opal listen failed-utterance list --reviewed false --limit 25 --json > review.json
 jq '.items[] | {id, transcript, expected_intent}' review.json
 ```
 

@@ -71,9 +71,9 @@ opal listen recognition test-audio --file command.wav --require-wakeword true --
 opal listen recognition status --json
 ```
 
-### 10. Review matched logs
+### 10. Review failed utterances
 ```bash
-opal listen log list --matched true --limit 25 --json
+opal listen failed-utterance list --limit 25 --json
 ```
 
 ## 3. Build A Vocabulary
@@ -240,9 +240,9 @@ opal think session add --title 'Greenhouse operations review' --json
 
 ## 9. Audit History And Evidence
 
-### 41. Count recognition logs
+### 41. Export the configuration
 ```bash
-opal listen log count --json
+opal listen backup export --json
 ```
 
 ### 42. Inspect latest recognition performance
