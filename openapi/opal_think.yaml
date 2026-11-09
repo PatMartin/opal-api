@@ -532,7 +532,7 @@ paths:
   /api/v1/health/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health'
     x-opal-cli:
-      get: 'health'
+      get: 'info health'
   /api/v1/info/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/info'
   /api/v1/info/ping:

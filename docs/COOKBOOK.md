@@ -26,12 +26,12 @@ Mutating configuration requires a current, quoted strong ETag:
 
 ### 1. Check Listen health
 ```bash
-opal listen health --json
+opal listen info health --json
 ```
 
 ### 2. Find audio devices
 ```bash
-opal listen health audio-devices --json
+opal listen info audio-devices --json
 ```
 
 ### 3. Discover Look capabilities

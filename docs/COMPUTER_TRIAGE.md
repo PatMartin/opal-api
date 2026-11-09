@@ -135,8 +135,8 @@ opal event events publish --topic it.incident.evidence \
 Collect service health and publish a degraded summary.
 
 ```bash
-LISTEN_STATE=$(opal listen health ready --json | jq -r '.status // "unknown"')
-LOOK_STATE=$(opal look health ready --json | jq -r '.status // "unknown"')
+LISTEN_STATE=$(opal listen info ready --json | jq -r '.status // "unknown"')
+LOOK_STATE=$(opal look info ready --json | jq -r '.status // "unknown"')
 opal event events publish --topic it.status \
   --source status-poll \
   --data "{\"listen\":\"$LISTEN_STATE\",\"look\":\"$LOOK_STATE\"}" --json
@@ -262,8 +262,8 @@ cat user-reply.txt
 Re-run the original check and confirm the incident cleared.
 
 ```bash
-opal listen health ready --json | jq -r '.status'
-opal look health ready --json | jq -r '.status'
+opal listen info ready --json | jq -r '.status'
+opal look info ready --json | jq -r '.status'
 opal event events publish --topic it.incident.resolved \
   --source post-check --data '{"verified":true}' --json
 ```

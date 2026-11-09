@@ -5282,8 +5282,8 @@ paths:
     $ref: ./shared/opal_kernel.yaml#/components/pathItems/health
     x-opal-cli:
       get:
-        group: health
-        command: show
+        group: info
+        command: health
   /api/v1/info/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/info'
     x-opal-cli:
@@ -5300,13 +5300,13 @@ paths:
     $ref: ./shared/opal_kernel.yaml#/components/pathItems/health_live
     x-opal-cli:
       get:
-        group: health
+        group: info
         command: live
   /api/v1/health/ready:
     $ref: ./shared/opal_kernel.yaml#/components/pathItems/health_ready
     x-opal-cli:
       get:
-        group: health
+        group: info
         command: ready
   /api/v1/metrics/:
     get:

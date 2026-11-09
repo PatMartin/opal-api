@@ -126,14 +126,14 @@ Speech recognition, vocabulary, and quality control. These recipes use
 ### L1 — Check service health
 
 ```bash
-opal listen health --json
-opal listen health ready --json
+opal listen info health --json
+opal listen info ready --json
 ```
 
 ### L2 — List audio devices
 
 ```bash
-opal listen health audio-devices --json
+opal listen info audio-devices --json
 ```
 
 ### L3 — Test text recognition
@@ -866,9 +866,9 @@ opal say generate --voice-id "$VOICE_ID" \
 ### O4 — Status rollup
 
 ```bash
-opal listen health ready --json | jq -r '.status'
-opal look health ready --json | jq -r '.status'
-opal say health ready --json | jq -r '.status'
+opal listen info ready --json | jq -r '.status'
+opal look info ready --json | jq -r '.status'
+opal say info ready --json | jq -r '.status'
 opal event stats show --json | jq -c '{observed:.observed_events}'
 ```
 
