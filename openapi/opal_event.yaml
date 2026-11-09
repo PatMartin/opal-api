@@ -1223,12 +1223,22 @@ paths:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health_live'
   /api/v1/health/ready:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health_ready'
+  /api/v1/backup/list:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_list'
+  /api/v1/backup/create:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_create'
+  /api/v1/backup/download/{filename}:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_download'
+  /api/v1/backup/restore/{filename}:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_restore'
+  /api/v1/backup/{filename}:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_delete'
   /api/v1/backup/export:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_export'
-  /api/v1/backup/validate:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_validate_post'
   /api/v1/backup/import:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_import'
+  /api/v1/backup/validate:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_validate_post'
   /api/v1/persona/:
     get:
       tags:
