@@ -5278,6 +5278,54 @@ paths:
       post:
         group: configuration
         command: import
+  /api/v1/backup/list:
+    $ref: ./shared/opal_kernel.yaml#/components/pathItems/backup_list
+    x-opal-cli:
+      get:
+        group: backup
+        command: list
+  /api/v1/backup/create:
+    $ref: ./shared/opal_kernel.yaml#/components/pathItems/backup_create
+    x-opal-cli:
+      post:
+        group: backup
+        command: create
+  /api/v1/backup/download/{filename}:
+    $ref: ./shared/opal_kernel.yaml#/components/pathItems/backup_download
+    x-opal-cli:
+      get:
+        group: backup
+        command: download
+  /api/v1/backup/restore/{filename}:
+    $ref: ./shared/opal_kernel.yaml#/components/pathItems/backup_restore
+    x-opal-cli:
+      post:
+        group: backup
+        command: restore
+  /api/v1/backup/{filename}:
+    $ref: ./shared/opal_kernel.yaml#/components/pathItems/backup_delete
+    x-opal-cli:
+      delete:
+        group: backup
+        command: remove
+  /api/v1/backup/export:
+    $ref: ./shared/opal_kernel.yaml#/components/pathItems/backup_export
+    x-opal-cli:
+      get:
+        group: backup
+        command: export
+  /api/v1/backup/import:
+    $ref: ./shared/opal_kernel.yaml#/components/pathItems/backup_import
+    x-opal-cli:
+      post:
+        group: backup
+        command: import
+  /api/v1/backup/validate:
+    $ref: ./shared/opal_kernel.yaml#/components/pathItems/backup_validate_post
+    x-opal-cli:
+      post:
+        group: backup
+        command: validate
   /api/v1/health/:
     $ref: ./shared/opal_kernel.yaml#/components/pathItems/health
     x-opal-cli:
