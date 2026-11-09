@@ -1972,16 +1972,16 @@ paths:
     $ref: ./shared/opal_kernel.yaml#/components/pathItems/engines_collection
     x-opal-cli:
       get:
-        group: engines
+        group: engine
         command: list
   /api/v1/engine/{engine_id}:
     $ref: ./shared/opal_kernel.yaml#/components/pathItems/engine_item
     x-opal-cli:
       get:
-        group: engines
+        group: engine
         command: show
       patch:
-        group: engines
+        group: engine
         command: update
   /api/v1/model/:
     get:
@@ -2026,7 +2026,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: models
+        group: model
         command: list
     post:
       tags:
@@ -2081,7 +2081,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ModelCreate'
       x-opal-cli:
-        group: models
+        group: model
         command: add
   /api/v1/model/{model_id}:
     get:
@@ -2124,7 +2124,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: models
+        group: model
         command: show
     patch:
       tags:
@@ -2177,7 +2177,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ModelPatch'
       x-opal-cli:
-        group: models
+        group: model
         command: update
     delete:
       tags:
@@ -2220,7 +2220,7 @@ paths:
         '412':
           $ref: ./shared/opal_kernel.yaml#/components/responses/PreconditionFailed
       x-opal-cli:
-        group: models
+        group: model
         command: remove
     parameters:
     - name: model_id
@@ -2273,7 +2273,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: sources
+        group: source
         command: list
     post:
       tags:
@@ -2328,7 +2328,7 @@ paths:
             schema:
               $ref: '#/components/schemas/SourceCreate'
       x-opal-cli:
-        group: sources
+        group: source
         command: add
   /api/v1/source/{source_id}:
     get:
@@ -2371,7 +2371,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: sources
+        group: source
         command: show
     patch:
       tags:
@@ -2424,7 +2424,7 @@ paths:
             schema:
               $ref: '#/components/schemas/SourcePatch'
       x-opal-cli:
-        group: sources
+        group: source
         command: update
     delete:
       tags:
@@ -2467,7 +2467,7 @@ paths:
         '412':
           $ref: ./shared/opal_kernel.yaml#/components/responses/PreconditionFailed
       x-opal-cli:
-        group: sources
+        group: source
         command: remove
     parameters:
     - name: source_id
@@ -2520,7 +2520,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: pipelines
+        group: pipeline
         command: list
     post:
       tags:
@@ -2575,7 +2575,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PipelineCreate'
       x-opal-cli:
-        group: pipelines
+        group: pipeline
         command: add
   /api/v1/pipeline/{pipeline_id}:
     get:
@@ -2618,7 +2618,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: pipelines
+        group: pipeline
         command: show
     patch:
       tags:
@@ -2671,7 +2671,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PipelinePatch'
       x-opal-cli:
-        group: pipelines
+        group: pipeline
         command: update
     delete:
       tags:
@@ -2714,7 +2714,7 @@ paths:
         '412':
           $ref: ./shared/opal_kernel.yaml#/components/responses/PreconditionFailed
       x-opal-cli:
-        group: pipelines
+        group: pipeline
         command: remove
     parameters:
     - name: pipeline_id
@@ -2728,22 +2728,22 @@ paths:
     $ref: ./shared/opal_kernel.yaml#/components/pathItems/profiles_collection
     x-opal-cli:
       get:
-        group: profiles
+        group: profile
         command: list
       post:
-        group: profiles
+        group: profile
         command: add
   /api/v1/profile/{profile_id}:
     $ref: ./shared/opal_kernel.yaml#/components/pathItems/profile_item
     x-opal-cli:
       get:
-        group: profiles
+        group: profile
         command: show
       patch:
-        group: profiles
+        group: profile
         command: update
       delete:
-        group: profiles
+        group: profile
         command: remove
   /api/v1/zone/:
     get:
@@ -2788,7 +2788,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: zones
+        group: zone
         command: list
     post:
       tags:
@@ -2843,7 +2843,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ZoneCreate'
       x-opal-cli:
-        group: zones
+        group: zone
         command: add
   /api/v1/zone/{zone_id}:
     get:
@@ -2886,7 +2886,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: zones
+        group: zone
         command: show
     patch:
       tags:
@@ -2939,7 +2939,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ZonePatch'
       x-opal-cli:
-        group: zones
+        group: zone
         command: update
     delete:
       tags:
@@ -2982,7 +2982,7 @@ paths:
         '412':
           $ref: ./shared/opal_kernel.yaml#/components/responses/PreconditionFailed
       x-opal-cli:
-        group: zones
+        group: zone
         command: remove
     parameters:
     - name: zone_id
@@ -3035,7 +3035,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: rules
+        group: rule
         command: list
     post:
       tags:
@@ -3090,7 +3090,7 @@ paths:
             schema:
               $ref: '#/components/schemas/RuleCreate'
       x-opal-cli:
-        group: rules
+        group: rule
         command: add
   /api/v1/rule/{rule_id}:
     get:
@@ -3133,7 +3133,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: rules
+        group: rule
         command: show
     patch:
       tags:
@@ -3186,7 +3186,7 @@ paths:
             schema:
               $ref: '#/components/schemas/RulePatch'
       x-opal-cli:
-        group: rules
+        group: rule
         command: update
     delete:
       tags:
@@ -3229,7 +3229,7 @@ paths:
         '412':
           $ref: ./shared/opal_kernel.yaml#/components/responses/PreconditionFailed
       x-opal-cli:
-        group: rules
+        group: rule
         command: remove
     parameters:
     - name: rule_id
@@ -3282,7 +3282,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: monitors
+        group: monitor
         command: list
     post:
       tags:
@@ -3337,7 +3337,7 @@ paths:
             schema:
               $ref: '#/components/schemas/MonitorCreate'
       x-opal-cli:
-        group: monitors
+        group: monitor
         command: add
   /api/v1/monitor/{monitor_id}:
     get:
@@ -3380,7 +3380,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: monitors
+        group: monitor
         command: show
     patch:
       tags:
@@ -3433,7 +3433,7 @@ paths:
             schema:
               $ref: '#/components/schemas/MonitorPatch'
       x-opal-cli:
-        group: monitors
+        group: monitor
         command: update
     delete:
       tags:
@@ -3476,7 +3476,7 @@ paths:
         '412':
           $ref: ./shared/opal_kernel.yaml#/components/responses/PreconditionFailed
       x-opal-cli:
-        group: monitors
+        group: monitor
         command: remove
     parameters:
     - name: monitor_id
@@ -3531,13 +3531,13 @@ paths:
             schema:
               $ref: '#/components/schemas/PipelineCreate'
       x-opal-cli:
-        group: pipelines
+        group: pipeline
         command: validate
   /api/v1/profile/{profile_id}/activate:
     $ref: ./shared/opal_kernel.yaml#/components/pathItems/profile_activate
     x-opal-cli:
       post:
-        group: profiles
+        group: profile
         command: activate
   /api/v1/source/{source_id}/status:
     get:
@@ -3578,7 +3578,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: sources
+        group: source
         command: status
     parameters:
     - name: source_id
@@ -3627,7 +3627,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: sources
+        group: source
         command: probe
     parameters:
     - name: source_id
@@ -3821,7 +3821,7 @@ paths:
             schema:
               $ref: '#/components/schemas/SessionCreate'
       x-opal-cli:
-        group: sessions
+        group: session
         command: start
     get:
       tags:
@@ -3875,7 +3875,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: sessions
+        group: session
         command: list
   /api/v1/session/{session_id}:
     get:
@@ -3916,7 +3916,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: sessions
+        group: session
         command: show
     parameters:
     - name: session_id
@@ -3965,7 +3965,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: sessions
+        group: session
         command: stop
     parameters:
     - name: session_id
@@ -4016,7 +4016,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: sessions
+        group: session
         command: observations
     parameters:
     - name: session_id
@@ -4070,7 +4070,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: sessions
+        group: session
         command: stream
     parameters:
     - name: session_id
@@ -4174,7 +4174,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: sessions
+        group: session
         command: preview
     parameters:
     - name: session_id
@@ -4232,7 +4232,7 @@ paths:
             schema:
               $ref: '#/components/schemas/JobCreate'
       x-opal-cli:
-        group: jobs
+        group: job
         command: submit
     get:
       tags:
@@ -4284,7 +4284,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: jobs
+        group: job
         command: list
   /api/v1/job/{job_id}:
     get:
@@ -4325,7 +4325,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: jobs
+        group: job
         command: show
     parameters:
     - name: job_id
@@ -4374,7 +4374,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: jobs
+        group: job
         command: cancel
     parameters:
     - name: job_id
@@ -4468,7 +4468,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: observations
+        group: observation
         command: list
   /api/v1/observation/{observation_id}:
     get:
@@ -4509,7 +4509,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: observations
+        group: observation
         command: show
     parameters:
     - name: observation_id
@@ -4783,7 +4783,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: sources
+        group: source
         command: frame
     parameters:
     - name: source_id
@@ -4853,7 +4853,7 @@ paths:
             schema:
               $ref: '#/components/schemas/CaptureCreate'
       x-opal-cli:
-        group: sources
+        group: source
         command: capture
     parameters:
     - name: source_id
@@ -4904,7 +4904,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: captures
+        group: capture
         command: list
   /api/v1/capture/{capture_id}:
     get:
@@ -4945,7 +4945,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: captures
+        group: capture
         command: show
     delete:
       tags:
@@ -4981,7 +4981,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: captures
+        group: capture
         command: remove
     parameters:
     - name: capture_id
@@ -5031,7 +5031,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: captures
+        group: capture
         command: download
     parameters:
     - name: capture_id
@@ -5082,7 +5082,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: artifacts
+        group: artifact
         command: list
   /api/v1/artifact/{artifact_id}:
     get:
@@ -5123,7 +5123,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: artifacts
+        group: artifact
         command: show
     delete:
       tags:
@@ -5159,7 +5159,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: artifacts
+        group: artifact
         command: remove
     parameters:
     - name: artifact_id
@@ -5229,7 +5229,7 @@ paths:
                 type: string
                 format: binary
       x-opal-cli:
-        group: artifacts
+        group: artifact
         command: download
     parameters:
     - name: artifact_id
@@ -5243,22 +5243,22 @@ paths:
     $ref: ./shared/opal_kernel.yaml#/components/pathItems/settings_collection
     x-opal-cli:
       get:
-        group: settings
+        group: setting
         command: list
       patch:
-        group: settings
+        group: setting
         command: patch
   /api/v1/setting/{key}:
     $ref: ./shared/opal_kernel.yaml#/components/pathItems/settings_key
     x-opal-cli:
       get:
-        group: settings
+        group: setting
         command: show
       put:
-        group: settings
+        group: setting
         command: update
       delete:
-        group: settings
+        group: setting
         command: reset
   /api/v1/configuration/export:
     $ref: ./shared/opal_kernel.yaml#/components/pathItems/backup_export
@@ -5388,7 +5388,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: events
+        group: event
         command: status
   /api/v1/recording/:
     post:
@@ -5438,7 +5438,7 @@ paths:
             schema:
               $ref: '#/components/schemas/RecordingCreate'
       x-opal-cli:
-        group: recordings
+        group: recording
         command: start
     get:
       tags:
@@ -5480,7 +5480,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: recordings
+        group: recording
         command: list
   /api/v1/recording/{recording_id}:
     get:
@@ -5521,7 +5521,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: recordings
+        group: recording
         command: show
     parameters:
     - name: recording_id
@@ -5570,7 +5570,7 @@ paths:
         '409':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Conflict
       x-opal-cli:
-        group: recordings
+        group: recording
         command: stop
     parameters:
     - name: recording_id
@@ -5595,7 +5595,7 @@ paths:
       summary: View live source feed without requiring a model or analysis session
       operationId: stream_sources
       x-opal-cli:
-        group: sources
+        group: source
         command: stream
       description: GET opens an ephemeral MJPEG viewer connection. In absence of pipeline_id, streams decoded source
         frames only. When pipeline_id is provided, evaluates the configured pipeline for this connection, subject

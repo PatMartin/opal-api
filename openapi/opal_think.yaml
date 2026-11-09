@@ -522,13 +522,13 @@ paths:
   /api/v1/setting/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_collection'
     x-opal-cli:
-      get: 'settings list'
+      get: 'setting list'
   /api/v1/setting/{key}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_key'
     x-opal-cli:
-      get: 'settings show'
-      put: 'settings set'
-      delete: 'settings remove'
+      get: 'setting show'
+      put: 'setting set'
+      delete: 'setting remove'
   /api/v1/health/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health'
     x-opal-cli:
