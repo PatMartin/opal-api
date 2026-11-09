@@ -154,7 +154,7 @@ opal look analyze image --image porch.jpg --pipeline-id PIPELINE_ID --persist-re
 
 ### 25. Browse source observations
 ```bash
-opal look observation list --source-id CAMERA_ID --limit 25 --json
+opal look data observation list --source-id CAMERA_ID --limit 25 --json
 ```
 
 ## 6. Run Visual Work
@@ -171,12 +171,12 @@ opal look session show SESSION_ID --json
 
 ### 28. List session observations
 ```bash
-opal look observation list --session-id SESSION_ID --limit 50 --json
+opal look data observation list --session-id SESSION_ID --limit 50 --json
 ```
 
 ### 29. Submit a video job
 ```bash
-opal look job submit --kind analyze_video --source-id CAMERA_ID --pipeline-id PIPELINE_ID --range '{"start_ms":0,"end_ms":30000}' --json
+opal look data job submit --kind analyze_video --source-id CAMERA_ID --pipeline-id PIPELINE_ID --range '{"start_ms":0,"end_ms":30000}' --json
 ```
 
 ### 30. Stop a session
@@ -257,12 +257,12 @@ opal listen performance history --limit 50 --json
 
 ### 44. List uploaded media
 ```bash
-opal look media list --limit 25 --json
+opal look data media list --limit 25 --json
 ```
 
 ### 45. Download an artifact
 ```bash
-opal look artifact download ARTIFACT_ID --output-file artifact.bin
+opal look data artifact download ARTIFACT_ID --output-file artifact.bin
 ```
 
 ## 10. Safely Handle Configuration

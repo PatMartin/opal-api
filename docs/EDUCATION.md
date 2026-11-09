@@ -263,7 +263,7 @@ A Look rule watches for missing safety gear; matching observations publish
 an event whose action can trigger a spoken reminder through Say.
 
 ```bash
-opal look observation list --source-id <camera_id> --label person \
+opal look data observation list --source-id <camera_id> --label person \
 opal event event publish --topic lab.safety --source lab-monitor \
 opal say generate --voice-id <voice_id> \
 ```

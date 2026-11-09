@@ -285,7 +285,7 @@ opal look analyze image --image photo.jpg \
 ### V5 — List observations
 
 ```bash
-opal look observation list --source-id CAMERA_ID --limit 25 --json
+opal look data observation list --source-id CAMERA_ID --limit 25 --json
 ```
 
 ### V6 — Run a live session
@@ -293,7 +293,7 @@ opal look observation list --source-id CAMERA_ID --limit 25 --json
 ```bash
 SID=$(opal look session start --source-id CAMERA_ID \
   --pipeline-id PIPELINE_ID --auto-start true --json | jq -er '.id')
-opal look observation list --session-id "$SID" --limit 25 --json
+opal look data observation list --session-id "$SID" --limit 25 --json
 opal look session stop "$SID" --json
 ```
 
@@ -382,7 +382,7 @@ opal think task watch <tid>
 Package observation triggers a household event and a spoken notice.
 
 ```bash
-COUNT=$(opal look observation list --source-id "$CAMERA_ID" --label package --limit 5 --json | jq '.items | length')
+COUNT=$(opal look data observation list --source-id "$CAMERA_ID" --label package --limit 5 --json | jq '.items | length')
 if [ "$COUNT" -gt 0 ]; then
   opal event event publish --topic home.delivery --source front-door \
     --data "{\"packages\":$COUNT}" --json
@@ -816,7 +816,7 @@ fi
 ### N4 — Meteor count
 
 ```bash
-COUNT=$(opal look observation list --source-id allsky-1 --label streak --limit 50 --json | jq '.items | length')
+COUNT=$(opal look data observation list --source-id allsky-1 --label streak --limit 50 --json | jq '.items | length')
 opal event event publish --topic sky.meteor \
   --source allsky-cam --data "{\"streaks\":$COUNT}" --json
 ```
