@@ -11,8 +11,8 @@ show a **Copy** button. Replace capitalized IDs (`VOICE_ID`, `CAMERA_ID`,
 shell:
 
 ```bash
-VOICE_ID=narrator                 # from: opal say voices list --json
-CAMERA_ID=classroom-1             # from: opal look sources list --json
+VOICE_ID=narrator                 # from: opal say voice list --json
+CAMERA_ID=classroom-1             # from: opal look source list --json
 OCR_PIPELINE=text-pipeline        # from: opal look capabilities show --json
 MODEL_ID=default                  # from: opal think model list --json
 ```
@@ -38,7 +38,7 @@ attendance record.
 ```bash
 opal listen recognition test-audio --file student-name.wav --save-log true --json > name.json
 NAME=$(jq -r '.transcript' name.json)
-opal event events publish --topic classroom.attendance \
+opal event event publish --topic classroom.attendance \
   --source roll-call --data "{\"student\":\"$NAME\",\"present\":true}" --json
 ```
 
@@ -48,15 +48,9 @@ A student's spoken question is transcribed, answered by THINK with lecture
 notes as context, and read back aloud.
 
 ```bash
-TRANSCRIPT=$(opal listen recognition test-audio --file question.wav --json \
-  | jq -r '.transcript')
-TID=$(opal think task create \
-  --prompt "Answer this student question briefly: $TRANSCRIPT" \
-  --context @lecture-notes.json --timeout-seconds 120 --json | jq -er '.id')
-opal think task watch "$TID"
-ANSWER=$(opal think task show "$TID" --json | jq -er '.answer')
-opal say generate --voice-id "$VOICE_ID" --text "$ANSWER" \
-  --output-format wav --output-file answer.wav
+opal think task watch <tid>
+opal think task show <tid> --json | jq -er '.answer'
+opal say generate --voice-id <voice_id> --text <answer> \
 ```
 
 ### 3. Oral quiz — speak the question, hear and grade the answer
@@ -65,15 +59,8 @@ Say poses the question, the student's spoken answer is transcribed, and
 THINK grades it against an expected answer.
 
 ```bash
-opal say generate --voice-id "$VOICE_ID" \
-  --text 'What is the capital of France?' \
-  --output-format wav --output-file quiz-question.wav
-TRANSCRIPT=$(opal listen recognition test-audio --file student-answer.wav --json \
-  | jq -r '.transcript')
+opal say generate --voice-id <voice_id> \
 opal think task create \
-  --prompt "Grade this spoken quiz answer as correct or incorrect with a one-line reason." \
-  --context "{\"question\":\"What is the capital of France?\",\"expected\":\"Paris\",\"answer\":\"$TRANSCRIPT\"}" \
-  --timeout-seconds 120 --json
 ```
 
 ### 4. Whiteboard capture — photo of the board to lecture notes
@@ -82,7 +69,7 @@ Look grabs a frame or photo of the board, analyzes it for text and diagrams,
 and THINK turns it into tidy notes.
 
 ```bash
-opal look sources frame "$CAMERA_ID" --output-file whiteboard.jpg
+opal look source frame "$CAMERA_ID" --output-file whiteboard.jpg
 opal look analyze image --image whiteboard.jpg --pipeline-id "$OCR_PIPELINE" --json > board.json
 OBS=$(jq -c '.observations' board.json)
 TID=$(opal think task create \
@@ -98,15 +85,9 @@ Transcribe a discussion segment, have THINK summarize the key points, and
 generate a narrated recap file.
 
 ```bash
-TRANSCRIPT=$(opal listen recognition test-audio --file discussion.wav --json \
-  | jq -r '.transcript')
-TID=$(opal think task create \
-  --prompt 'Summarize this classroom discussion in three sentences for a student who was absent.' \
-  --context "{\"transcript\":\"$TRANSCRIPT\"}" --timeout-seconds 120 --json | jq -er '.id')
-opal think task watch "$TID"
-opal think task show "$TID" --json | jq -er '.answer' > recap.txt
-opal say generate --voice-id "$VOICE_ID" --text "$(cat recap.txt)" \
-  --output-format wav --output-file recap.wav
+opal think task watch <tid>
+opal think task show <tid> --json | jq -er '.answer' > recap.txt
+opal say generate --voice-id <voice_id> --text "$(cat recap.txt)" \
 ```
 
 ## 2. Reading and Literacy
@@ -145,15 +126,8 @@ Say speaks the target phrase, the student repeats it into a clip, and THINK
 evaluates the match — repeatable in a small loop.
 
 ```bash
-opal say generate --voice-id "$VOICE_ID" \
-  --text 'She sells seashells by the seashore.' \
-  --output-format wav --output-file drill-target.wav
-TRANSCRIPT=$(opal listen recognition test-audio --file drill-attempt.wav --json \
-  | jq -r '.transcript')
+opal say generate --voice-id <voice_id> \
 opal think task create \
-  --prompt 'Rate how closely the repetition matches the target phrase (0-100) and name one sound to practice.' \
-  --context "{\"target\":\"She sells seashells by the seashore.\",\"heard\":\"$TRANSCRIPT\"}" \
-  --timeout-seconds 120 --json
 ```
 
 ### 9. Flashcard practice — card photo to spoken definition
@@ -162,15 +136,9 @@ Look reads a vocabulary card, THINK produces a short definition, Say
 dictates word and definition for review.
 
 ```bash
-opal look analyze image --image flashcard.jpg --pipeline-id "$OCR_PIPELINE" --json > card.json
-WORD=$(jq -r '.observations[0].text // .observations[0].label' card.json)
-TID=$(opal think task create \
-  --prompt "Give a one-sentence student-friendly definition of: $WORD" \
-  --timeout-seconds 60 --json | jq -er '.id')
-opal think task watch "$TID"
-DEF=$(opal think task show "$TID" --json | jq -er '.answer')
-opal say generate --voice-id "$VOICE_ID" --text "$WORD. $DEF" \
-  --output-format wav --output-file flashcard.wav
+opal look analyze image --image flashcard.jpg --pipeline-id <ocr_pipeline> --json > card.json
+opal think task watch <tid>
+opal think task show <tid> --json | jq -er '.answer'
 ```
 
 ### 10. DIY audiobook — page photos to a narrated WAV
@@ -179,17 +147,9 @@ Scan page images through OCR, let THINK clean the text, and synthesize a
 single narrated file.
 
 ```bash
-TEXT=$(for f in page-*.jpg; do
-  opal look analyze image --image "$f" --pipeline-id "$OCR_PIPELINE" --json \
-    | jq -r '.observations[0].text // empty'
-done)
-TID=$(opal think task create \
-  --prompt 'Clean OCR artifacts from this text while preserving meaning.' \
-  --context "{\"text\":\"$TEXT\"}" --timeout-seconds 180 --json | jq -er '.id')
-opal think task watch "$TID"
-opal think task show "$TID" --json | jq -er '.answer' > chapter.txt
-opal say generate --voice-id "$VOICE_ID" --text "$(cat chapter.txt)" \
-  --output-format wav --output-file chapter.wav
+opal look analyze image --image <f> --pipeline-id <ocr_pipeline> --json \
+opal think task watch <tid>
+opal think task show <tid> --json | jq -er '.answer' > chapter.txt
 ```
 
 ## 3. Language Learning
@@ -204,7 +164,7 @@ opal say generate --voice-id "$VOICE_ID" --text 'Bonjour, comment allez-vous?' \
   --output-format wav --output-file phrase-target.wav
 TRANSCRIPT=$(opal listen recognition test-audio --file phrase-attempt.wav --json \
   | jq -r '.transcript')
-opal event events publish --topic language.practice \
+opal event event publish --topic language.practice \
   --source phrase-drill \
   --data "{\"target\":\"Bonjour, comment allez-vous?\",\"heard\":\"$TRANSCRIPT\"}" --json
 ```
@@ -230,14 +190,8 @@ target language.
 
 ```bash
 opal look analyze image --image object.jpg --pipeline-id PIPELINE_ID --json > obj.json
-LABEL=$(jq -r '.observations[0].label // empty' obj.json)
-TID=$(opal think task create \
-  --prompt "Say the word for \"$LABEL\" in Spanish with a one-line example sentence." \
-  --timeout-seconds 60 --json | jq -er '.id')
-opal think task watch "$TID"
-opal think task show "$TID" --json | jq -er '.answer' > vocab.txt
-opal say generate --voice-id "$VOICE_ID" --text "$(cat vocab.txt)" \
-  --output-format wav --output-file vocab.wav
+opal think task watch <tid>
+opal think task show <tid> --json | jq -er '.answer' > vocab.txt
 ```
 
 ### 14. Listening comprehension quiz
@@ -246,15 +200,8 @@ Say dictates a short passage, the student answers aloud, and THINK checks
 comprehension against the passage.
 
 ```bash
-opal say generate --voice-id "$VOICE_ID" \
-  --text 'Marie va au marche le samedi matin pour acheter du pain.' \
-  --output-format wav --output-file passage.wav
-TRANSCRIPT=$(opal listen recognition test-audio --file student-response.wav --json \
-  | jq -r '.transcript')
+opal say generate --voice-id <voice_id> \
 opal think task create \
-  --prompt 'The student heard a French passage and answered in English. Did they understand it?' \
-  --context "{\"passage\":\"Marie goes to the market on Saturday morning to buy bread.\",\"answer\":\"$TRANSCRIPT\"}" \
-  --timeout-seconds 120 --json
 ```
 
 ### 15. Conversation partner — spoken turn, spoken reply
@@ -281,15 +228,9 @@ Photograph an exhibit or placard, have THINK explain it at a chosen reading
 level, and play the audio.
 
 ```bash
-opal look analyze image --image exhibit.jpg --pipeline-id "$OCR_PIPELINE" --json > exhibit.json
-OBS=$(jq -c '.observations' exhibit.json)
-TID=$(opal think task create \
-  --prompt 'Explain this exhibit for a ten-year-old in two sentences.' \
-  --context "{\"observations\":$OBS}" --timeout-seconds 120 --json | jq -er '.id')
-opal think task watch "$TID"
-opal think task show "$TID" --json | jq -er '.answer' > exhibit-note.txt
-opal say generate --voice-id "$VOICE_ID" --text "$(cat exhibit-note.txt)" \
-  --output-format wav --output-file exhibit-audio.wav
+opal look analyze image --image exhibit.jpg --pipeline-id <ocr_pipeline> --json > exhibit.json
+opal think task watch <tid>
+opal think task show <tid> --json | jq -er '.answer' > exhibit-note.txt
 ```
 
 ### 17. Nature walk journal — photo to observation log
@@ -300,9 +241,9 @@ entry on the event bus.
 ```bash
 opal look analyze image --image specimen.jpg --pipeline-id PIPELINE_ID --json > find.json
 OBS=$(jq -c '.observations' find.json)
-opal event events publish --topic field.journal \
+opal event event publish --topic field.journal \
   --source nature-walk --data "{\"observations\":$OBS}" --json
-opal event events list --topic field.journal --limit 20 --json
+opal event event list --topic field.journal --limit 20 --json
 ```
 
 ### 18. Science fair rubric scoring
@@ -311,16 +252,9 @@ Look reads a project poster and THINK scores it against a rubric, then the
 score is published for review.
 
 ```bash
-opal look analyze image --image poster.jpg --pipeline-id "$OCR_PIPELINE" --json > poster.json
-OBS=$(jq -c '.observations' poster.json)
-TID=$(opal think task create \
-  --prompt 'Score this poster on a provided rubric; return JSON scores.' \
-  --context "{\"observations\":$OBS,\"rubric\":{\"clarity\":5,\"method\":5,\"creativity\":5}}" \
-  --timeout-seconds 120 --json | jq -er '.id')
-opal think task watch "$TID"
-opal think task show "$TID" --json > score.json
-opal event events publish --topic sciencefair.score \
-  --source judge-helper --data "$(jq -c '{answer:.answer}' score.json)" --json
+opal look analyze image --image poster.jpg --pipeline-id <ocr_pipeline> --json > poster.json
+opal think task watch <tid>
+opal think task show <tid> --json > score.json
 ```
 
 ### 19. Lab safety watch — missing gear to spoken alert
@@ -329,16 +263,9 @@ A Look rule watches for missing safety gear; matching observations publish
 an event whose action can trigger a spoken reminder through Say.
 
 ```bash
-opal look observations list --source-id "$CAMERA_ID" --label person \
-  --limit 25 --json > obs.json
-MISSING=$(jq '[.items[] | select(.attributes.no_goggles==true)] | length' obs.json)
-if [ "$MISSING" -gt 0 ]; then
-  opal event events publish --topic lab.safety --source lab-monitor \
-    --data "{\"missing_goggles\":$MISSING}" --json
-  opal say generate --voice-id "$VOICE_ID" \
-    --text 'Safety reminder: goggles are required in the lab.' \
-    --output-format wav --output-file safety-alert.wav
-fi
+opal look observation list --source-id <camera_id> --label person \
+opal event event publish --topic lab.safety --source lab-monitor \
+opal say generate --voice-id <voice_id> \
 ```
 
 ### 20. Study group debrief — discussion to recap and action items
@@ -347,15 +274,9 @@ Transcribe a study-group segment, have THINK pull out key points and action
 items, and narrate the recap.
 
 ```bash
-TRANSCRIPT=$(opal listen recognition test-audio --file study-group.wav --json \
-  | jq -r '.transcript')
-TID=$(opal think task create \
-  --prompt 'List three key points and two action items from this study discussion.' \
-  --context "{\"transcript\":\"$TRANSCRIPT\"}" --timeout-seconds 120 --json | jq -er '.id')
-opal think task watch "$TID"
-opal think task show "$TID" --json | jq -er '.answer' > debrief.txt
-opal say generate --voice-id "$VOICE_ID" --text "$(cat debrief.txt)" \
-  --output-format wav --output-file debrief.wav
+opal think task watch <tid>
+opal think task show <tid> --json | jq -er '.answer' > debrief.txt
+opal say generate --voice-id <voice_id> --text "$(cat debrief.txt)" \
 ```
 
 ## Practical Notes

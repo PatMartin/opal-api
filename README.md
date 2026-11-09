@@ -1,20 +1,48 @@
 # opal-api
 
-Published OpenAPI 3.1 contracts for the OPAL suite, one file per service in
-[`openapi/`](openapi/):
+Published OpenAPI 3.1 contracts for the OPAL suite — one file per service in
+[`openapi/`](openapi/), all built on a shared kernel contract
+[`openapi/shared/opal_kernel.yaml`](openapi/shared/opal_kernel.yaml).
 
-| File | Service |
-| --- | --- |
-| `openapi/opal_event.yaml` | Opal Event API |
-| `openapi/opal_listen.yaml` | Opal Listen (voice intent) API |
-| `openapi/opal_say.yaml` | OPAL Say API |
-| `openapi/opal_look.yaml` | OPAL Look (vision) API |
-| `openapi/opal_think.yaml` | OPAL Think (LLM/agentic) API |
+| File | Service | Version |
+| --- | --- | --- |
+| `openapi/opal_event.yaml` | OPAL Event API (publication, rules, actions, executions) | 1.6.0 |
+| `openapi/opal_listen.yaml` | OPAL Listen API (speech recognition, intents, wakewords) | 1.6.0 |
+| `openapi/opal_say.yaml` | OPAL Say API (TTS engines, voices, generation, streaming) | 1.6.0 |
+| `openapi/opal_look.yaml` | OPAL Look API (vision sources, pipelines, sessions, media) | 1.6.0 |
+| `openapi/opal_think.yaml` | OPAL Think API (durable reasoning tasks, sessions, models) | 1.6.0 |
+| `openapi/shared/opal_kernel.yaml` | Shared kernel: headers, parameters, errors, mounted pathItems, common schemas | 1.6.0 |
+
+## Contract conventions
+
+- **Singular resource routes** — `/api/v1/voice/`, `/api/v1/task/`,
+  `/api/v1/rule/` (v1.6.0 convention, matching `opal_say`).
+- **Correlation headers** — every operation accepts `X-Opal-Session-Id`,
+  `X-Opal-Transaction-Id`, `X-Opal-Request-Id`, `X-Opal-Causation-Id`; these are
+  transport context, not credentials.
+- **Strong concurrency** — configuration mutations declare `If-Match`
+  (`#/components/parameters/IfMatch`), return ETags, and document 428 (missing),
+  412 (stale), and 422 where applicable.
+- **Standard errors** — `OpalError` envelope on 4xx/5xx.
+- **Service identity** — every service mounts `/api/v1/info/` and
+  `/api/v1/info/ping` (kernel `ServiceInfo`/`LivenessRead`), plus
+  `/api/v1/health/` and `/health/live|ready`.
+- **Personas** — `/api/v1/persona/` CRUD + validate in all five services
+  (named identities; `voice_id` optional outside Say).
+- **CLI metadata** — `x-opal-cli` group/command annotations drive the CLI
+  command surface (Look uses `group:`/`command:` objects; Think uses strings).
+
+## Docs
+
+[`docs/`](docs/) holds runnable CLI cookbooks: `COOKBOOK.md` (50 recipes),
+`CLI_USECASES.md` (single-interface + 50 cross-interface recipes), and themed
+multi-interface collections (`EDUCATION.md`, `HOME_AUTOMATION.md`,
+`ACCESSIBILITY.md`, `PROPERTY_MONITORING.md`, `PET_CARE.md`,
+`VOICE_ASSISTANT.md`, `SHOPPING.md`, `COMPUTER_TRIAGE.md`, `STARGAZING.md`).
 
 ## Validating the contracts
 
-All checks run on every pull request and push to `main` via
-[`.github/workflows/openapi-validate.yml`](.github/workflows/openapi-validate.yml).
+All checks run via `npm run check`.
 
 ### Prerequisites
 
@@ -24,36 +52,34 @@ All checks run on every pull request and push to `main` via
 ### Commands
 
 ```bash
-npm run validate    # structural validation + $ref resolution of every file
-                    # in openapi/ (Redocly CLI, redocly.yaml)
-npm run lint        # generic OpenAPI lint rules (Spectral, .spectral.yaml)
-npm run lint:opal   # OPAL suite conventions (Spectral, .spectral.opal.yaml)
-npm run lint:look    # OPAL Look-specific contract guarantees (.spectral.opal.look.yaml)
-npm run test:lint    # regression fixtures proving the rules fire (tests/test_lint.py)
-npm run check       # all of the above, same as CI
+npm run validate       # Redocly structural validation + $ref resolution
+npm run lint           # generic Spectral rules (.spectral.yaml)
+npm run lint:opal      # OPAL suite conventions (.spectral.opal.yaml)
+npm run lint:kernel    # suite conventions against the kernel
+npm run lint:look      # Look-specific guarantees (.spectral.opal.look.yaml)
+npm run lint:think     # Think-specific guarantees (.spectral.opal.think.yaml)
+npm run bundle         # dereferenced bundles to dist/
+npm run test:lint      # regression fixtures for the Spectral rules
+npm run test:event150  # event contract assertions
+npm run test:think-event  # think<->event integration routes
+npm run test:look-cli  # x-opal-cli metadata coverage
+npm run test:listen150 # listen contract assertions
+npm run test:say150    # say contract assertions
+npm run test:rest-security  # auth/scope/concurrency semantics
+npm run check          # everything above, same as CI
 ```
 
 ### What is checked
 
 - OpenAPI 3.1 parsing and structural validity (Redocly `recommended` ruleset)
-- Local `$ref` resolution (both tools fail on unresolved references; there are
-  no external `$ref`s today)
-- Duplicate `operationId`s (`operation-operationId-unique`)
-- Path/parameter consistency (`path-params`, `operation-parameters-*`)
-- Invalid examples and response schemas (`oas3-valid-*-example`,
-  `oas3-schema`)
-- Every file under `openapi/` — the glob `"openapi/*.yaml"` covers all
-  published contracts; add new contracts there and they are checked
-  automatically
-
-### Ruleset layout
-
-| File | Purpose |
-| --- | --- |
-| `redocly.yaml` | Generic structural validation. Two rules are disabled because they contradict documented OPAL conventions (`no-path-trailing-slash`) or are intentionally deferred (`security-defined`). |
-| `.spectral.yaml` | Generic Spectral `oas` recommended rules. |
-| `.spectral.opal.yaml` | OPAL suite conventions only (error correlation headers, standard error body, request context parameters, ETag/precondition declarations, 201 Location, item-op 404s, event-envelope compatibility). Keep OPAL-specific rules here, not in the generic ruleset. |
-| `.spectral.opal.look.yaml` | Look-scoped guarantees: mandatory If-Match on configuration mutations, cursor-page structure (items/next_cursor/has_more), status+ready probe bodies on 200 and 503, and BusEvent keeping correlation metadata optional inside data.metadata. Separate file because these rules apply to Look paths only. |
+- Local `$ref` resolution — both tools fail on unresolved references
+- Duplicate `operationId`s, path/parameter consistency, valid examples
+- OPAL suite conventions: correlation params, error envelope, ETag/precondition
+  declarations, 201 Location, item-op 404s
+- Look-specific guarantees: `x-opal-cli` on every operation, mandatory
+  `If-Match` on configuration mutations, cursor-page structure, health-probe
+  bodies
+- Contract regression tests in `tests/` for each service
 
 Spectral fails the build on `error` severity; `warn`-level findings are
 reported but non-blocking.

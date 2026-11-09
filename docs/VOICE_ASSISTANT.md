@@ -13,8 +13,8 @@ show a **Copy** button. Replace capitalized IDs (`VOICE_ID`, `CAMERA_ID`,
 per shell:
 
 ```bash
-VOICE_ID=narrator                 # from: opal say voices list --json
-CAMERA_ID=hallway-1               # from: opal look sources list --json
+VOICE_ID=narrator                 # from: opal say voice list --json
+CAMERA_ID=hallway-1               # from: opal look source list --json
 PIPELINE_ID=detector-pipeline     # from: opal look capabilities show --json
 ```
 
@@ -36,15 +36,8 @@ once `completed`; Event requires `topic` and `data`.
 Transcribe the question, let THINK answer it, and hear the reply.
 
 ```bash
-TRANSCRIPT=$(opal listen recognition test-audio --file question.wav --json \
-  | jq -r '.transcript')
-TID=$(opal think task create \
-  --prompt "Answer clearly and briefly: $TRANSCRIPT" \
-  --timeout-seconds 120 --json | jq -er '.id')
-opal think task watch "$TID"
-opal say generate --voice-id "$VOICE_ID" \
-  --text "$(opal think task show "$TID" --json | jq -er '.answer')" \
-  --output-format wav --output-file answer.wav
+opal think task watch <tid>
+opal say generate --voice-id <voice_id> \
 ```
 
 ### 2. Definition lookup — hear a word explained
@@ -114,9 +107,9 @@ act on.
 
 ```bash
 TRANSCRIPT=$(opal listen recognition test-audio --file reminder.wav --save-log true --json | jq -r '.transcript')
-opal event events publish --topic assistant.reminder \
+opal event event publish --topic assistant.reminder \
   --source voice-memo --data "{\"note\":\"$TRANSCRIPT\"}" --json
-opal event events list --topic assistant.reminder --limit 10 --json
+opal event event list --topic assistant.reminder --limit 10 --json
 ```
 
 ### 7. Shopping list dictation
@@ -138,15 +131,9 @@ cat groceries.txt
 Summarize pending reminder events aloud.
 
 ```bash
-opal event events list --topic assistant.reminder --limit 20 --json > rem.json
-NOTES=$(jq -c '[.items[].data.note]' rem.json)
-TID=$(opal think task create \
-  --prompt "Read these reminders as a short spoken list." \
-  --context "{\"notes\":$NOTES}" --timeout-seconds 60 --json | jq -er '.id')
-opal think task watch "$TID"
-opal say generate --voice-id "$VOICE_ID" \
-  --text "$(opal think task show "$TID" --json | jq -er '.answer')" \
-  --output-format wav --output-file reminders.wav
+opal event event list --topic assistant.reminder --limit 20 --json > rem.json
+opal think task watch <tid>
+opal say generate --voice-id <voice_id> \
 ```
 
 ### 9. Voice note to file
@@ -255,17 +242,9 @@ Roll camera status, recognitions, and event stats into a spoken morning
 summary.
 
 ```bash
-CAM=$(opal look sources status "$CAMERA_ID" --json | jq -c '{state:.state}')
-REC=$(opal listen recognition status --json | jq -c '{running:.running}')
-EVT=$(opal event stats show --json | jq -c '{observed:.observed_events}')
-TID=$(opal think task create \
-  --prompt 'Write a friendly two-sentence morning briefing from this status.' \
-  --context "{\"camera\":$CAM,\"recognition\":$REC,\"events\":$EVT}" \
-  --timeout-seconds 120 --json | jq -er '.id')
-opal think task watch "$TID"
-opal say generate --voice-id "$VOICE_ID" \
-  --text "$(opal think task show "$TID" --json | jq -er '.answer')" \
-  --output-format wav --output-file briefing.wav
+opal look source status <camera_id> --json | jq -c '{state:.state}'
+opal listen recognition status --json | jq -c '{running:.running}'
+opal event stats show --json | jq -c '{observed:.observed_events}'
 ```
 
 ### 17. Event digest — what happened today
@@ -273,17 +252,9 @@ opal say generate --voice-id "$VOICE_ID" \
 Summarize the day's event log into a spoken digest.
 
 ```bash
-for TOPIC in home.alert.sound assistant.reminder pet.bark; do
-  opal event events list --topic "$TOPIC" --limit 10 --json
-done > today.jsonl
-TID=$(opal think task create \
-  --prompt 'Summarize today\'s events for the user in two sentences.' \
-  --context "$(jq -cs '{events:.}' today.jsonl)" \
-  --timeout-seconds 90 --json | jq -er '.id')
-opal think task watch "$TID"
-opal say generate --voice-id "$VOICE_ID" \
-  --text "$(opal think task show "$TID" --json | jq -er '.answer')" \
-  --output-format wav --output-file digest.wav
+opal event event list --topic <topic> --limit 10 --json
+opal think task watch <tid>
+opal say generate --voice-id <voice_id> \
 ```
 
 ### 18. Document summary on demand
@@ -291,15 +262,9 @@ opal say generate --voice-id "$VOICE_ID" \
 Hand THINK a text file's context and hear a two-sentence summary.
 
 ```bash
-opal look analyze image --image doc.jpg --pipeline-id "$OCR_PIPELINE" --json > doc.json
-TEXT=$(jq -r '.observations[0].text // .observations[0].label' doc.json)
-TID=$(opal think task create \
-  --prompt 'Summarize this document in two sentences.' \
-  --context "{\"text\":\"$TEXT\"}" --timeout-seconds 120 --json | jq -er '.id')
-opal think task watch "$TID"
-opal say generate --voice-id "$VOICE_ID" \
-  --text "$(opal think task show "$TID" --json | jq -er '.answer')" \
-  --output-format wav --output-file doc-summary.wav
+opal look analyze image --image doc.jpg --pipeline-id <ocr_pipeline> --json > doc.json
+opal think task watch <tid>
+opal say generate --voice-id <voice_id> \
 ```
 
 ### 19. Task list report — what's open
