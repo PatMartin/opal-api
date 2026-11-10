@@ -1457,11 +1457,9 @@ components:
       type: object
       required:
       - text
-      unevaluatedProperties: false
       description: 'Shared speech-generation settings. Omitted fields resolve from the selected/active
 
-        profile, then service defaults. `unevaluatedProperties` (OpenAPI 3.1)
-        keeps this object closed to unknown keys under `allOf` composition.
+        profile, then service defaults.
 
         '
       properties:
@@ -1534,11 +1532,14 @@ components:
         engine_options:
           $ref: '#/components/schemas/EngineOptions'
     GenerateRequest:
-      description: 'Request for completed speech audio. Any omitted generation setting is resolved
+      description: 'Request for completed speech audio. Applicable settings resolve in order:
 
-        from the selected/active profile and then service defaults.
+        explicit request values, persona, the selected/active profile, then service
+
+        defaults.
 
         '
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/GenerateRequestBase'
       - type: object
@@ -1558,9 +1559,14 @@ components:
     GenerateStreamRequest:
       description: 'Request for progressively streamed speech. The wire format is fixed to raw PCM,
 
-        so there is intentionally no `output_format` property.
+        so there is intentionally no `output_format` property. Applicable settings
+
+        resolve in order: explicit request values, persona, the selected/active
+
+        profile, then service defaults.
 
         '
+      unevaluatedProperties: false
       allOf:
       - $ref: '#/components/schemas/GenerateRequestBase'
       example:
