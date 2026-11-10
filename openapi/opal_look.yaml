@@ -2,7 +2,7 @@ openapi: 3.1.0
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 info:
   title: OPAL Look — Visual Observation API
-  version: 1.7.0
+  version: 1.7.1
   description: 'Clean-sheet, implementation-neutral visual perception API for OPAL 1.4.0. OpenAPI is normative for
     REST, generated CLI, and SPA clients. A source provides frames; a pipeline is an ordered acyclic graph of inference
     and processing stages; a stage produces immutable observations; sessions run live pipelines; jobs run finite

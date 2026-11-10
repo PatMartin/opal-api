@@ -1,6 +1,6 @@
 """Contract regression tests for the unified opal_say.yaml (atomic config imports).
 
-Verifies the published 1.7.0 spec:
+Verifies the published 1.7.1 spec:
 - backup/import and backup/restore now require strong If-Match with 412+428;
 - atomicity + validate-before-apply semantics are required, not SHOULD-optional.
 """
@@ -31,7 +31,7 @@ def param_names(op):
 def main():
     spec = spec_util.load(SPEC)
 
-    check(spec["info"]["version"] == "1.7.0", "info.version is 1.7.0")
+    check(spec["info"]["version"] == "1.7.1", "info.version is 1.7.1")
 
     for path, name in (("/api/v1/backup/import", "import"),
                        ("/api/v1/backup/restore/{filename}", "restore")):
