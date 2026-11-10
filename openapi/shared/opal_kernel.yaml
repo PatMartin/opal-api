@@ -65,6 +65,54 @@ x-opal-cli-format:
     parent: config
     group: persona
     command: list
+x-opal-persona:
+  version: '1.0'
+  description: >-
+    Portable OPAL persona contract. A persona is an identity with optional
+    per-service bindings. OPAL Think hosts the authoritative registry; every
+    service keeps full local CRUD for standalone operation, and the owner
+    record wins on conflict when a consumer is configured to reach it.
+  ownership:
+    authoritative_writer: OPAL Think
+    obtain: >-
+      Consumers resolve an unknown persona_id from
+      GET {owner_url}/api/v1/persona/{persona_id}, cache it with its ETag
+      (origin: owner), and revalidate on use. No owner_url means standalone:
+      local personas only.
+    conflict: owner record wins when owner_url is configured; local records are retained.
+  resolution:
+    order: explicit request field > persona binding > profile > service default
+    per_field: true
+  bindings:
+    voice_id: OPAL Say validates resolvability; other services treat it as an opaque nullable reference.
+    think: model/instructions binding lives in Think's service-local fields; Think validates.
+    validation: >-
+      POST /api/v1/persona/{persona_id}/validate reports that service's
+      binding resolvability, not a suite-wide verdict.
+  errors:
+    unknown_persona: 404 on read, 422 when referenced by a request
+    binding_unresolvable: 422 on use; /validate reports it without deleting the persona
+    disabled: 422/409 on use; record and bindings remain readable
+  examples:
+    think_only:
+      persona_id: amy
+      name: Amy
+      enabled: true
+      description: Persona with only a Think model/instructions binding (service-local fields).
+    say_only:
+      persona_id: vox
+      name: Vox
+      voice_id: en-gb-alan-low
+      enabled: true
+      description: Persona with only a Say voice binding.
+    combined:
+      persona_id: amy
+      name: Amy
+      description: Ops assistant.
+      voice_id: en-gb-alan-low
+      enabled: true
+      origin: owner
+      description_of_example: Think model + instructions plus a Say voice, synced from the owner.
 components:
   headers:
     OpalSessionIdHeader:
@@ -1383,6 +1431,11 @@ components:
           description: Rebind the persona to a different OPAL Say voice identifier.
         enabled:
           type: boolean
+    OpalPersonaRef:
+      type: string
+      minLength: 1
+      maxLength: 200
+      pattern: ^[A-Za-z0-9][A-Za-z0-9._-]*$
     OpalPersonaRead:
       type: object
       required:
@@ -1410,6 +1463,14 @@ components:
           description: Optional OPAL Say voice identifier associated with this persona.
         enabled:
           type: boolean
+        origin:
+          type: string
+          enum: [local, owner]
+          default: local
+          description: >-
+            Provenance: `local` (authored here, standalone) or `owner` (synced
+            from the authoritative registry at OPAL Think). Optional and
+            additive; absent means `local`.
         created_at:
           type: string
           format: date-time

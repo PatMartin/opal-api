@@ -1490,10 +1490,7 @@ components:
           example: en-us-lessac-medium
         persona:
           anyOf:
-          - type: string
-            minLength: 1
-            maxLength: 200
-            pattern: ^[A-Za-z0-9][A-Za-z0-9._-]*$
+          - $ref: './shared/opal_kernel.yaml#/components/schemas/OpalPersonaRef'
           - type: 'null'
           description: 'Named persona supplying a default voice. An explicit `voice_id` in this
 
@@ -1578,10 +1575,7 @@ components:
           description: Request-level voice override.
         persona:
           anyOf:
-          - type: string
-            minLength: 1
-            maxLength: 200
-            pattern: ^[A-Za-z0-9][A-Za-z0-9._-]*$
+          - $ref: './shared/opal_kernel.yaml#/components/schemas/OpalPersonaRef'
           - type: 'null'
           description: Named persona supplying a default voice; `voice_id` takes precedence.
           example: amy
