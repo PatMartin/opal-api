@@ -44,6 +44,7 @@ Shared kernel mounts — identical in all five services:
 │   └── profile/{id}/activate  POST
 ├── persona/  GET/POST · persona/{id}  GET/PATCH/DELETE
 │   └── persona/{id}/validate  POST
+├── service/start  POST · service/stop  POST · service/log  GET
 └── setting/  GET/PATCH · setting/{key}  GET/PUT/DELETE
     (engine/ + engine/{id} GET — say and look only)
 ```
@@ -112,6 +113,7 @@ opal
 │   ├── config        intent | slot | wakeword | regression | persona | profile | setting
 │   ├── data          failed-utterance | performance
 │   ├── backup        create | list | download | remove | export | import | validate | restore
+│   ├── service       start | stop | log
 │   └── info          version | ping | health | live | ready | audio-devices
 │
 ├── say
@@ -120,12 +122,14 @@ opal
 │   ├── config        voice | persona | profile | setting
 │   ├── engine        list | show
 │   ├── backup        ...
+│   ├── service       start | stop | log
 │   └── info          ...
 │
 ├── event
 │   ├── config        rule | action | topic | persona | profile | setting
 │   ├── data          event | execution | stats
 │   ├── backup        ...
+│   ├── service       start | stop | log
 │   └── info          ...
 │
 ├── look                                   (fully annotated in spec)
@@ -136,6 +140,7 @@ opal
 │   ├── data          observation | media | capture | artifact | recording | job
 │   ├── engine        list | show
 │   ├── backup        ...
+│   ├── service       start | stop | log
 │   └── info          version | ping | health | live | ready | capabilities | metrics | events
 │
 └── think                                  (annotated in spec)
@@ -144,11 +149,15 @@ opal
     ├── model         list | show
     ├── config        persona | profile | setting
     ├── backup        ...
+    ├── service       start | stop | log
     └── info          ...
 ```
 
-`backup`, `persona`, `profile`, `setting`, and `info` are uniform across all
-five services; `engine` exists on say + look only.
+`backup`, `persona`, `profile`, `setting`, `service`, and `info` are uniform
+across all five services; `engine` exists on say + look only. `service start`
+launches the server in the background (output to `logs/opal_<service>.log`,
+overwritten by default, any running instance killed first), `service stop`
+halts it, and `service log` tails the last 10 lines.
 
 ## Docs
 

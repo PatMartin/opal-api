@@ -191,6 +191,16 @@ components:
         type: string
         minLength: 1
       example: piper
+    ServiceLogLines:
+      name: lines
+      in: query
+      required: false
+      description: Number of trailing log lines to return.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 1000
+        default: 10
   responses:
     BadRequest:
       description: Malformed request syntax or invalid parameter encoding.
@@ -1231,6 +1241,59 @@ components:
           enum:
           - ok
           example: ok
+    OpalServiceStartOptions:
+      type: object
+      properties:
+        append:
+          type: boolean
+          default: false
+          description: Append to the existing service log file instead of truncating it. By default
+            `logs/opal_<service>.log` is overwritten on each start.
+      required: []
+      additionalProperties: true
+      description: Options for service start.
+    OpalServiceStatus:
+      type: object
+      required:
+      - state
+      properties:
+        state:
+          type: string
+          enum:
+          - running
+          - stopped
+          description: Whether the service's server process is running after the operation.
+        pid:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: Process identifier of the running server; null when stopped or unknown.
+        previous_pid:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: Process identifier of a prior instance terminated by `service start`; null when none was
+            running.
+        log_file:
+          type: string
+          description: Path of the log file receiving server output (`logs/opal_<service>.log`).
+      additionalProperties: true
+      description: Lifecycle state of the service's server process as reported by start/stop.
+    OpalServiceLogTail:
+      type: object
+      required:
+      - lines
+      properties:
+        log_file:
+          type: string
+          description: Path of the service log file (`logs/opal_<service>.log`).
+        lines:
+          type: array
+          items:
+            type: string
+          description: Trailing log lines, oldest first; at most `lines` entries.
+      additionalProperties: true
+      description: Trailing lines of the service log file.
   securitySchemes:
     BearerAuth:
       type: http
@@ -2403,5 +2466,127 @@ components:
             $ref: '#/components/responses/Unauthorized'
           '403':
             $ref: '#/components/responses/Forbidden'
+          '422':
+            $ref: '#/components/responses/UnprocessableEntity'
+    service_start:
+      parameters:
+      - $ref: '#/components/parameters/OpalSessionIdParameter'
+      - $ref: '#/components/parameters/OpalTransactionIdParameter'
+      - $ref: '#/components/parameters/OpalRequestIdParameter'
+      - $ref: '#/components/parameters/OpalCausationIdParameter'
+      post:
+        tags:
+        - service
+        summary: Start service
+        operationId: opal_service_start
+        description: 'Start the service''s server process in the background and return immediately. Server output
+          is written to `logs/opal_<service>.log`; the log file is overwritten by default unless `append` is
+          requested. If another server process is already running it is terminated before the new one is launched,
+          so `start` doubles as restart. The response reports the launched process; readiness is reported separately
+          by `/api/v1/health/ready`.'
+        requestBody:
+          required: false
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpalServiceStartOptions'
+        responses:
+          '200':
+            description: Server process launched.
+            headers:
+              X-Opal-Session-Id:
+                $ref: '#/components/headers/OpalSessionIdHeader'
+              X-Opal-Transaction-Id:
+                $ref: '#/components/headers/OpalTransactionIdHeader'
+              X-Opal-Request-Id:
+                $ref: '#/components/headers/OpalRequestIdHeader'
+              X-Opal-Causation-Id:
+                $ref: '#/components/headers/OpalCausationIdHeader'
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/OpalServiceStatus'
+          '401':
+            $ref: '#/components/responses/Unauthorized'
+          '403':
+            $ref: '#/components/responses/Forbidden'
+          '422':
+            $ref: '#/components/responses/UnprocessableEntity'
+          '500':
+            $ref: '#/components/responses/OperationFailed'
+    service_stop:
+      parameters:
+      - $ref: '#/components/parameters/OpalSessionIdParameter'
+      - $ref: '#/components/parameters/OpalTransactionIdParameter'
+      - $ref: '#/components/parameters/OpalRequestIdParameter'
+      - $ref: '#/components/parameters/OpalCausationIdParameter'
+      post:
+        tags:
+        - service
+        summary: Stop service
+        operationId: opal_service_stop
+        description: Stop the service's server process if it is running. Not an error when no server is running;
+          the response reports the resulting state.
+        responses:
+          '200':
+            description: Resulting process state.
+            headers:
+              X-Opal-Session-Id:
+                $ref: '#/components/headers/OpalSessionIdHeader'
+              X-Opal-Transaction-Id:
+                $ref: '#/components/headers/OpalTransactionIdHeader'
+              X-Opal-Request-Id:
+                $ref: '#/components/headers/OpalRequestIdHeader'
+              X-Opal-Causation-Id:
+                $ref: '#/components/headers/OpalCausationIdHeader'
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/OpalServiceStatus'
+          '401':
+            $ref: '#/components/responses/Unauthorized'
+          '403':
+            $ref: '#/components/responses/Forbidden'
+          '422':
+            $ref: '#/components/responses/UnprocessableEntity'
+          '500':
+            $ref: '#/components/responses/OperationFailed'
+    service_log:
+      parameters:
+      - $ref: '#/components/parameters/OpalSessionIdParameter'
+      - $ref: '#/components/parameters/OpalTransactionIdParameter'
+      - $ref: '#/components/parameters/OpalRequestIdParameter'
+      - $ref: '#/components/parameters/OpalCausationIdParameter'
+      get:
+        tags:
+        - service
+        summary: Tail service log
+        operationId: opal_service_log
+        description: Return the trailing lines of the service's log file (`logs/opal_<service>.log`); defaults
+          to the last 10 lines.
+        parameters:
+        - $ref: '#/components/parameters/ServiceLogLines'
+        responses:
+          '200':
+            description: Trailing log lines.
+            headers:
+              X-Opal-Session-Id:
+                $ref: '#/components/headers/OpalSessionIdHeader'
+              X-Opal-Transaction-Id:
+                $ref: '#/components/headers/OpalTransactionIdHeader'
+              X-Opal-Request-Id:
+                $ref: '#/components/headers/OpalRequestIdHeader'
+              X-Opal-Causation-Id:
+                $ref: '#/components/headers/OpalCausationIdHeader'
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/OpalServiceLogTail'
+          '401':
+            $ref: '#/components/responses/Unauthorized'
+          '403':
+            $ref: '#/components/responses/Forbidden'
+          '404':
+            $ref: '#/components/responses/NotFound'
           '422':
             $ref: '#/components/responses/UnprocessableEntity'

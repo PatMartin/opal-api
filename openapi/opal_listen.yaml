@@ -2063,6 +2063,24 @@ paths:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_import'
   /api/v1/backup/validate:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_validate'
+  /api/v1/service/start:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/service_start'
+    x-opal-cli:
+      post:
+        group: service
+        command: start
+  /api/v1/service/stop:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/service_stop'
+    x-opal-cli:
+      post:
+        group: service
+        command: stop
+  /api/v1/service/log:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/service_log'
+    x-opal-cli:
+      get:
+        group: service
+        command: log
   /api/v1/persona/:
     get:
       tags:
@@ -3697,6 +3715,7 @@ tags:
 - name: slots
 - name: wakewords
 - name: info
+- name: service
 servers:
 - url: http://localhost:8000
 x-opal-context-standard:

@@ -86,6 +86,8 @@ tags:
   description: Service readiness and health information. Playback devices are out of scope.
 - name: backup
   description: Backup, restore, import, export, and validate OPAL Say configuration.
+- name: service
+  description: Service process lifecycle (start, stop, log tail).
 servers:
 - url: http://127.0.0.1:8080
   description: Illustrative local endpoint; actual bind address and port are configurable.
@@ -986,6 +988,24 @@ paths:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health_live'
   /api/v1/health/ready:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health_ready'
+  /api/v1/service/start:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/service_start'
+    x-opal-cli:
+      post:
+        group: service
+        command: start
+  /api/v1/service/stop:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/service_stop'
+    x-opal-cli:
+      post:
+        group: service
+        command: stop
+  /api/v1/service/log:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/service_log'
+    x-opal-cli:
+      get:
+        group: service
+        command: log
 components:
   securitySchemes:
     BearerAuth: {$ref: './shared/opal_kernel.yaml#/components/securitySchemes/BearerAuth'}

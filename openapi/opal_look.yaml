@@ -141,6 +141,8 @@ tags:
   description: Manage named persona identities adopting the shared OPAL persona identifiers introduced by OPAL Say v1.6.0.
 - name: info
   description: Service identity, version and liveness probes.
+- name: service
+  description: Service process lifecycle (start, stop, log tail).
 components:
   schemas:
     CapabilityDescriptor:
@@ -5342,6 +5344,24 @@ paths:
       get:
         group: info
         command: ready
+  /api/v1/service/start:
+    $ref: ./shared/opal_kernel.yaml#/components/pathItems/service_start
+    x-opal-cli:
+      post:
+        group: service
+        command: start
+  /api/v1/service/stop:
+    $ref: ./shared/opal_kernel.yaml#/components/pathItems/service_stop
+    x-opal-cli:
+      post:
+        group: service
+        command: stop
+  /api/v1/service/log:
+    $ref: ./shared/opal_kernel.yaml#/components/pathItems/service_log
+    x-opal-cli:
+      get:
+        group: service
+        command: log
   /api/v1/metrics/:
     get:
       tags:
