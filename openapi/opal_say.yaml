@@ -64,7 +64,9 @@ tags:
 - name: persona
   description: 'Manage named persona: identities that bind a registered voice so requests can
 
-    select a consistent character with a single `persona` field. The schema is kept
+    select a consistent character with a single `persona` field. Personas and
+    profiles are explained together in the shared kernel doc `x-opal-persona`
+    (`profiles_vs_personas`). The schema is kept
 
     flat for Say v1; sister OPAL services may adopt the same persona identifiers for
 
@@ -886,6 +888,31 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/GenerateRequest'
+            examples:
+              profile-default-voice:
+                summary: >-
+                  Active profile supplies the voice. "amy" is active with
+                  voice en-us-lessac-medium; the request names nothing, so the
+                  profile voice is used.
+                value:
+                  text: Hello from the default profile voice.
+              persona-selected-voice:
+                summary: >-
+                  Persona supplies a different voice. Persona "amy" binds
+                  en-gb-alan-low; naming the persona overrides the active
+                  profile's voice for this request.
+                value:
+                  text: Hello from Amy.
+                  persona: amy
+              explicit-voice-overrides:
+                summary: >-
+                  Explicit voice_id wins. Even with persona "amy" selected, the
+                  request voice en-us-ryan-high overrides both the persona and
+                  the profile.
+                value:
+                  text: Hello in Ryan's voice.
+                  persona: amy
+                  voice_id: en-us-ryan-high
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1492,9 +1519,11 @@ components:
       type: object
       required:
       - text
-      description: 'Shared speech-generation settings. Omitted fields resolve from the selected/active
+      description: 'Shared speech-generation settings. Applicable settings resolve in order:
 
-        profile, then service defaults.
+        explicit request values, persona, the selected/active profile, then service
+
+        defaults.
 
         '
       properties:
