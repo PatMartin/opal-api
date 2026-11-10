@@ -1888,15 +1888,6 @@ components:
         maxLength: 200
         pattern: ^[A-Za-z0-9][A-Za-z0-9._-]*$
       example: amy
-    IdempotencyKey:
-      name: Idempotency-Key
-      in: header
-      required: false
-      description: 1–128 characters; persist key/fingerprint for 24 hours. Retry with changed body yields 409.
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 128
   responses:
     RangeNotSatisfiable:
       description: RangeNotSatisfiable
@@ -3822,7 +3813,7 @@ paths:
       - *id032
       - *id033
       - *id034
-      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IdempotencyKey'
       responses:
         '401':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Unauthorized
@@ -4182,7 +4173,7 @@ paths:
       - *id032
       - *id033
       - *id034
-      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IdempotencyKey'
       responses:
         '401':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Unauthorized
@@ -5459,7 +5450,7 @@ paths:
       - *id032
       - *id033
       - *id034
-      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IdempotencyKey'
       responses:
         '401':
           $ref: ./shared/opal_kernel.yaml#/components/responses/Unauthorized

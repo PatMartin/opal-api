@@ -75,7 +75,7 @@ paths:
         serializes active tasks (409 if busy). Idempotency-Key can safely repeat admission but does not guarantee
         exactly-once action side effects. All context is untrusted. No separate chat REST endpoint.
       parameters:
-      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -1029,16 +1029,6 @@ components:
         minLength: 1
         maxLength: 200
       description: URL-encode opaque ID.
-    IdempotencyKey:
-      name: Idempotency-Key
-      in: header
-      required: false
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 128
-      description: Optional caller-scoped deduplication for task creation. Same key+body returns the same task;
-        conflicting body returns 409.
     TaskStatus:
       name: status
       in: query

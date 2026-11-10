@@ -156,6 +156,18 @@ components:
       schema:
         type: string
         pattern: ^"[^"]+"$
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: Optional caller-scoped deduplication key for admissions that accept it. Repeating a request
+        with the same key and an identical request body replays the original admission result; reusing the key
+        with a different body is rejected with 409 Conflict. Each service documents which operations honor the
+        key and how long key/fingerprint records are retained.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
     Cursor:
       name: cursor
       in: query
