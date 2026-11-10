@@ -241,3 +241,67 @@ rules:
             required:
               const: false
 
+
+  opal-cli-descriptor:
+    description: Operation-level x-opal-cli must use the canonical structured descriptor (required `command`; optional `parent`, `group`, `aliases`) documented at kernel extension x-opal-cli-format.
+    severity: error
+    given:
+      - $.paths[*][*].x-opal-cli
+      - $.components.pathItems[*][*].x-opal-cli
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - command
+          additionalProperties: false
+          properties:
+            parent:
+              type: string
+              pattern: ^[a-z0-9][a-z0-9-]*$
+            group:
+              type: string
+              pattern: ^[a-z0-9][a-z0-9-]*$
+            command:
+              type: string
+              pattern: ^[a-z0-9][a-z0-9-]*$
+            aliases:
+              type: array
+              items:
+                type: string
+                minLength: 1
+
+  opal-cli-method-map:
+    description: Path-level x-opal-cli on $ref-mounted paths must be a per-method map of canonical descriptors.
+    severity: error
+    given:
+      - $.paths[*].x-opal-cli
+      - $.components.pathItems[*].x-opal-cli
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          additionalProperties: false
+          patternProperties:
+            ^(get|post|put|patch|delete)$:
+              type: object
+              required:
+                - command
+              additionalProperties: false
+              properties:
+                parent:
+                  type: string
+                  pattern: ^[a-z0-9][a-z0-9-]*$
+                group:
+                  type: string
+                  pattern: ^[a-z0-9][a-z0-9-]*$
+                command:
+                  type: string
+                  pattern: ^[a-z0-9][a-z0-9-]*$
+                aliases:
+                  type: array
+                  items:
+                    type: string
+                    minLength: 1

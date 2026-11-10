@@ -62,7 +62,10 @@ info:
     and event publication. P2/P3 features are capability-advertised extensions and may be absent.
 
 
-    CLI METADATA (normative): Every operation has x-opal-cli.group and x-opal-cli.command.
+    CLI METADATA (normative): Every operation carries an x-opal-cli descriptor in the canonical
+    format documented at kernel extension x-opal-cli-format — required `command`, optional
+    `group`, optional `parent` super-group, optional `aliases`. Kernel-mounted paths carry a
+    per-method map `x-opal-cli: {<method>: <descriptor>}`.
 
     Resource management uses add, remove, update, list, show as its five canonical verbs.
 

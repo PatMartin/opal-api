@@ -19,8 +19,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import spec_util  # noqa: E402
 
 LOOK = os.path.join(ROOT, "openapi", "opal_look.yaml")
+THINK = os.path.join(ROOT, "openapi", "opal_think.yaml")
 KERNEL = os.path.join(ROOT, "openapi", "shared", "opal_kernel.yaml")
-DOCS = {"look": LOOK, "kernel": KERNEL}
+DOCS = {"look": LOOK, "think": THINK, "kernel": KERNEL}
 RULES = {
     "look": os.path.join(ROOT, ".spectral.opal.look.yaml"),
     "opal": os.path.join(ROOT, ".spectral.opal.yaml"),
@@ -178,6 +179,20 @@ def m_precond(d):
     res.pop("428", None)
 
 
+def m_cli_descriptor(d):
+    # Legacy string annotation replaces the structured descriptor.
+    op = d["paths"]["/api/v1/task/"]["get"]
+    assert op["x-opal-cli"]["command"] == "list"
+    op["x-opal-cli"] = "task list"
+
+
+def m_cli_map(d):
+    # Path-level per-method map gains a non-method key.
+    item = d["paths"]["/api/v1/profile/"]
+    assert item["x-opal-cli"]["get"]["command"] == "list"
+    item["x-opal-cli"]["bogus"] = {"command": "list"}
+
+
 CASES = [
     ("missing If-Match on config mutation", "look", m_ifmatch, "look", "opal-look-config-ifmatch", 0),
     ("cursor page missing next_cursor", "look", m_cursor, "look", "opal-look-cursor-page", 0),
@@ -194,6 +209,8 @@ CASES = [
     ("201 without Location", "look", m_location, "opal", "opal-201-location-header", 0),
     ("duplicate operationId", "look", m_dup_opid, "generic", "operation-operationId-unique", 0),
     ("broken $ref", "look", m_broken_ref, "generic", "invalid-ref", 0),
+    ("legacy string cli annotation", "think", m_cli_descriptor, "opal", "opal-cli-descriptor", 0),
+    ("cli method map non-method key", "think", m_cli_map, "opal", "opal-cli-method-map", 0),
 ]
 
 

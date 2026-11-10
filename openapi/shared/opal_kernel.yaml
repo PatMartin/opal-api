@@ -46,6 +46,25 @@ x-opal-event-envelope:
     (topic + JSON with topic/data) is unchanged across versions. Consumers extract known correlation keys (session_id,
     transaction_id, request_id, causation_id) and MUST ignore unknown metadata fields; producers may emit any metadata_schema_version
     without breaking the wire contract.
+x-opal-cli-format:
+  version: '1.0'
+  description: Canonical CLI binding for OPAL operations. Every annotated operation maps to one canonical
+    command `opal <service> [parent] [group] <command>`; `aliases` names alternate complete spellings that dispatch
+    to the same operation (e.g. Think's `ask`/`chat` invoke `task create`). Readers hoist a path-level per-method
+    map onto each operation; both forms carry the same descriptor shape.
+  descriptor:
+    command: required — canonical verb, kebab-case (`list`, `add`, `show`, `update`, `remove`, `validate`, ...)
+    group: optional — command group (`task`, `persona`, `backup`, `info`, ...)
+    parent: optional — super-group above `group` (`config`, `data`)
+    aliases: optional — array of alternate complete command spellings for this operation
+  placement:
+    operation: '`x-opal-cli: <descriptor>`'
+    path_item: '`x-opal-cli: {<method>: <descriptor>}` — required for kernel-mounted paths (extensions cannot
+      inject into `$ref`ed operations)'
+  example:
+    parent: config
+    group: persona
+    command: list
 components:
   headers:
     OpalSessionIdHeader:

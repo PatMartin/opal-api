@@ -25,9 +25,12 @@ Published OpenAPI 3.1 contracts for the OPAL suite — one file per service in
 - **Service identity** — every service mounts `/api/v1/info/` +
   `/api/v1/info/ping` and `/api/v1/health/` + `/health/live|ready`.
 - **Personas** — `/api/v1/persona/` CRUD + validate in all five services.
-- **CLI metadata** — `x-opal-cli` group/command/parent annotations drive the
-  CLI command surface (look: `{parent, group, command}` objects; think:
-  `'group command'` strings).
+- **CLI metadata** — `x-opal-cli` annotations bind operations to canonical
+  `opal <service> [parent] [group] <command>` spellings using one structured
+  descriptor (`command` + optional `parent`/`group`/`aliases`), documented at
+  kernel extension `x-opal-cli-format` and enforced by the
+  `opal-cli-descriptor`/`opal-cli-method-map` lint rules. Kernel-mounted
+  paths carry a per-method map `{<method>: <descriptor>}`.
 
 ## REST tree
 
