@@ -5948,3 +5948,84 @@ x-opal-context-standard:
     metadata_schema_version: '1.0'
 x-opal-authorization:
   $ref: ./shared/opal_kernel.yaml#/x-opal-authorization
+
+x-opal-workflow-examples:
+  - workflow: frame-capture
+    description: >-
+      Create an exact-frame capture, read `output_ref` from the Capture record,
+      then GET `output_ref.content_url` for the image bytes.
+    create:
+      method: POST
+      path: /api/v1/capture/
+      body:
+        source_id: src-front-door
+        retain: true
+    response:
+      status: 201
+      body:
+        id: cap-8f2d41a0
+        source_id: src-front-door
+        created_at: '2026-01-15T10:23:41Z'
+        expires_at: '2026-01-22T10:23:41Z'
+        mime_type: image/jpeg
+        annotated: false
+        frame_time: '2026-01-15T10:23:40Z'
+        output_ref:
+          kind: capture
+          id: cap-8f2d41a0
+          content_url: /api/v1/capture/cap-8f2d41a0/content
+    retrieve:
+      method: GET
+      path: /api/v1/capture/cap-8f2d41a0/content
+      returns: image/jpeg bytes (200); 404 once the capture is swept after expires_at
+  - workflow: recording
+    description: >-
+      Stop a recording; when `artifact_ref` is non-null the recording is
+      finalized and GET `artifact_ref.content_url` serves the clip bytes.
+      Null `artifact_ref` = still pending.
+    create:
+      method: POST
+      path: /api/v1/recording/rec-51c2/stop
+    response:
+      status: 200
+      body:
+        id: rec-51c2
+        source_id: src-front-door
+        state: completed
+        created_at: '2026-01-15T10:20:00Z'
+        artifact_ref:
+          kind: artifact
+          id: art-rec-51c2
+          content_url: /api/v1/artifact/art-rec-51c2/content
+    retrieve:
+      method: GET
+      path: /api/v1/artifact/art-rec-51c2/content
+      returns: recording bytes (200); 404 if the artifact is deleted or swept
+  - workflow: clip-export
+    description: >-
+      Submit an export job; when it completes `output_refs` lists one ref per
+      produced artifact (null while pending). GET each `content_url` for bytes.
+    create:
+      method: POST
+      path: /api/v1/job/
+      body:
+        kind: clip_export
+        source_id: src-front-door
+    response:
+      status: 200
+      body:
+        id: job-9a3f
+        kind: clip_export
+        state: completed
+        created_at: '2026-01-15T10:25:12Z'
+        progress: 1
+        artifact_ids:
+        - art-job-9a3f-clip
+        output_refs:
+        - kind: artifact
+          id: art-job-9a3f-clip
+          content_url: /api/v1/artifact/art-job-9a3f-clip/content
+    retrieve:
+      method: GET
+      path: /api/v1/artifact/art-job-9a3f-clip/content
+      returns: export bytes (200); 404 if the artifact is deleted or swept
