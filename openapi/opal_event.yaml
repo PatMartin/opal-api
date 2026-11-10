@@ -1208,8 +1208,45 @@ paths:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_activate'
   /api/v1/setting/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_collection'
+    x-opal-cli:
+      get:
+        parent: config
+        group: setting
+        command: list
+
+        aliases:
+        - setting get
+      patch:
+        parent: config
+        group: setting
+        command: update
+
+        aliases:
+        - config setting patch
   /api/v1/setting/{key}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_key'
+    x-opal-cli:
+      get:
+        parent: config
+        group: setting
+        command: show
+
+        aliases:
+        - setting get-key
+      put:
+        parent: config
+        group: setting
+        command: set
+
+        aliases:
+        - setting set-key
+      delete:
+        parent: config
+        group: setting
+        command: remove
+
+        aliases:
+        - setting reset-key
   /api/v1/info/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/info'
   /api/v1/info/ping:

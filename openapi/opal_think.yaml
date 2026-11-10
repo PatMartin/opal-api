@@ -587,7 +587,9 @@ paths:
       patch:
         parent: config
         group: setting
-        command: patch
+        command: update
+        aliases:
+        - setting patch
   /api/v1/setting/{key}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_key'
     x-opal-cli:

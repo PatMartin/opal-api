@@ -5092,7 +5092,9 @@ paths:
       patch:
         parent: config
         group: setting
-        command: patch
+        command: update
+        aliases:
+        - settings patch
   /api/v1/setting/{key}:
     $ref: ./shared/opal_kernel.yaml#/components/pathItems/settings_key
     x-opal-cli:
@@ -5103,11 +5105,13 @@ paths:
       put:
         parent: config
         group: setting
-        command: update
+        command: set
       delete:
         parent: config
         group: setting
-        command: reset
+        command: remove
+        aliases:
+        - settings reset
   /api/v1/backup/list:
     $ref: ./shared/opal_kernel.yaml#/components/pathItems/backup_list
     x-opal-cli:

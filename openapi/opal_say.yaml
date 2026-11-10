@@ -959,8 +959,43 @@ paths:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
   /api/v1/setting/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_collection'
+    x-opal-cli:
+      get:
+        parent: config
+        group: setting
+        command: list
+
+        aliases:
+      patch:
+        parent: config
+        group: setting
+        command: update
+
+        aliases:
+        - config setting patch
   /api/v1/setting/{key}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_key'
+    x-opal-cli:
+      get:
+        parent: config
+        group: setting
+        command: show
+
+        aliases:
+        - setting get
+      put:
+        parent: config
+        group: setting
+        command: set
+
+        aliases:
+      delete:
+        parent: config
+        group: setting
+        command: remove
+
+        aliases:
+        - setting delete
   /api/v1/health/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health'
   /api/v1/backup/list:
