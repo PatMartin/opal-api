@@ -1453,14 +1453,15 @@ components:
         updated_at:
           type: string
           format: date-time
-    GenerateRequest:
+    GenerateRequestBase:
       type: object
-      additionalProperties: false
       required:
       - text
-      description: 'Request for completed speech audio. Any omitted generation setting is resolved
+      unevaluatedProperties: false
+      description: 'Shared speech-generation settings. Omitted fields resolve from the selected/active
 
-        from the selected/active profile and then service defaults.
+        profile, then service defaults. `unevaluatedProperties` (OpenAPI 3.1)
+        keeps this object closed to unknown keys under `allOf` composition.
 
         '
       properties:
@@ -1474,7 +1475,6 @@ components:
             by the OpenAPI schema.
 
             '
-          example: Hello from OPAL Say.
         profile_id:
           anyOf:
           - type: integer
@@ -1524,20 +1524,30 @@ components:
             maximum: 2.0
           - type: 'null'
           description: Request-level linear gain override; `1.0` is unchanged.
-        output_format:
-          anyOf:
-          - $ref: '#/components/schemas/AudioFormat'
-          - type: 'null'
-          description: Request-level completed-audio format override.
         sample_rate:
           anyOf:
           - type: integer
             minimum: 8000
             maximum: 192000
           - type: 'null'
-          description: Optional requested output sample rate in Hz.
+          description: Optional requested output PCM sample rate in Hz.
         engine_options:
           $ref: '#/components/schemas/EngineOptions'
+    GenerateRequest:
+      description: 'Request for completed speech audio. Any omitted generation setting is resolved
+
+        from the selected/active profile and then service defaults.
+
+        '
+      allOf:
+      - $ref: '#/components/schemas/GenerateRequestBase'
+      - type: object
+        properties:
+          output_format:
+            anyOf:
+            - $ref: '#/components/schemas/AudioFormat'
+            - type: 'null'
+            description: Request-level completed-audio format override.
       example:
         text: The quick brown fox jumps over the lazy dog.
         voice_id: en-us-lessac-medium
@@ -1546,68 +1556,13 @@ components:
         output_format: wav
         engine_options: {}
     GenerateStreamRequest:
-      type: object
-      additionalProperties: false
-      required:
-      - text
       description: 'Request for progressively streamed speech. The wire format is fixed to raw PCM,
 
         so there is intentionally no `output_format` property.
 
         '
-      properties:
-        text:
-          type: string
-          minLength: 1
-          description: Plain text to speak. Long text may be internally chunked.
-          example: This audio begins streaming as it is generated.
-        profile_id:
-          anyOf:
-          - type: integer
-            minimum: 1
-          - type: 'null'
-          description: Explicit profile to use; otherwise the active profile may provide defaults.
-        voice_id:
-          anyOf:
-          - type: string
-            minLength: 1
-          - type: 'null'
-          description: Request-level voice override.
-        persona:
-          anyOf:
-          - $ref: './shared/opal_kernel.yaml#/components/schemas/OpalPersonaRef'
-          - type: 'null'
-          description: Named persona supplying a default voice; `voice_id` takes precedence.
-          example: amy
-        engine_id:
-          anyOf:
-          - type: string
-            minLength: 1
-          - type: 'null'
-          description: Optional advanced engine override; incompatible overrides are rejected.
-        speed:
-          anyOf:
-          - type: number
-            format: float
-            minimum: 0.25
-            maximum: 4.0
-          - type: 'null'
-        volume:
-          anyOf:
-          - type: number
-            format: float
-            minimum: 0.0
-            maximum: 2.0
-          - type: 'null'
-        sample_rate:
-          anyOf:
-          - type: integer
-            minimum: 8000
-            maximum: 192000
-          - type: 'null'
-          description: Optional requested PCM stream sample rate in Hz.
-        engine_options:
-          $ref: '#/components/schemas/EngineOptions'
+      allOf:
+      - $ref: '#/components/schemas/GenerateRequestBase'
       example:
         text: Stream this sentence as raw PCM audio.
         profile_id: 1
