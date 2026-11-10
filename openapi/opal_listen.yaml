@@ -21,10 +21,9 @@ info:
     \ /api/v1/health/ready. Settings: GET and PATCH /api/v1/settings/ exclusively;\
     \ PATCH is atomic. Mutable configuration uses strong ETags and mandatory If-Match\
     \ with 428 missing, 412 stale. For bounded configuration catalogs return full\
-    \ arrays (subject to explicit deployment caps); for growing histories use cursor\
-    \ pagination with stable deterministic ordering, opaque next_cursor and has_more.\
-    \ Cursors are scoped to the exact filter set and invalidate on mismatch (422);\
-    \ cursor values expire explicitly. Standard HTTP creation 201 Location, async\
+    \ arrays (subject to explicit deployment caps); growing histories return bounded\
+    \ arrays in stable deterministic order and `limit` caps the returned items.\
+    \ Standard HTTP creation 201 Location, async\
     \ admission 202, empty deletion 204. Streaming keeps media-specific transports\
     \ but exposes correlation headers, defined failure behavior, and no unsupported\
     \ replay guarantee. Configuration export/import/validation excludes secrets and\
@@ -1955,8 +1954,7 @@ paths:
       tags:
       - performance
       summary: Get Performance History
-      description: Use cursor pagination, stable descending time-plus-ID ordering;
-        filters are bound into the cursor.
+      description: Bounded list in stable descending time-plus-ID order; `limit` caps the returned items.
       operationId: get_performance_history_api_v1_performance_history_get
       parameters:
       - name: limit
@@ -1966,19 +1964,10 @@ paths:
           type: integer
           maximum: 500
           minimum: 1
-          description: Maximum items per page.
+          description: Maximum items to return.
           default: 100
           title: Limit
-        description: Maximum items per page.
-      - name: cursor
-        in: query
-        required: false
-        schema:
-          type: string
-          minLength: 1
-          description: Opaque continuation token returned from the preceding page.
-          title: Cursor
-        description: Opaque continuation token returned from the preceding page.
+        description: Maximum items to return.
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1989,7 +1978,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PerformancePage'
+                $ref: '#/components/schemas/PerformanceHistory'
           headers:
             X-Opal-Session-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
@@ -2757,24 +2746,11 @@ components:
       - p95
       - max
       title: LatencyStats
-    PerformancePage:
-      type: object
-      description: Cursor-paginated performance result history.
-      required:
-      - items
-      - next_cursor
-      - has_more
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/PerformanceResultRead'
-        next_cursor:
-          type:
-          - string
-          - 'null'
-        has_more:
-          type: boolean
+    PerformanceHistory:
+      type: array
+      items:
+        $ref: '#/components/schemas/PerformanceResultRead'
+      description: Bounded list of performance results, newest first; `limit` caps the returned items.
     PerformanceResultRead:
       properties:
         id:
@@ -3732,7 +3708,7 @@ x-opal-context-standard:
     $ref: './shared/opal_kernel.yaml#/x-opal-event-envelope'
     metadata_schema_version: '2.0'
   pagination:
-    history: cursor
+    history: none
     configuration: none
     default_limit: 100
     max_limit: 500

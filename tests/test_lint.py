@@ -86,24 +86,6 @@ def m_ifmatch(d):
     op["parameters"] = keep
 
 
-def m_cursor(d):
-    # Resolved doc inlines page schemas at usage sites; strip next_cursor
-    # wherever it is declared under paths so the rule sees the violation.
-    hit = []
-    def walk(n):
-        if isinstance(n, dict):
-            if "next_cursor" in (n.get("properties") or {}):
-                n["properties"].pop("next_cursor")
-                hit.append(1)
-            for v in n.values():
-                walk(v)
-        elif isinstance(n, list):
-            for v in n:
-                walk(v)
-    walk(d["paths"])
-    assert hit, "no next_cursor found under paths"
-
-
 def m_probe(d):
     d["paths"]["/api/v1/health/live"]["get"]["responses"].pop("503")
 
@@ -195,7 +177,6 @@ def m_cli_map(d):
 
 CASES = [
     ("missing If-Match on config mutation", "look", m_ifmatch, "look", "opal-look-config-ifmatch", 0),
-    ("cursor page missing next_cursor", "look", m_cursor, "look", "opal-look-cursor-page", 0),
     ("missing 503 probe response", "look", m_probe, "look", "opal-look-health-probe", 0),
     ("If-Match schema without pattern", "look", m_ifmatch_pattern, "look", "opal-look-ifmatch-strong-schema", 0),
     ("request header made optional", "kernel", m_header_req, "opal", "opal-header-required-ids", 0),
@@ -238,10 +219,9 @@ def main():
           "" if ok else f"(errors {errs[:3]})")
     failures += 0 if ok else 1
 
-    # Referenced-schema positives: /results/ uses $ref ResultQueryPage;
-    # /health/* use $ref OpalHealthProbe. Both must be accepted as-is.
-    probe = [x for x in look_findings if x.get("code") in
-             ("opal-look-cursor-page", "opal-look-health-probe")]
+    # Referenced-schema positives: /health/* use $ref OpalHealthProbe —
+    # must be accepted as-is.
+    probe = [x for x in look_findings if x.get("code") == "opal-look-health-probe"]
     ok = not probe
     print(("PASS" if ok else "FAIL"),
           "positive: referenced page/probe schemas accepted",

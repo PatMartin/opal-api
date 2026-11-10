@@ -109,9 +109,9 @@ def main():
           op(d, "get", "/api/v1/media/{media_id}/content") is not None,
           "media retrieval exists")
 
-    # 11) query retained observations -> cursor-paginated
+    # 11) query retained observations -> bounded list with a `limit` cap
     qp = params(d, "get", "/api/v1/observation/")
-    check("cursor" in qp or "limit" in qp, "observations cursor-paginated")
+    check("limit" in qp and "cursor" not in qp, "observations bounded by limit")
 
     # 12) unsupported capabilities -> capabilities endpoint exists
     check(op(d, "get", "/api/v1/capabilities/") is not None, "GET /capabilities/ exists")

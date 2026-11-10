@@ -25,7 +25,7 @@ info:
     - X-Opal-Session-Id identifies a logical trace, not a server-created Session; TaskCreate.session_id identifies an actual Session resource. If both are present, propagate the resource session ID as the canonical context header. Do not treat these identifiers as authorization.
     - X-Opal-Transaction-Id is logical workflow tracing, not a distributed atomic transaction; X-Opal-Request-Id is per HTTP hop, and X-Opal-Causation-Id identifies immediate causal parent when known. Generate transaction/request IDs when absent and return known IDs on success/error and initial stream headers. Outbound REST requests regenerate request ID, preserve transaction/context and set causation.
     - IDs are printable, non-whitespace ASCII tokens of 1..128 chars. Invalid client-provided context IDs return 422.
-    - Growing task and session histories use cursor pagination (filter-scoped, deterministic, expiring); model catalogs are bounded and not paginated.
+    - Growing task and session histories return bounded arrays (deterministic ordering; `limit` caps items); model catalogs are bounded and not paginated.
     - Single-setting GET/PUT/DELETE and collection GET/PATCH use strong portable-configuration ETags, mandatory If-Match on mutation, 428 if missing, 412 if stale.
     - Credentials are configured as references; never return raw secret material. On non-loopback bindings require REST authentication.
     - TASK stream is live SSE, no guaranteed replay. Final Task snapshot remains source of truth.
@@ -127,21 +127,20 @@ paths:
       - tasks
       operationId: list_tasks
       summary: List retained tasks
-      description: Newest-first deterministic pagination by (created_at,id). Cursors bind to filters and expire.
+      description: Newest-first deterministic ordering by (created_at,id); `limit` caps the items returned.
         Includes standalone and session-linked tasks. Retention settings remove old task records automatically;
         no task DELETE operation.
       parameters:
       - $ref: '#/components/parameters/TaskStatus'
       - $ref: '#/components/parameters/TaskSessionFilter'
       - $ref: './shared/opal_kernel.yaml#/components/parameters/Limit'
-      - $ref: './shared/opal_kernel.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Task page.
+          description: Task list.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskPage'
+                $ref: '#/components/schemas/TaskList'
           headers:
             X-Opal-Session-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
@@ -359,18 +358,17 @@ paths:
       - sessions
       operationId: list_sessions
       summary: List sessions
-      description: Newest updated first, deterministically ordered by (updated_at,id); opaque cursors expire. For
-        turns in a conversation, list tasks filtered by session_id.
+      description: Newest updated first, deterministically ordered by (updated_at,id); `limit` caps the items
+        returned. For turns in a conversation, list tasks filtered by session_id.
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/Limit'
-      - $ref: './shared/opal_kernel.yaml#/components/parameters/Cursor'
       responses:
         '200':
-          description: Session page.
+          description: Session list.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SessionPage'
+                $ref: '#/components/schemas/SessionList'
           headers:
             X-Opal-Session-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
@@ -1248,24 +1246,11 @@ components:
       required:
       - code
       - message
-    TaskPage:
-      type: object
-      additionalProperties: false
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Task'
-        next_cursor:
-          type:
-          - string
-          - 'null'
-        has_more:
-          type: boolean
-      required:
-      - items
-      - next_cursor
-      - has_more
+    TaskList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Task'
+      description: Bounded list of tasks, newest first; `limit` caps the returned items.
     SessionCreate:
       type: object
       additionalProperties: false
@@ -1301,24 +1286,11 @@ components:
       - created_at
       - updated_at
       - task_count
-    SessionPage:
-      type: object
-      additionalProperties: false
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Session'
-        next_cursor:
-          type:
-          - string
-          - 'null'
-        has_more:
-          type: boolean
-      required:
-      - items
-      - next_cursor
-      - has_more
+    SessionList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Session'
+      description: Bounded list of sessions, newest updated first; `limit` caps the returned items.
     Model:
       type: object
       additionalProperties: false
@@ -1560,7 +1532,7 @@ x-opal-context-standard:
     $ref: './shared/opal_kernel.yaml#/x-opal-event-envelope'
     metadata_schema_version: '1.0'
   pagination:
-    history: cursor
+    history: none
     configuration: none
     default_limit: 100
     max_limit: 500

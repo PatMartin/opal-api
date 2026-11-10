@@ -30,8 +30,8 @@ info:
 
 
     Collection paths end with /. Creates return 201 with Location; async admissions return 202 with Location; delete
-    returns 204. Cursor collections are newest-first then ID tie-breaker, filter-bound and expiry-limited; bounded
-    catalogs are full arrays with documented caps. Settings allow atomic whole-map PATCH and individual leaf GET/PUT/DELETE,
+    returns 204. List collections are bounded arrays, newest first then ID tie-breaker; `limit` caps the
+    returned items and service-side maxima apply; bounded catalogs are full arrays with documented caps. Settings allow atomic whole-map PATCH and individual leaf GET/PUT/DELETE,
     where DELETE resets the default. Runtime admissions can use Idempotency-Key; exact replay reuses original admission,
     differing payload returns 409, reservation lifetime 24 hours. Unsupported controls, source tasks, media types,
     schemas and pipeline topologies fail explicitly with 422. GET never starts inference.
@@ -708,24 +708,11 @@ components:
       - request_id
       description: Immutable atomic output from a processing stage. Multiple observations can arise from the same
         frame. Empty items means processed with no matching observations.
-    ObservationPage:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Observation'
-        next_cursor:
-          oneOf:
-          - type: string
-          - type: 'null'
-        has_more:
-          type: boolean
-      additionalProperties: false
-      required:
-      - items
-      - next_cursor
-      - has_more
+    ObservationList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Observation'
+      description: Bounded list of observations, newest first; `limit` caps the returned items.
     SourceInput:
       type: object
       properties:
@@ -882,24 +869,11 @@ components:
       - created_at
       - processed_frames
       - dropped_frames
-    SessionPage:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Session'
-        next_cursor:
-          oneOf:
-          - type: string
-          - type: 'null'
-        has_more:
-          type: boolean
-      additionalProperties: false
-      required:
-      - items
-      - next_cursor
-      - has_more
+    SessionList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Session'
+      description: Bounded list of sessions, newest first; `limit` caps the returned items.
     JobCreate:
       type: object
       properties:
@@ -1024,24 +998,11 @@ components:
       - created_at
       - progress
       - artifact_ids
-    JobPage:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Job'
-        next_cursor:
-          oneOf:
-          - type: string
-          - type: 'null'
-        has_more:
-          type: boolean
-      additionalProperties: false
-      required:
-      - items
-      - next_cursor
-      - has_more
+    JobList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Job'
+      description: Bounded list of jobs, newest first; `limit` caps the returned items.
     Media:
       type: object
       properties:
@@ -1078,24 +1039,11 @@ components:
       - size_bytes
       - created_at
       - expires_at
-    MediaPage:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Media'
-        next_cursor:
-          oneOf:
-          - type: string
-          - type: 'null'
-        has_more:
-          type: boolean
-      additionalProperties: false
-      required:
-      - items
-      - next_cursor
-      - has_more
+    MediaList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Media'
+      description: Bounded list of uploaded media, newest first; `limit` caps the returned items.
     CaptureCreate:
       type: object
       properties:
@@ -1147,24 +1095,11 @@ components:
       - mime_type
       - annotated
       - frame_time
-    CapturePage:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Capture'
-        next_cursor:
-          oneOf:
-          - type: string
-          - type: 'null'
-        has_more:
-          type: boolean
-      additionalProperties: false
-      required:
-      - items
-      - next_cursor
-      - has_more
+    CaptureList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Capture'
+      description: Bounded list of captures, newest first; `limit` caps the returned items.
     Artifact:
       type: object
       properties:
@@ -1209,24 +1144,11 @@ components:
       - size_bytes
       - created_at
       - expires_at
-    ArtifactPage:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Artifact'
-        next_cursor:
-          oneOf:
-          - type: string
-          - type: 'null'
-        has_more:
-          type: boolean
-      additionalProperties: false
-      required:
-      - items
-      - next_cursor
-      - has_more
+    ArtifactList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Artifact'
+      description: Bounded list of artifacts, newest first; `limit` caps the returned items.
     ZoneCreate:
       type: object
       properties:
@@ -1640,24 +1562,11 @@ components:
       - source_id
       - state
       - created_at
-    RecordingPage:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Recording'
-        next_cursor:
-          oneOf:
-          - type: string
-          - type: 'null'
-        has_more:
-          type: boolean
-      additionalProperties: false
-      required:
-      - items
-      - next_cursor
-      - has_more
+    RecordingList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Recording'
+      description: Bounded list of recordings, newest first; `limit` caps the returned items.
     VideoProcessingOptions:
       type: object
       additionalProperties: false
@@ -3862,7 +3771,6 @@ paths:
       - *id032
       - *id033
       - *id034
-      - $ref: ./shared/opal_kernel.yaml#/components/parameters/Cursor
       - $ref: ./shared/opal_kernel.yaml#/components/parameters/Limit
       - name: state
         in: query
@@ -3891,7 +3799,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SessionPage'
+                $ref: '#/components/schemas/SessionList'
         '422':
           $ref: ./shared/opal_kernel.yaml#/components/responses/UnprocessableEntity
         '429':
@@ -4223,7 +4131,6 @@ paths:
       - *id032
       - *id033
       - *id034
-      - $ref: ./shared/opal_kernel.yaml#/components/parameters/Cursor
       - $ref: ./shared/opal_kernel.yaml#/components/parameters/Limit
       - name: state
         in: query
@@ -4250,7 +4157,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/JobPage'
+                $ref: '#/components/schemas/JobList'
         '422':
           $ref: ./shared/opal_kernel.yaml#/components/responses/UnprocessableEntity
         '429':
@@ -4377,7 +4284,6 @@ paths:
       - *id032
       - *id033
       - *id034
-      - $ref: ./shared/opal_kernel.yaml#/components/parameters/Cursor
       - $ref: ./shared/opal_kernel.yaml#/components/parameters/Limit
       - name: source_id
         in: query
@@ -4437,7 +4343,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ObservationPage'
+                $ref: '#/components/schemas/ObservationList'
         '422':
           $ref: ./shared/opal_kernel.yaml#/components/responses/UnprocessableEntity
         '429':
@@ -4578,7 +4484,6 @@ paths:
       - *id032
       - *id033
       - *id034
-      - $ref: ./shared/opal_kernel.yaml#/components/parameters/Cursor
       - $ref: ./shared/opal_kernel.yaml#/components/parameters/Limit
       responses:
         '401':
@@ -4595,7 +4500,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MediaPage'
+                $ref: '#/components/schemas/MediaList'
         '422':
           $ref: ./shared/opal_kernel.yaml#/components/responses/UnprocessableEntity
         '429':
@@ -4862,7 +4767,6 @@ paths:
       - *id032
       - *id033
       - *id034
-      - $ref: ./shared/opal_kernel.yaml#/components/parameters/Cursor
       - $ref: ./shared/opal_kernel.yaml#/components/parameters/Limit
       responses:
         '401':
@@ -4879,7 +4783,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CapturePage'
+                $ref: '#/components/schemas/CaptureList'
         '422':
           $ref: ./shared/opal_kernel.yaml#/components/responses/UnprocessableEntity
         '429':
@@ -5044,7 +4948,6 @@ paths:
       - *id032
       - *id033
       - *id034
-      - $ref: ./shared/opal_kernel.yaml#/components/parameters/Cursor
       - $ref: ./shared/opal_kernel.yaml#/components/parameters/Limit
       responses:
         '401':
@@ -5061,7 +4964,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ArtifactPage'
+                $ref: '#/components/schemas/ArtifactList'
         '422':
           $ref: ./shared/opal_kernel.yaml#/components/responses/UnprocessableEntity
         '429':
@@ -5500,7 +5403,6 @@ paths:
       - *id032
       - *id033
       - *id034
-      - $ref: ./shared/opal_kernel.yaml#/components/parameters/Cursor
       - $ref: ./shared/opal_kernel.yaml#/components/parameters/Limit
       responses:
         '401':
@@ -5517,7 +5419,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RecordingPage'
+                $ref: '#/components/schemas/RecordingList'
         '422':
           $ref: ./shared/opal_kernel.yaml#/components/responses/UnprocessableEntity
         '429':
@@ -6089,7 +5991,7 @@ x-opal-context-standard:
     stale_status: 412
   pagination:
     configuration: none
-    history: cursor
+    history: none
     ordering: newest-first-then-id-tiebreak
   session_mode: context-only
   streaming: HTTP context headers precede bytes; SSE streams carry monotonic per-session event IDs and

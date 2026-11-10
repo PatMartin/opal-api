@@ -220,7 +220,7 @@ GET  /api/v1/metrics/ | /api/v1/events/status
 
 ```
 POST /api/v1/task/                             create task (prompt, model, context)
-GET  /api/v1/task/ | /{id}                     retained tasks (cursor-paged)
+GET  /api/v1/task/ | /{id}                     retained tasks (bounded list)
 GET  /api/v1/task/{id}/stream                  SSE task.watch
 POST /api/v1/task/{id}/cancel
 POST|GET /api/v1/session/ | /{id}              conversation containers
