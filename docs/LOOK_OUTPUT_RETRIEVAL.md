@@ -54,6 +54,35 @@ output_ref:
 `artifact_ids` (`output_refs[]` for multi-artifact jobs). Existing fields
 and routes stay untouched — `output_ref` is additive.
 
+## Where the reference appears
+
+| workflow | field carrying the reference | next step |
+|---|---|---|
+| Frame capture | `Capture.output_ref` (kind `capture`) | `GET output_ref.content_url` |
+| Recording | `Recording.artifact_ref` (kind `artifact`) | `GET artifact_ref.content_url` |
+| Clip export / job | `Job.output_refs[]` (kind `artifact`) | `GET` each `output_refs[i].content_url` |
+
+Every flow ends at the same client step: `GET <content_url>` for the
+bytes. `kind` is informational — the URL already names the route, so
+callers do not branch on resource type.
+
+## Reading an absent or null reference
+
+- **Null/absent + non-terminal state = still pending.** A recording in
+  `starting`, `recording` or `stopping` has no `artifact_ref` yet; a job
+  in `queued` or `running` has `output_refs: null`. Poll `show` again.
+- **Null/absent + terminal failure = no bytes coming.** A recording that
+  ends `failed`, or a job that ends `failed`, `cancelled` or `timed_out`,
+  produces no output; the missing ref is permanent, not pending.
+- **Field absent entirely = older server.** Servers predating this
+  contract omit the reference fields. The records still carry enough to
+  fetch bytes the original way: `GET /api/v1/capture/{capture_id}/content`
+  for captures, and `GET /api/v1/artifact/{artifact_id}/content` for
+  artifacts (`artifact_id` on the recording, `artifact_ids[]` on the job).
+- **404 is not "still pending".** Once a reference is issued, a `404`
+  from the content route means the bytes were swept past `expires_at` or
+  the record was deleted — it is a terminal answer, not a retry signal.
+
 ## Pending / missing / expired semantics
 
 - `output_ref` absent or `null` → output not produced yet (running

@@ -994,7 +994,10 @@ components:
           - type: 'null'
           description: >-
             Byte references for produced artifacts (kind=artifact), one per
-            artifact_ids entry once the job finishes; null while pending.
+            artifact_ids entry once the job finishes; null while the job is
+            `queued`/`running` and permanently absent after `failed`,
+            `cancelled` or `timed_out`. Field absent entirely = older server;
+            fall back to `artifact_ids` on `/artifact/{id}/content`.
         failure:
           oneOf:
           - $ref: ./shared/opal_kernel.yaml#/components/schemas/OpalErrorBody
@@ -1099,7 +1102,10 @@ components:
           oneOf:
           - $ref: '#/components/schemas/OutputRef'
           - type: 'null'
-          description: This capture's byte reference (kind=capture).
+          description: >-
+            This capture's byte reference (kind=capture); GET
+            `output_ref.content_url` for the frame bytes. Absent on servers
+            predating this field — `GET /capture/{id}/content` directly.
       additionalProperties: false
       required:
       - id
@@ -1601,7 +1607,10 @@ components:
           - type: 'null'
           description: >-
             The finalized recording's artifact byte reference (kind=artifact);
-            null until finalize produces the artifact.
+            null while `state` is `starting`/`recording`/`stopping` and
+            permanently absent after `failed`. Absent entirely = older
+            server; `artifact_id` still names the artifact for
+            `/artifact/{id}/content` once `state` is `completed`.
       additionalProperties: false
       required:
       - id
@@ -5986,7 +5995,9 @@ x-opal-workflow-examples:
     description: >-
       Stop a recording; when `artifact_ref` is non-null the recording is
       finalized and GET `artifact_ref.content_url` serves the clip bytes.
-      Null `artifact_ref` = still pending.
+      While `state` is `starting`/`recording`/`stopping` the field is null
+      (poll show again); after `failed` it stays null permanently (no bytes).
+      404 on the content route means swept/deleted, not pending.
     create:
       method: POST
       path: /api/v1/recording/rec-51c2/stop
@@ -6008,7 +6019,9 @@ x-opal-workflow-examples:
   - workflow: clip-export
     description: >-
       Submit an export job; when it completes `output_refs` lists one ref per
-      produced artifact (null while pending). GET each `content_url` for bytes.
+      produced artifact (null while `queued`/`running`; permanently absent
+      after `failed`/`cancelled`/`timed_out`). GET each `content_url` for
+      bytes; 404 means swept/deleted, not pending.
     create:
       method: POST
       path: /api/v1/job/
