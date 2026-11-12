@@ -1,9 +1,15 @@
 """Load an OPAL OpenAPI spec with $refs fully resolved.
 
 Service specs mount shared Path Items and reference shared components in
-openapi/shared/opal_kernel.yaml via external $refs. Tests assert against the
-effective (resolved) contract, so this helper inlines external refs and then
-dereferences internal '#/components/...' refs as well.
+openapi/shared/opal_kernel.yaml (and, for OPAL Devices,
+openapi/shared/opal_devices.yaml) via external $refs. Tests assert against
+the effective (resolved) contract, so this helper inlines external refs and
+then dereferences internal '#/components/...' refs as well.
+
+External refs are resolved relative to the document that contains them, so a
+spec may consume any number of shared contract bases. Inlined fragments have
+their inner refs rebased to the document they came from, which keeps '#/...'
+and './...' targets correct no matter where the fragment is mounted.
 """
 import copy
 import os
@@ -21,39 +27,50 @@ def _pointer(doc, frag):
     return node
 
 
-def _qualify(node):
-    """Rewrite bare '#/...' refs inside a kernel fragment to kernel-qualified
-    refs so they resolve against the kernel after inlining."""
+def _doc_path(base_path, ref):
+    """Absolute path of the document a $ref written in `base_path` targets."""
+    filepart = ref.split("#", 1)[0]
+    if not filepart:
+        return base_path
+    return os.path.normpath(os.path.join(os.path.dirname(base_path), filepart))
+
+
+def _rebase(node, base_path):
+    """Rewrite refs inside a fragment inlined from `base_path` so they stay
+    resolvable in the host document: '#/x' becomes '<base_path>#/x' and
+    './rel.yaml#/x' becomes its path-normalized absolute form."""
     if isinstance(node, dict):
-        if "$ref" in node and isinstance(node["$ref"], str) \
-                and node["$ref"].startswith("#/"):
+        if "$ref" in node and isinstance(node["$ref"], str):
+            ref = node["$ref"]
             node = dict(node)
-            node["$ref"] = "./shared/opal_kernel.yaml" + node["$ref"]
-        return {k: _qualify(v) for k, v in node.items()}
+            if ref.startswith("#"):
+                node["$ref"] = base_path + ref
+            else:
+                node["$ref"] = _doc_path(base_path, ref) + "#" + ref.split("#", 1)[1]
+        return {k: _rebase(v, base_path) for k, v in node.items()}
     if isinstance(node, list):
-        return [_qualify(v) for v in node]
+        return [_rebase(v, base_path) for v in node]
     return node
 
 
-def _deref(node, local_doc, kernel_doc, depth=0):
+def _deref(node, doc_path, docs, depth=0):
     if depth > 25:
         return node
     if isinstance(node, dict):
         if "$ref" in node:
             ref = node["$ref"]
-            if ref.startswith("./") or ref.startswith("../"):
-                src, frag = kernel_doc, ref.split("#", 1)[1]
-            else:
-                src, frag = local_doc, ref.lstrip("#")
-            target = copy.deepcopy(_pointer(src, frag))
-            if src is kernel_doc:
-                target = _qualify(target)
+            src_path = _doc_path(doc_path, ref)
+            if src_path not in docs:
+                docs[src_path] = yaml.safe_load(open(src_path, encoding="utf-8"))
+            src = docs[src_path]
+            frag = ref.split("#", 1)[1]
+            target = _rebase(copy.deepcopy(_pointer(src, frag)), src_path)
             merged = {k: v for k, v in node.items() if k != "$ref"}
             merged.update(target if isinstance(target, dict) else {"value": target})
-            return _deref(merged, local_doc, kernel_doc, depth + 1)
-        return {k: _deref(v, local_doc, kernel_doc, depth) for k, v in node.items()}
+            return _deref(merged, doc_path, docs, depth + 1)
+        return {k: _deref(v, doc_path, docs, depth) for k, v in node.items()}
     if isinstance(node, list):
-        return [_deref(v, local_doc, kernel_doc, depth) for v in node]
+        return [_deref(v, doc_path, docs, depth) for v in node]
     return node
 
 
@@ -61,10 +78,10 @@ _METHODS = ("get", "post", "put", "patch", "delete")
 
 
 def _hoist_cli(spec):
-    """Mounted kernel Path Items carry per-op x-opal-cli metadata as a
-    path-level {method: value} map sibling of the $ref (extensions cannot
-    inject into referenced operations). For the resolved view, copy each
-    entry onto the operation it describes."""
+    """Mounted shared Path Items carry per-op x-opal-cli metadata as a
+    path-level {method: value} map (extensions cannot inject into referenced
+    operations). For the resolved view, copy each entry onto the operation it
+    describes."""
     for item in (spec.get("paths") or {}).values():
         if not isinstance(item, dict):
             continue
@@ -77,15 +94,15 @@ def _hoist_cli(spec):
 
 
 def _internalize(node):
-    """After kernel components are merged into the resolved document,
-    rewrite './shared/opal_kernel.yaml#/X' refs to internal '#/X' refs so
-    the document is self-contained (and mutates cleanly to a temp file)."""
+    """After external components are merged into the resolved document,
+    rewrite any '<file>#/X' refs to internal '#/X' refs so the document is
+    self-contained (and mutates cleanly to a temp file)."""
     if isinstance(node, dict):
-        if "$ref" in node and isinstance(node["$ref"], str) \
-                and node["$ref"].startswith("./shared/opal_kernel.yaml#/"):
-            node = dict(node)
-            node["$ref"] = node["$ref"].split("#", 1)[1]
-            node["$ref"] = "#" + node["$ref"].lstrip("#")
+        if "$ref" in node and isinstance(node["$ref"], str) and "#" in node["$ref"]:
+            filepart, _, frag = node["$ref"].partition("#")
+            if filepart:
+                node = dict(node)
+                node["$ref"] = "#" + frag
         return {k: _internalize(v) for k, v in node.items()}
     if isinstance(node, list):
         return [_internalize(v) for v in node]
@@ -95,15 +112,18 @@ def _internalize(node):
 def load(path):
     """Return the spec at `path` with all $refs resolved.
 
-    Kernel components are also merged into `components` and all
-    kernel-qualified refs are internalized, so the result mirrors the
-    bundled (self-contained) document a consumer would see."""
-    spec = yaml.safe_load(open(path, encoding="utf-8"))
-    kernel = yaml.safe_load(open(KERNEL_PATH, encoding="utf-8"))
-    resolved = _hoist_cli(_deref(spec, spec, kernel))
+    Components of every externally referenced document are also merged into
+    `components` and all file-qualified refs are internalized, so the result
+    mirrors the bundled (self-contained) document a consumer would see."""
+    ap = os.path.normpath(os.path.abspath(path))
+    docs = {ap: yaml.safe_load(open(ap, encoding="utf-8"))}
+    resolved = _hoist_cli(_deref(docs[ap], ap, docs))
     comps = resolved.setdefault("components", {})
-    for kind, entries in (kernel.get("components") or {}).items():
-        target = comps.setdefault(kind, {})
-        for name, val in entries.items():
-            target.setdefault(name, copy.deepcopy(val))
+    for p, doc in docs.items():
+        if p == ap:
+            continue
+        for kind, entries in (doc.get("components") or {}).items():
+            target = comps.setdefault(kind, {})
+            for name, val in entries.items():
+                target.setdefault(name, copy.deepcopy(val))
     return _internalize(resolved)
