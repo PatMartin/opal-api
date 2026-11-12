@@ -1,95 +1,94 @@
-# The OPAL CLI Cookbook (v1.7.1)
+# The OPAL CLI Cookbook
 
-*Field manual for commanding five microservices that can see your porch, hear your excuses, ponder your life choices, gossip over ZeroMQ, and read the verdict out loud in a polite British baritone.*
+*Recipes for six services that can hear you, see your porch, think about it, gossip over an event bus, announce the verdict out loud, and remember which microphone heard it.*
 
-This cookbook covers the unified `opal` Typer CLI built on the v1.7.1 OpenAPI contracts (`openapi/*.yaml`) and the shared OPAL Suite Kernel (`openapi/shared/opal_kernel.yaml`).
+This cookbook describes the unified `opal` [Typer](https://typer.tiangolo.com/) CLI implied by the v1.7.1 OpenAPI contracts in [`openapi/`](../openapi) and the shared kernel at [`openapi/shared/opal_kernel.yaml`](../openapi/shared/opal_kernel.yaml). Every command maps to exactly one REST operation in those contracts.
 
-## Ground Rules & CLI Conventions
+One honest caveat before the fun starts: this repository ships contracts, not an `opal` executable. Treat this as the menu for a restaurant whose kitchen is specified in great detail.
 
-- **Canonical verbs**: Resource CRUD uses `list | add | show | update | remove`. Operational endpoints use explicit verbs (`generate`, `stream`, `test`, `validate`, `activate`, `start`, `stop`, `watch`, `cancel`, `probe`, `capture`, `submit`, `promote`, `run`, `publish`, `execute`, `fetch`).
-- **Standardized groups**:
-  - `config` holds mutable configuration (`voice`, `wakeword`, `intent`, `slot`, `model`, `pipeline`, `zone`, `rule`, `monitor`, `action`, `profile`, `persona`, `setting`).
-  - `data` / `history` holds runtime artifacts and historical records (`job`, `observation`, `media`, `capture`, `artifact`, `recording`, `failed-utterance`, `event`, `execution`).
-  - `info` holds probes and telemetry (`health`, `version`, `ping`, `live`, `ready`, `capabilities`, `metrics`, `events`, `stats`, `audio-devices`).
-  - `service` controls daemon lifecycle (`start`, `stop`, `log`).
-  - `backup` handles snapshots and portable configuration (`list`, `create`, `download`, `restore`, `remove`, `export`, `import`, `validate`).
-- **Settings parity**: Across all five services, `opal <service> config setting` exposes `list`, `update` (alias `patch`), `show`, `set`, and `remove` (alias `reset`).
-- **Optimistic concurrency without the tears**: Config mutations require `If-Match` against the service's strong ETag. The Typer CLI automatically fetches and attaches the current ETag unless you explicitly pass `--if-match`.
-- **Portable Personas**: `opal-think` is the authoritative persona writer (`origin: local`); other services can cache owner personas (`origin: owner`) or run standalone. Resolution order is always **explicit request field > persona binding > active/selected profile > service default**.
+## Contents
+
+- [Before you cook](#before-you-cook)
+- [Part 1: Interface](#part-1-interface)
+  - [opal-say](#opal-say) · [opal-listen](#opal-listen) · [opal-look](#opal-look) · [opal-think](#opal-think) · [opal-event](#opal-event) · [opal-devices](#opal-devices)
+- [Part 2: Usecases](#part-2-usecases)
+  - [opal-say](#opal-say-usecases) · [opal-listen](#opal-listen-usecases) · [opal-look](#opal-look-usecases) · [opal-think](#opal-think-usecases) · [opal-event](#opal-event-usecases) · [opal-devices](#opal-devices-usecases)
+- [Part 3: Combined](#part-3-combined)
+  - [Plumbing](#plumbing-do-this-once)
+  - [Voice lab](#voice-lab) · [Eyes on the property](#eyes-on-the-property) · [The classroom](#the-classroom) · [Voice assistant](#voice-assistant) · [Home automation](#home-automation) · [Office and computer](#office-and-computer) · [Fleet operations](#fleet-operations)
+
+## Before you cook
+
+### How commands are named
+
+The kernel's `x-opal-cli-format` extension defines the shape of every command:
+
+```text
+opal <service> [parent] [group] <command>
+```
+
+Look and Think annotate every operation with `x-opal-cli`, so their command names come straight from the contracts. Event, Listen, and Say annotate only their `config setting` and `service` commands. For the rest, this cookbook proposes names that follow the same kernel format and the Look/Think vocabulary (`list`, `add`, `show`, `update`, `remove`, plus explicit verbs for operations). Proposed names are marked with **†** in the command tables.
+
+### How options are named
+
+- Path parameters become positional arguments: `/voice/{voice_id}` becomes `<voice_id>`.
+- Query parameters and JSON body fields become kebab-case options: `engine_voice_ref` becomes `--engine-voice-ref`.
+- Booleans become flag pairs: `--enabled/--no-enabled`.
+- Objects and arrays are passed as JSON: `--stages '[...]'`.
+- A request's primary payload is positional: `<prompt>` on `task create` (and its `ask`/`chat` aliases), `<text>` on `say generate` and `say stream`.
+- Request headers become options: `--if-match`, `--idempotency-key`, `--last-event-id`, `--range`.
+
+### Client-side conveniences
+
+These live in the CLI, not in the contracts. The recipes lean on them, so here they are in plain sight:
+
+| Convenience | Behavior |
+|---|---|
+| `--if-match` is optional | Configuration mutations require a strong `If-Match` ETag. When you omit the option, the CLI reads the current ETag first and sends it for you. |
+| `--out PATH` | Write a binary or JSON response body to a file. |
+| `--play` | Play the audio returned by `opal say` on this machine's default output device. The Say API returns bytes only; playback is explicitly outside its contract. |
+| `--wait` | After a `202 Accepted`, poll the resource until it reaches a terminal state, then print it. |
+| `-` as a value | Read the value from standard input, for example `opal say generate -` or `--context -`. |
+| `@path` as a value | Read the value from a file, for example `opal say generate @chapter-one.txt`. |
+| `opal think ask` and `chat` | Aliases of `task create` that wait for the task and print only the final `answer`, which makes them easy to pipe. `chat` is `ask` bound to a session via `--session-id`. |
+| Output | Commands print JSON on standard output unless the response is binary. |
+
+### Assumptions in the examples
+
+- **Addresses.** The contracts list `127.0.0.1:8080` as an example server for five services, and six services cannot share one port. Where a recipe needs one service to call another, it assumes Event on `8080`, Say on `8081`, Look on `8082`, Think on `8083`, Devices on `8084`, and Listen on `8000`. Adjust to your deployment.
+- **Identifiers.** Voices (`en-gb-alan-low`), engines (`piper`), cameras (`cam-front`), models (`ollama:llama3.2`), and IDs such as `ses-42` or `tsk-123` are examples. Use the IDs your services return.
+- **Shell.** Examples use POSIX quoting. In PowerShell, keep the single quotes around JSON and escape inner double quotes as your version requires.
+- **Copy button.** Every snippet is a fenced code block, so GitHub and most Markdown viewers render a copy button in its top-right corner.
 
 ---
 
-## INTERFACE: `opal-say`
+## Part 1: Interface
 
-*Text-to-speech synthesis over host-installed engines (Piper, Kokoro, etc.) without caring how many ONNX files live under `/opt`.*
+### opal-say
 
-### 1. Typer Command Tree
+Text-to-speech over engines already installed on the host, such as Piper or Kokoro. Say registers and uses voices; it never downloads models and never plays audio itself.
+
+#### Typer command tree
 
 ```text
 opal say
-├── generate                synthesize completed WAV/PCM (or progressive PCM with --stream)
-├── stream                  synthesize progressive raw s16le mono PCM stream
-├── engine
-│   ├── list
-│   ├── show
-│   ├── update
-│   └── validate
+├── generate
+├── stream
+├── engine                list | show | update | validate
 ├── config
-│   ├── voice
-│   │   ├── list
-│   │   ├── add
-│   │   ├── show
-│   │   ├── update
-│   │   ├── remove
-│   │   ├── validate
-│   │   └── test
-│   ├── profile
-│   │   ├── list
-│   │   ├── add
-│   │   ├── show
-│   │   ├── update
-│   │   ├── remove
-│   │   └── activate
-│   ├── persona
-│   │   ├── list
-│   │   ├── add
-│   │   ├── show
-│   │   ├── update
-│   │   ├── remove
-│   │   └── validate
-│   └── setting
-│       ├── list
-│       ├── update          (alias: patch)
-│       ├── show
-│       ├── set
-│       └── remove          (alias: delete)
-├── service
-│   ├── start
-│   ├── stop
-│   └── log
-├── info
-│   ├── health
-│   ├── version
-│   ├── ping
-│   ├── live
-│   └── ready
-└── backup
-    ├── list
-    ├── create
-    ├── download
-    ├── restore
-    ├── remove
-    ├── export
-    ├── import
-    └── validate
+│   ├── voice             list | add | show | update | remove | validate | test
+│   ├── profile           list | add | show | update | remove | activate
+│   ├── persona           list | add | validate | show | update | remove
+│   └── setting           list | update | show | set | remove
+├── info                  health | version | ping | live | ready
+├── backup                list | create | download | restore | remove | export | import | validate-stored | validate
+└── service               start | stop | log
 ```
 
-### 2. REST Tree (`openapi/opal_say.yaml`)
+#### REST tree
 
 ```text
 /api/v1
-├── /generate                               POST
-├── /generate/stream                        POST
 ├── /engine/                                GET
 │   └── /{engine_id}                        GET, PATCH
 │       └── /validate                       POST
@@ -103,104 +102,115 @@ opal say
 ├── /persona/                               GET, POST
 │   └── /{persona_id}                       GET, PATCH, DELETE
 │       └── /validate                       POST
+├── /generate                               POST
+│   └── /stream                             POST
 ├── /setting/                               GET, PATCH
 │   └── /{key}                              GET, PUT, DELETE
-├── /service
-│   ├── /start                              POST
-│   ├── /stop                               POST
-│   └── /log                                GET
-├── /info/                                  GET
-│   └── /ping                               GET
 ├── /health/                                GET
 │   ├── /live                               GET
 │   └── /ready                              GET
-└── /backup
-    ├── /list                               GET
-    ├── /create                             POST
-    ├── /download/{filename}                GET
-    ├── /restore/{filename}                 POST
-    ├── /{filename}                         DELETE
-    ├── /export                             GET
-    ├── /import                             POST
-    └── /validate                           GET, POST
+├── /backup
+│   ├── /list                               GET
+│   ├── /create                             POST
+│   ├── /download
+│   │   └── /{filename}                     GET
+│   ├── /restore
+│   │   └── /{filename}                     POST
+│   ├── /{filename}                         DELETE
+│   ├── /export                             GET
+│   ├── /import                             POST
+│   └── /validate                           GET, POST
+├── /info/                                  GET
+│   └── /ping                               GET
+└── /service
+    ├── /start                              POST
+    ├── /stop                               POST
+    └── /log                                GET
 ```
 
-### 3. Command Reference
+#### Commands
 
 | COMMAND | OPTIONS | DESCRIPTION |
 |---|---|---|
-| `opal say generate` | `--text TEXT`, `--text-file PATH`, `--profile INT`, `--persona ID`, `--voice ID`, `--engine ID`, `--speed FLOAT`, `--volume FLOAT`, `--sample-rate INT`, `--output-format [wav\|pcm]`, `--engine-options JSON`, `--stream`, `--out PATH` | Synthesize speech audio from plain text (`POST /api/v1/generate`, or `/generate/stream` with `--stream`). |
-| `opal say stream` | `--text TEXT`, `--text-file PATH`, `--profile INT`, `--persona ID`, `--voice ID`, `--engine ID`, `--speed FLOAT`, `--volume FLOAT`, `--sample-rate INT`, `--engine-options JSON`, `--out PATH` | Stream raw `s16le` mono PCM audio progressively (`POST /api/v1/generate/stream`). |
-| `opal say engine list` | `--json` | List installed TTS synthesis engines (`GET /api/v1/engine/`). |
-| `opal say engine show` | `<engine_id>` | Inspect a single TTS engine (`GET /api/v1/engine/{engine_id}`). |
-| `opal say engine update` | `<engine_id>`, `--enabled/--disabled`, `--options JSON`, `--if-match ETAG` | Enable/disable an engine or update its options (`PATCH /api/v1/engine/{engine_id}`). |
-| `opal say engine validate` | `<engine_id>` | Verify engine binary and runtime readiness (`POST /api/v1/engine/{engine_id}/validate`). |
-| `opal say config voice list` | `--engine ID`, `--language TAG`, `--enabled BOOL` | List registered OPAL voices (`GET /api/v1/voice/`). |
-| `opal say config voice add` | `--voice-id ID`, `--name TEXT`, `--engine ID`, `--engine-voice-ref REF`, `--language TAG`, `--description TEXT`, `--enabled/--disabled`, `--engine-options JSON` | Register a host voice/model resource (`POST /api/v1/voice/`). |
-| `opal say config voice show` | `<voice_id>` | Show details of a registered voice (`GET /api/v1/voice/{voice_id}`). |
-| `opal say config voice update` | `<voice_id>`, `--name TEXT`, `--description TEXT`, `--engine ID`, `--engine-voice-ref REF`, `--language TAG`, `--enabled/--disabled`, `--engine-options JSON` | Update a registered voice (`PATCH /api/v1/voice/{voice_id}`). |
-| `opal say config voice remove` | `<voice_id>` | Unregister a voice without deleting host files (`DELETE /api/v1/voice/{voice_id}`). |
-| `opal say config voice validate` | `<voice_id>` | Check that a voice's model files and engine resolve (`POST /api/v1/voice/{voice_id}/validate`). |
-| `opal say config voice test` | `<voice_id>`, `--text TEXT`, `--speed FLOAT`, `--volume FLOAT`, `--output-format [wav\|pcm]`, `--sample-rate INT`, `--engine-options JSON`, `--out PATH` | Synthesize a short audition clip for a voice (`POST /api/v1/voice/{voice_id}/test`). |
-| `opal say config profile list` | `--json` | List generation preset profiles (`GET /api/v1/profile/`). |
-| `opal say config profile add` | `--name TEXT`, `--description TEXT`, `--voice ID`, `--speed FLOAT`, `--volume FLOAT`, `--output-format [wav\|pcm]`, `--sample-rate INT`, `--engine-options JSON`, `--active/--inactive` | Create a generation profile (`POST /api/v1/profile/`). |
-| `opal say config profile show` | `<profile_id>` | Show one generation profile (`GET /api/v1/profile/{profile_id}`). |
-| `opal say config profile update` | `<profile_id>`, `--name TEXT`, `--description TEXT`, `--voice ID`, `--speed FLOAT`, `--volume FLOAT`, `--output-format [wav\|pcm]`, `--sample-rate INT`, `--engine-options JSON` | Update a generation profile (`PATCH /api/v1/profile/{profile_id}`). |
-| `opal say config profile remove` | `<profile_id>` | Delete a non-active profile (`DELETE /api/v1/profile/{profile_id}`). |
-| `opal say config profile activate` | `<profile_id>` | Make a profile the active default (`POST /api/v1/profile/{profile_id}/activate`). |
-| `opal say config persona list` | `--enabled BOOL` | List personas and their bound `voice_id` (`GET /api/v1/persona/`). |
-| `opal say config persona add` | `--persona-id ID`, `--name TEXT`, `--voice ID`, `--description TEXT`, `--enabled/--disabled` | Create a persona with a required `voice_id` (`POST /api/v1/persona/`). |
-| `opal say config persona show` | `<persona_id>` | Show a persona and its `origin` (`GET /api/v1/persona/{persona_id}`). |
-| `opal say config persona update` | `<persona_id>`, `--name TEXT`, `--voice ID`, `--description TEXT`, `--enabled/--disabled` | Update a persona's voice or metadata (`PATCH /api/v1/persona/{persona_id}`). |
-| `opal say config persona remove` | `<persona_id>` | Delete a persona (`DELETE /api/v1/persona/{persona_id}`). |
-| `opal say config persona validate` | `<persona_id>` | Validate that the persona's bound `voice_id` is resolvable (`POST /api/v1/persona/{persona_id}/validate`). |
-| `opal say config setting list` | `--json` | List all runtime settings (`GET /api/v1/setting/`). |
-| `opal say config setting update` | `--data JSON` | Atomically patch multiple settings (`PATCH /api/v1/setting/`). |
-| `opal say config setting show` | `<key>` | Inspect one setting key (`GET /api/v1/setting/{key}`). |
-| `opal say config setting set` | `<key>`, `<value_json>` | Set a single setting key (`PUT /api/v1/setting/{key}`). |
-| `opal say config setting remove` | `<key>` | Reset a setting key to its default (`DELETE /api/v1/setting/{key}`). |
-| `opal say service start\|stop\|log` | `--append BOOL`, `--lines INT` | Start/stop the background service or tail its log (`/api/v1/service/*`). |
-| `opal say info health\|version\|ping\|live\|ready` | `--json` | Service health, build info, and readiness probes (`/api/v1/health/*`, `/api/v1/info/*`). |
-| `opal say backup list\|create\|download\|restore\|remove\|export\|import\|validate` | `<filename>`, `--file PATH`, `--out PATH` | Manage snapshots and portable config bundles (`/api/v1/backup/*`). |
+| `opal say engine list` † | — | List engines. `GET /api/v1/engine/` |
+| `opal say engine show` † | `<engine_id>` | Get engine. `GET /api/v1/engine/{engine_id}` |
+| `opal say engine update` † | `<engine_id>`, `--if-match ETAG`, `--enabled/--no-enabled`, `--options JSON` | Update engine. `PATCH /api/v1/engine/{engine_id}` |
+| `opal say engine validate` † | `<engine_id>` | Validate Engine. `POST /api/v1/engine/{engine_id}/validate` |
+| `opal say config voice list` † | `--engine-id ID`, `--language TEXT`, `--enabled/--no-enabled` | List Voice. `GET /api/v1/voice/` |
+| `opal say config voice add` † | `--if-match ETAG`, `--voice-id ID`, `--name TEXT`, `--description TEXT`, `--engine-id ID`, `--engine-voice-ref TEXT`, `--language TEXT`, `--enabled/--no-enabled`, `--engine-options JSON` | Register Voice. `POST /api/v1/voice/` |
+| `opal say config voice show` † | `<voice_id>` | Get Voice. `GET /api/v1/voice/{voice_id}` |
+| `opal say config voice update` † | `<voice_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--engine-id ID`, `--engine-voice-ref TEXT`, `--language TEXT`, `--enabled/--no-enabled`, `--engine-options JSON` | Update Voice. `PATCH /api/v1/voice/{voice_id}` |
+| `opal say config voice remove` † | `<voice_id>`, `--if-match ETAG` | Unregister Voice. `DELETE /api/v1/voice/{voice_id}` |
+| `opal say config voice validate` † | `<voice_id>` | Validate Voice. `POST /api/v1/voice/{voice_id}/validate` |
+| `opal say config voice test` † | `<voice_id>`, `--text TEXT`, `--speed FLOAT`, `--volume FLOAT`, `--output-format [wav\|pcm]`, `--sample-rate INT`, `--engine-options JSON`, `--out PATH`, `--play` | Test Voice. `POST /api/v1/voice/{voice_id}/test` |
+| `opal say config profile list` † | — | List profiles. `GET /api/v1/profile/` |
+| `opal say config profile add` † | `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--voice-id ID`, `--speed FLOAT`, `--volume FLOAT`, `--output-format [wav\|pcm]`, `--sample-rate INT`, `--engine-options JSON` | Create profile. `POST /api/v1/profile/` |
+| `opal say config profile show` † | `<profile_id>` | Get profile. `GET /api/v1/profile/{profile_id}` |
+| `opal say config profile update` † | `<profile_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--voice-id ID`, `--speed FLOAT`, `--volume FLOAT`, `--output-format [wav\|pcm]`, `--sample-rate INT`, `--engine-options JSON` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
+| `opal say config profile remove` † | `<profile_id>`, `--if-match ETAG` | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
+| `opal say config profile activate` † | `<profile_id>`, `--if-match ETAG` | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
+| `opal say config persona list` † | `--enabled/--no-enabled` | List Personas. `GET /api/v1/persona/` |
+| `opal say config persona add` † | `--if-match ETAG`, `--persona-id ID`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Create Persona. `POST /api/v1/persona/` |
+| `opal say config persona validate` † | `<persona_id>` | Validate Persona. `POST /api/v1/persona/{persona_id}/validate` |
+| `opal say config persona show` † | `<persona_id>` | Get Persona. `GET /api/v1/persona/{persona_id}` |
+| `opal say config persona update` † | `<persona_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Update Persona. `PATCH /api/v1/persona/{persona_id}` |
+| `opal say config persona remove` † | `<persona_id>`, `--if-match ETAG` | Delete Persona. `DELETE /api/v1/persona/{persona_id}` |
+| `opal say generate` † | `<text>`, `--profile-id INT`, `--voice-id ID`, `--persona ID`, `--engine-id ID`, `--speed FLOAT`, `--volume FLOAT`, `--sample-rate INT`, `--engine-options JSON`, `--output-format [wav\|pcm]`, `--out PATH`, `--play` | Synthesize completed WAV or raw PCM audio from text. `POST /api/v1/generate` |
+| `opal say stream` † | `<text>`, `--profile-id INT`, `--voice-id ID`, `--persona ID`, `--engine-id ID`, `--speed FLOAT`, `--volume FLOAT`, `--sample-rate INT`, `--engine-options JSON`, `--out PATH`, `--play` | Synthesize progressive raw `s16le` mono PCM from text. `POST /api/v1/generate/stream` |
+| `opal say config setting list` | — | List settings. `GET /api/v1/setting/` |
+| `opal say config setting update` | `--if-match ETAG`, `--data JSON` | Patch settings (alias: `opal say config setting patch`). `PATCH /api/v1/setting/` |
+| `opal say config setting show` | `<key>` | Get setting (alias: `opal say setting get`). `GET /api/v1/setting/{key}` |
+| `opal say config setting set` | `<key>`, `<value>`, `--if-match ETAG` | Set setting. `PUT /api/v1/setting/{key}` |
+| `opal say config setting remove` | `<key>`, `--if-match ETAG` | Delete setting (alias: `opal say setting delete`). `DELETE /api/v1/setting/{key}` |
+| `opal say info health` † | — | Service health report. `GET /api/v1/health/` |
+| `opal say backup list` † | — | List backups. `GET /api/v1/backup/list` |
+| `opal say backup create` † | — | Create backup. `POST /api/v1/backup/create` |
+| `opal say backup download` † | `<filename>`, `--out PATH` | Download backup. `GET /api/v1/backup/download/{filename}` |
+| `opal say backup restore` † | `<filename>`, `--if-match ETAG` | Restore backup. `POST /api/v1/backup/restore/{filename}` |
+| `opal say backup remove` † | `<filename>` | Delete backup. `DELETE /api/v1/backup/{filename}` |
+| `opal say backup export` † | `--out PATH` | Export configuration. `GET /api/v1/backup/export` |
+| `opal say backup import` † | `--if-match ETAG`, `--file PATH` | Import configuration. `POST /api/v1/backup/import` |
+| `opal say backup validate-stored` † | — | Validate stored configuration. `GET /api/v1/backup/validate` |
+| `opal say backup validate` † | `--file PATH` | Validate configuration. `POST /api/v1/backup/validate` |
+| `opal say info version` † | — | Service Info. `GET /api/v1/info/` |
+| `opal say info ping` † | — | Ping. `GET /api/v1/info/ping` |
+| `opal say info live` † | — | Liveness probe. `GET /api/v1/health/live` |
+| `opal say info ready` † | — | Readiness probe. `GET /api/v1/health/ready` |
+| `opal say service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
+| `opal say service stop` | — | Stop service. `POST /api/v1/service/stop` |
+| `opal say service log` | `--lines INT` | Tail service log. `GET /api/v1/service/log` |
 
----
+† Proposed name; the operation has no `x-opal-cli` annotation yet.
 
-## INTERFACE: `opal-listen`
+### opal-listen
 
-*Wakeword detection, speech-to-text, deterministic intent & slot extraction, and a regression harness for people tired of repeating "turn on the kitchen lights" at 2 AM.*
+Wakewords, speech-to-text, intent recognition, and slot extraction, plus a regression harness for people tired of saying "turn on the kitchen lights" at 2 AM.
 
-### 1. Typer Command Tree
+#### Typer command tree
 
 ```text
 opal listen
-├── recognition
-│   ├── test                unified dry-run: --text <utt> OR --audio <wav>
-│   ├── test-text           dry-run text through normalization + intent + slot matching
-│   ├── test-audio          dry-run 16-bit PCM WAV through wakeword + STT + NLU
-│   ├── start               start live microphone recognition pipeline
-│   ├── stop                stop live microphone recognition pipeline
-│   ├── status              pipeline state and counter snapshot
-│   └── stream              SSE stream of live recognition events
 ├── config
-│   ├── wakeword            list | add | show | update | remove
-│   ├── intent              list | add | show | update | remove
-│   │   └── phrase          list | add | remove
-│   ├── slot                list | add | show | update | remove
-│   │   ├── value           list | add | remove
-│   │   └── alias           list | add | remove
-│   ├── profile             list | add | show | update | remove | activate
-│   ├── persona             list | add | show | update | remove | validate
-│   └── setting             list | update | show | set | remove
+│   ├── wakeword          list | add | show | update | remove
+│   ├── intent            list | add | show | update | remove
+│   ├── phrase            list | add | remove
+│   ├── slot              list | add | show | update | remove
+│   ├── slot-value        list | add | remove
+│   ├── slot-alias        list | add | remove
+│   ├── profile           list | add | show | update | remove | activate
+│   ├── setting           list | update | show | set | remove
+│   └── persona           list | add | validate | show | update | remove
+├── recognition           test-text | test-audio | start | stop | status | stream
 ├── data
-│   └── failed-utterance    list | add | show | update | remove | promote
-├── regression              list | add | show | update | remove | run
-├── performance             last | summary | history
-├── service                 start | stop | log
-├── info                    health | audio-devices | version | ping | live | ready
-└── backup                  list | create | download | restore | remove | export | import | validate
+│   └── failed-utterance  list | add | show | update | remove | promote
+├── regression            list | add | run | show | update | remove
+├── performance           last | summary | history
+├── info                  health | audio-devices | version | ping | live | ready
+├── backup                list | create | download | restore | remove | export | import | validate-stored | validate
+└── service               start | stop | log
 ```
 
-### 2. REST Tree (`openapi/opal_listen.yaml`)
+#### REST tree
 
 ```text
 /api/v1
@@ -216,13 +226,18 @@ opal listen
 │           └── /{value_id}                 DELETE
 │               └── /alias                  GET, POST
 │                   └── /{alias_id}         DELETE
+├── /profile/                               GET, POST
+│   └── /{profile_id}                       GET, PATCH, DELETE
+│       └── /activate                       POST
+├── /setting/                               GET, PATCH
+│   └── /{key}                              GET, PUT, DELETE
 ├── /recognition
 │   ├── /test_text                          POST
 │   ├── /test_audio                         POST
 │   ├── /start                              POST
 │   ├── /stop                               POST
 │   ├── /status                             GET
-│   └── /stream                             GET (SSE)
+│   └── /stream                             GET
 ├── /failed_utterance/                      GET, POST
 │   └── /{fu_id}                            GET, PATCH, DELETE
 │       └── /promote                        POST
@@ -233,122 +248,153 @@ opal listen
 │   ├── /last                               GET
 │   ├── /summary                            GET
 │   └── /history                            GET
-├── /profile/                               GET, POST
-│   └── /{profile_id}                       GET, PATCH, DELETE
-│       └── /activate                       POST
-├── /persona/                               GET, POST
-│   └── /{persona_id}                       GET, PATCH, DELETE
-│       └── /validate                       POST
-├── /setting/                               GET, PATCH
-│   └── /{key}                              GET, PUT, DELETE
-├── /service
-│   ├── /start                              POST
-│   ├── /stop                               POST
-│   └── /log                                GET
-├── /info/                                  GET
-│   └── /ping                               GET
 ├── /health/                                GET
 │   ├── /audio_devices                      GET
 │   ├── /live                               GET
 │   └── /ready                              GET
-└── /backup
-    ├── /list                               GET
-    ├── /create                             POST
-    ├── /download/{filename}                GET
-    ├── /restore/{filename}                 POST
-    ├── /{filename}                         DELETE
-    ├── /export                             GET
-    ├── /import                             POST
-    └── /validate                           GET, POST
+├── /info/                                  GET
+│   └── /ping                               GET
+├── /backup
+│   ├── /list                               GET
+│   ├── /create                             POST
+│   ├── /download
+│   │   └── /{filename}                     GET
+│   ├── /restore
+│   │   └── /{filename}                     POST
+│   ├── /{filename}                         DELETE
+│   ├── /export                             GET
+│   ├── /import                             POST
+│   └── /validate                           GET, POST
+├── /service
+│   ├── /start                              POST
+│   ├── /stop                               POST
+│   └── /log                                GET
+└── /persona/                               GET, POST
+    └── /{persona_id}                       GET, PATCH, DELETE
+        └── /validate                       POST
 ```
 
-### 3. Command Reference
+#### Commands
 
 | COMMAND | OPTIONS | DESCRIPTION |
 |---|---|---|
-| `opal listen recognition test` | `--text TEXT` \| `--audio WAV`, `--save/--no-save`, `--require-wakeword`, `--expect-intent NAME`, `--verbose` | Unified recognition test: pass `--text` or `--audio` (XOR) (`POST /api/v1/recognition/test_text` or `/test_audio`). |
-| `opal listen recognition test-text` | `--text TEXT`, `--save/--no-save`, `--expect-intent NAME`, `--verbose` | Run text through normalization, intent matching, and slot extraction (`POST /api/v1/recognition/test_text`). |
-| `opal listen recognition test-audio` | `<wav_path>`, `--save/--no-save`, `--require-wakeword`, `--expect-intent NAME`, `--verbose` | Run a 16-bit PCM WAV file through wakeword + STT + NLU (`POST /api/v1/recognition/test_audio`). |
-| `opal listen recognition start\|stop\|status` | `--json` | Start, stop, or inspect the live microphone pipeline (`/api/v1/recognition/start\|stop\|status`). |
-| `opal listen recognition stream` | `--debug BOOL` | Stream live recognition matches and debug telemetry over SSE (`GET /api/v1/recognition/stream`). |
-| `opal listen config wakeword list\|add\|show\|update\|remove` | `<wakeword_id>`, `--name TEXT`, `--confidence-threshold FLOAT`, `--enabled/--disabled` | Manage wakeword models and thresholds (`/api/v1/wakeword/*`). |
-| `opal listen config intent list\|add\|show\|update\|remove` | `<intent_id>`, `--name TEXT`, `--description TEXT`, `--confidence-threshold FLOAT`, `--phrase TEXT...`, `--enabled/--disabled` | Manage intents and initial training phrases (`/api/v1/intent/*`). |
-| `opal listen config intent phrase list\|add\|remove` | `<intent_id>`, `<phrase_id>`, `--phrase TEXT` | List, add, or delete training phrases on an intent (`/api/v1/intent/{id}/phrase/*`). |
-| `opal listen config slot list\|add\|show\|update\|remove` | `<slot_id>`, `--name TEXT`, `--slot-type TEXT`, `--description TEXT` | Manage named entity slots (`/api/v1/slot/*`). |
-| `opal listen config slot value list\|add\|remove` | `<slot_id>`, `<value_id>`, `--value TEXT` | Manage canonical values inside a slot (`/api/v1/slot/{id}/value/*`). |
-| `opal listen config slot alias list\|add\|remove` | `<slot_id>`, `<value_id>`, `<alias_id>`, `--alias TEXT` | Manage spoken synonyms for a canonical slot value (`/api/v1/slot/{id}/value/{vid}/alias/*`). |
-| `opal listen data failed-utterance list` | `--reviewed BOOL`, `--promoted BOOL`, `--limit INT`, `--offset INT` | List unrecognized utterances queued for human review (`GET /api/v1/failed_utterance/`). |
-| `opal listen data failed-utterance add\|show\|update\|remove` | `<fu_id>`, `--transcript TEXT`, `--expected-intent NAME`, `--notes TEXT`, `--reviewed BOOL` | Record, inspect, annotate, or delete a failed utterance (`/api/v1/failed_utterance/*`). |
-| `opal listen data failed-utterance promote` | `<fu_id>`, `--intent-name NAME`, `--create-regression BOOL` | Promote a miss into an intent training phrase and optional regression test (`POST /api/v1/failed_utterance/{id}/promote`). |
-| `opal listen regression list\|add\|show\|update\|remove` | `<test_id>`, `--name TEXT`, `--phrase TEXT`, `--expected-intent NAME`, `--expected-slots JSON`, `--enabled/--disabled` | Manage saved NLU regression test cases (`/api/v1/regression/*`). |
-| `opal listen regression run` | `--enabled-only BOOL` | Execute the regression suite and report pass/fail counts (`POST /api/v1/regression/run`). |
-| `opal listen performance last\|summary\|history` | `--limit INT` | Inspect stage latency metrics for the last utterance, rolling summary, or bounded history (`/api/v1/performance/*`). |
-| `opal listen config profile list\|add\|show\|update\|remove\|activate` | `<profile_id>`, `--name TEXT`, `--wakeword-names JSON`, `--enabled-intents JSON`, `--enabled-slots JSON`, `--vad-settings JSON` | Manage recognition profiles and activate the default (`/api/v1/profile/*`). |
-| `opal listen config persona list\|add\|show\|update\|remove\|validate` | `<persona_id>`, `--name TEXT`, `--voice ID`, `--description TEXT`, `--enabled/--disabled` | Manage portable persona records in Listen (`/api/v1/persona/*`). |
-| `opal listen config setting list\|update\|show\|set\|remove` | `<key>`, `<value_json>`, `--data JSON` | Manage Listen runtime settings (`/api/v1/setting/*`). |
-| `opal listen info health\|audio-devices\|version\|ping\|live\|ready` | `--json` | Inspect service health and enumerate host microphones (`GET /api/v1/health/audio_devices`, `/api/v1/info/*`). |
-| `opal listen service start\|stop\|log` | `--append BOOL` | Control the Listen daemon process (`/api/v1/service/*`). |
-| `opal listen backup list\|create\|download\|restore\|remove\|export\|import\|validate` | `<filename>`, `--file PATH`, `--out PATH` | Backup and restore recognition catalogs (`/api/v1/backup/*`). |
+| `opal listen config wakeword list` † | — | List Wakewords. `GET /api/v1/wakeword/` |
+| `opal listen config wakeword add` † | `--if-match ETAG`, `--name TEXT`, `--enabled/--no-enabled`, `--confidence-threshold FLOAT` | Create Wakeword. `POST /api/v1/wakeword/` |
+| `opal listen config wakeword show` † | `<wakeword_id>` | Get Wakeword. `GET /api/v1/wakeword/{wakeword_id}` |
+| `opal listen config wakeword update` † | `<wakeword_id>`, `--if-match ETAG`, `--name TEXT`, `--enabled/--no-enabled`, `--confidence-threshold FLOAT` | Update Wakeword. `PATCH /api/v1/wakeword/{wakeword_id}` |
+| `opal listen config wakeword remove` † | `<wakeword_id>`, `--if-match ETAG` | Delete Wakeword. `DELETE /api/v1/wakeword/{wakeword_id}` |
+| `opal listen config intent list` † | — | List Intents. `GET /api/v1/intent/` |
+| `opal listen config intent add` † | `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--enabled/--no-enabled`, `--confidence-threshold FLOAT`, `--phrases JSON` | Create Intent. `POST /api/v1/intent/` |
+| `opal listen config intent show` † | `<intent_id>` | Get Intent. `GET /api/v1/intent/{intent_id}` |
+| `opal listen config intent update` † | `<intent_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--enabled/--no-enabled`, `--confidence-threshold FLOAT` | Update Intent. `PATCH /api/v1/intent/{intent_id}` |
+| `opal listen config intent remove` † | `<intent_id>`, `--if-match ETAG` | Delete Intent. `DELETE /api/v1/intent/{intent_id}` |
+| `opal listen config phrase list` † | `<intent_id>` | List Phrases. `GET /api/v1/intent/{intent_id}/phrase` |
+| `opal listen config phrase add` † | `<intent_id>`, `--if-match ETAG`, `--phrase TEXT` | Add Phrase. `POST /api/v1/intent/{intent_id}/phrase` |
+| `opal listen config phrase remove` † | `<intent_id>`, `<phrase_id>`, `--if-match ETAG` | Delete Phrase. `DELETE /api/v1/intent/{intent_id}/phrase/{phrase_id}` |
+| `opal listen config slot list` † | — | List Slots. `GET /api/v1/slot/` |
+| `opal listen config slot add` † | `--if-match ETAG`, `--name TEXT`, `--slot-type TEXT`, `--description TEXT` | Create Slot. `POST /api/v1/slot/` |
+| `opal listen config slot show` † | `<slot_id>` | Get Slot. `GET /api/v1/slot/{slot_id}` |
+| `opal listen config slot update` † | `<slot_id>`, `--if-match ETAG`, `--name TEXT`, `--slot-type TEXT`, `--description TEXT` | Update Slot. `PATCH /api/v1/slot/{slot_id}` |
+| `opal listen config slot remove` † | `<slot_id>`, `--if-match ETAG` | Delete Slot. `DELETE /api/v1/slot/{slot_id}` |
+| `opal listen config slot-value list` † | `<slot_id>` | List Slot Values. `GET /api/v1/slot/{slot_id}/value` |
+| `opal listen config slot-value add` † | `<slot_id>`, `--if-match ETAG`, `--value TEXT` | Add Slot Value. `POST /api/v1/slot/{slot_id}/value` |
+| `opal listen config slot-value remove` † | `<slot_id>`, `<value_id>`, `--if-match ETAG` | Delete Slot Value. `DELETE /api/v1/slot/{slot_id}/value/{value_id}` |
+| `opal listen config slot-alias list` † | `<slot_id>`, `<value_id>` | List Aliases. `GET /api/v1/slot/{slot_id}/value/{value_id}/alias` |
+| `opal listen config slot-alias add` † | `<slot_id>`, `<value_id>`, `--if-match ETAG`, `--alias TEXT` | Add Alias. `POST /api/v1/slot/{slot_id}/value/{value_id}/alias` |
+| `opal listen config slot-alias remove` † | `<slot_id>`, `<value_id>`, `<alias_id>`, `--if-match ETAG` | Delete Alias. `DELETE /api/v1/slot/{slot_id}/value/{value_id}/alias/{alias_id}` |
+| `opal listen config profile list` † | — | List profiles. `GET /api/v1/profile/` |
+| `opal listen config profile add` † | `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--wakeword-names JSON`, `--confidence-thresholds JSON`, `--vad-settings JSON`, `--enabled-intents JSON`, `--enabled-slots JSON`, `--model-paths JSON` | Create profile. `POST /api/v1/profile/` |
+| `opal listen config profile show` † | `<profile_id>` | Get profile. `GET /api/v1/profile/{profile_id}` |
+| `opal listen config profile update` † | `<profile_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--wakeword-names JSON`, `--confidence-thresholds JSON`, `--vad-settings JSON`, `--enabled-intents JSON`, `--enabled-slots JSON`, `--model-paths JSON` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
+| `opal listen config profile remove` † | `<profile_id>`, `--if-match ETAG` | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
+| `opal listen config profile activate` † | `<profile_id>`, `--if-match ETAG` | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
+| `opal listen config setting list` | — | List settings. `GET /api/v1/setting/` |
+| `opal listen config setting update` | `--if-match ETAG`, `--data JSON` | Patch settings (alias: `opal listen config setting patch`). `PATCH /api/v1/setting/` |
+| `opal listen config setting show` | `<key>` | Get setting (alias: `opal listen setting get`). `GET /api/v1/setting/{key}` |
+| `opal listen config setting set` | `<key>`, `<value>`, `--if-match ETAG` | Set setting. `PUT /api/v1/setting/{key}` |
+| `opal listen config setting remove` | `<key>`, `--if-match ETAG` | Delete setting (alias: `opal listen setting unset`). `DELETE /api/v1/setting/{key}` |
+| `opal listen recognition test-text` † | `--save-log/--no-save-log`, `--text TEXT` | Run text through intent matching and slot extraction (never published). `POST /api/v1/recognition/test_text` |
+| `opal listen recognition test-audio` † | `<file>`, `--save-log/--no-save-log`, `--require-wakeword/--no-require-wakeword` | Run an audio file through wakeword, STT and intent matching (never published). `POST /api/v1/recognition/test_audio` |
+| `opal listen recognition start` † | — | Start the live microphone pipeline. `POST /api/v1/recognition/start` |
+| `opal listen recognition stop` † | — | Stop the live microphone pipeline. `POST /api/v1/recognition/stop` |
+| `opal listen recognition status` † | — | Show live pipeline state and metrics. `GET /api/v1/recognition/status` |
+| `opal listen recognition stream` † | `--debug/--no-debug` | Stream live recognition results (SSE, live-only). `GET /api/v1/recognition/stream` |
+| `opal listen data failed-utterance list` † | `--reviewed/--no-reviewed`, `--promoted/--no-promoted`, `--limit INT`, `--offset INT` | List Failed Utterances. `GET /api/v1/failed_utterance/` |
+| `opal listen data failed-utterance add` † | `--transcript TEXT`, `--expected-intent TEXT`, `--notes TEXT`, `--recognition-log-id INT` | Create Failed Utterance. `POST /api/v1/failed_utterance/` |
+| `opal listen data failed-utterance show` † | `<fu_id>` | Get Failed Utterance. `GET /api/v1/failed_utterance/{fu_id}` |
+| `opal listen data failed-utterance update` † | `<fu_id>`, `--expected-intent TEXT`, `--notes TEXT`, `--reviewed/--no-reviewed`, `--promoted-to-phrase/--no-promoted-to-phrase` | Update Failed Utterance. `PATCH /api/v1/failed_utterance/{fu_id}` |
+| `opal listen data failed-utterance remove` † | `<fu_id>` | Delete Failed Utterance. `DELETE /api/v1/failed_utterance/{fu_id}` |
+| `opal listen data failed-utterance promote` † | `<fu_id>`, `--intent-name TEXT`, `--create-regression/--no-create-regression`, `--if-match ETAG` | Promote To Phrase. `POST /api/v1/failed_utterance/{fu_id}/promote` |
+| `opal listen regression list` † | — | List Regression Tests. `GET /api/v1/regression/` |
+| `opal listen regression add` † | `--if-match ETAG`, `--name TEXT`, `--phrase TEXT`, `--expected-intent TEXT`, `--enabled/--no-enabled`, `--expected-slots JSON` | Create Regression Test. `POST /api/v1/regression/` |
+| `opal listen regression run` † | `--enabled-only/--no-enabled-only` | Run Regression Tests. `POST /api/v1/regression/run` |
+| `opal listen regression show` † | `<test_id>` | Get Regression Test. `GET /api/v1/regression/{test_id}` |
+| `opal listen regression update` † | `<test_id>`, `--if-match ETAG`, `--name TEXT`, `--phrase TEXT`, `--expected-intent TEXT`, `--expected-slots JSON`, `--enabled/--no-enabled` | Update Regression Test. `PATCH /api/v1/regression/{test_id}` |
+| `opal listen regression remove` † | `<test_id>`, `--if-match ETAG` | Delete Regression Test. `DELETE /api/v1/regression/{test_id}` |
+| `opal listen performance last` † | — | Get Last Performance. `GET /api/v1/performance/last` |
+| `opal listen performance summary` † | `--limit INT` | Get Performance Summary. `GET /api/v1/performance/summary` |
+| `opal listen performance history` † | `--limit INT` | Get Performance History. `GET /api/v1/performance/history` |
+| `opal listen info health` † | — | Service health report. `GET /api/v1/health/` |
+| `opal listen info audio-devices` † | — | List host audio input devices. `GET /api/v1/health/audio_devices` |
+| `opal listen info version` † | — | Service Info. `GET /api/v1/info/` |
+| `opal listen info ping` † | — | Ping. `GET /api/v1/info/ping` |
+| `opal listen info live` † | — | Liveness probe. `GET /api/v1/health/live` |
+| `opal listen info ready` † | — | Readiness probe. `GET /api/v1/health/ready` |
+| `opal listen backup list` † | — | List backups. `GET /api/v1/backup/list` |
+| `opal listen backup create` † | — | Create backup. `POST /api/v1/backup/create` |
+| `opal listen backup download` † | `<filename>`, `--out PATH` | Download backup. `GET /api/v1/backup/download/{filename}` |
+| `opal listen backup restore` † | `<filename>`, `--if-match ETAG` | Restore backup. `POST /api/v1/backup/restore/{filename}` |
+| `opal listen backup remove` † | `<filename>` | Delete backup. `DELETE /api/v1/backup/{filename}` |
+| `opal listen backup export` † | `--out PATH` | Export configuration. `GET /api/v1/backup/export` |
+| `opal listen backup import` † | `--if-match ETAG`, `--file PATH` | Import configuration. `POST /api/v1/backup/import` |
+| `opal listen backup validate-stored` † | — | Validate stored configuration. `GET /api/v1/backup/validate` |
+| `opal listen backup validate` † | `--file PATH` | Validate configuration. `POST /api/v1/backup/validate` |
+| `opal listen service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
+| `opal listen service stop` | — | Stop service. `POST /api/v1/service/stop` |
+| `opal listen service log` | `--lines INT` | Tail service log. `GET /api/v1/service/log` |
+| `opal listen config persona list` † | `--enabled/--no-enabled` | List Personas. `GET /api/v1/persona/` |
+| `opal listen config persona add` † | `--if-match ETAG`, `--persona-id ID`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Create Persona. `POST /api/v1/persona/` |
+| `opal listen config persona validate` † | `<persona_id>` | Validate Persona. `POST /api/v1/persona/{persona_id}/validate` |
+| `opal listen config persona show` † | `<persona_id>` | Get Persona. `GET /api/v1/persona/{persona_id}` |
+| `opal listen config persona update` † | `<persona_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Update Persona. `PATCH /api/v1/persona/{persona_id}` |
+| `opal listen config persona remove` † | `<persona_id>`, `--if-match ETAG` | Delete Persona. `DELETE /api/v1/persona/{persona_id}` |
 
----
+† Proposed name; the operation has no `x-opal-cli` annotation yet.
 
-## INTERFACE: `opal-look`
+### opal-look
 
-*Visual observation, DAG pipelines, polygon zones, tripwires, self-healing camera monitors, and unified `OutputRef` byte retrieval.*
+Visual observation: sources, pipelines, live sessions, finite jobs, zones, rules, monitors, captures, and recordings. Optional tasks such as OCR, captioning, and tracking are advertised through `opal look info capabilities`.
 
-### 1. Typer Command Tree
+#### Typer command tree
 
 ```text
 opal look
-├── analyze
-│   ├── run                 synchronous single-frame analysis on a source/media/capture
-│   └── image               multipart upload + immediate analysis of a still image
-├── session
-│   ├── start               start a live observation session on a source
-│   ├── list
-│   ├── show
-│   ├── stop
-│   ├── stream              SSE stream of live session observations
-│   └── preview             MJPEG stream with live bounding-box overlays
-├── source
-│   ├── list
-│   ├── add
-│   ├── show
-│   ├── update
-│   ├── remove
-│   ├── status              live connectivity and frame-drop telemetry
-│   ├── probe               actively probe camera/stream dimensions and codecs
-│   ├── frame               grab an immediate JPEG frame (optional overlay)
-│   ├── capture             persist an exact frame Capture (with OutputRef)
-│   └── stream              MJPEG live view of a source
-├── engine
-│   ├── list
-│   ├── show
-│   └── update
-├── output
-│   └── fetch               download bytes from any OutputRef content_url
+├── info                  capabilities | health | version | ping | live | ready | metrics | events
+├── engine                list | show | update
 ├── config
-│   ├── model               list | add | show | update | remove
-│   ├── pipeline            list | add | show | update | remove | validate
-│   ├── zone                list | add | show | update | remove
-│   ├── rule                list | add | show | update | remove
-│   ├── monitor             list | add | show | update | remove
-│   ├── profile             list | add | show | update | remove | activate
-│   ├── persona             list | add | show | update | remove | validate
-│   └── setting             list | update | show | set | remove
+│   ├── model             list | add | show | update | remove
+│   ├── pipeline          list | add | show | update | remove | validate
+│   ├── profile           list | add | show | update | remove | activate
+│   ├── zone              list | add | show | update | remove
+│   ├── rule              list | add | show | update | remove
+│   ├── monitor           list | add | show | update | remove
+│   ├── setting           list | update | show | set | remove
+│   └── persona           list | add | validate | show | update | remove
+├── source                list | add | show | update | remove | status | probe | frame | capture | stream
+├── analyze               run | image
+├── session               list | start | show | stop | stream | preview
 ├── data
-│   ├── job                 submit | list | show | cancel
-│   ├── observation         list | show
-│   ├── media               upload | list | show | remove
-│   ├── capture             list | show | remove | download
-│   ├── artifact            list | show | remove | download
-│   └── recording           start | list | show | stop
-├── service                 start | stop | log
-├── info                    capabilities | health | version | ping | live | ready | metrics | events
-└── backup                  list | create | download | restore | remove | export | import | validate
+│   ├── job               list | submit | show | cancel
+│   ├── observation       list | show
+│   ├── media             list | upload | show | remove
+│   ├── capture           list | show | remove | download
+│   ├── artifact          list | show | remove | download
+│   └── recording         list | start | show | stop
+├── backup                list | create | download | restore | remove | export | import | validate
+└── service               start | stop | log
 ```
 
-### 2. REST Tree (`openapi/opal_look.yaml`)
+#### REST tree
 
 ```text
 /api/v1
@@ -363,10 +409,13 @@ opal look
 │       ├── /probe                          POST
 │       ├── /frame                          GET
 │       ├── /capture/                       POST
-│       └── /stream                         GET (MJPEG)
+│       └── /stream                         GET
 ├── /pipeline/                              GET, POST
-│   ├── /validate                           POST
-│   └── /{pipeline_id}                      GET, PATCH, DELETE
+│   ├── /{pipeline_id}                      GET, PATCH, DELETE
+│   └── /validate                           POST
+├── /profile/                               GET, POST
+│   └── /{profile_id}                       GET, PATCH, DELETE
+│       └── /activate                       POST
 ├── /zone/                                  GET, POST
 │   └── /{zone_id}                          GET, PATCH, DELETE
 ├── /rule/                                  GET, POST
@@ -374,150 +423,197 @@ opal look
 ├── /monitor/                               GET, POST
 │   └── /{monitor_id}                       GET, PATCH, DELETE
 ├── /analyze/                               POST
-│   └── /image                              POST (multipart)
+│   └── /image                              POST
 ├── /session/                               GET, POST
 │   └── /{session_id}                       GET
 │       ├── /stop                           POST
-│       ├── /stream                         GET (SSE)
-│       └── /preview                        GET (MJPEG)
+│       ├── /stream                         GET
+│       └── /preview                        GET
 ├── /job/                                   GET, POST
 │   └── /{job_id}                           GET
 │       └── /cancel                         POST
 ├── /observation/                           GET
 │   └── /{observation_id}                   GET
-├── /media/                                 GET, POST (multipart)
+├── /media/                                 GET, POST
 │   └── /{media_id}                         GET, DELETE
 ├── /capture/                               GET
 │   └── /{capture_id}                       GET, DELETE
-│       └── /content                        GET (bytes)
+│       └── /content                        GET
 ├── /artifact/                              GET
 │   └── /{artifact_id}                      GET, DELETE
-│       └── /content                        GET (bytes)
-├── /recording/                             GET, POST
-│   └── /{recording_id}                     GET
-│       └── /stop                           POST
-├── /profile/                               GET, POST
-│   └── /{profile_id}                       GET, PATCH, DELETE
-│       └── /activate                       POST
-├── /persona/                               GET, POST
-│   └── /{persona_id}                       GET, PATCH, DELETE
-│       └── /validate                       POST
+│       └── /content                        GET
 ├── /setting/                               GET, PATCH
 │   └── /{key}                              GET, PUT, DELETE
-├── /metrics/                               GET
-├── /events/status                          GET
+├── /backup
+│   ├── /list                               GET
+│   ├── /create                             POST
+│   ├── /download
+│   │   └── /{filename}                     GET
+│   ├── /restore
+│   │   └── /{filename}                     POST
+│   ├── /{filename}                         DELETE
+│   ├── /export                             GET
+│   ├── /import                             POST
+│   └── /validate                           POST
+├── /health/                                GET
+│   ├── /live                               GET
+│   └── /ready                              GET
+├── /info/                                  GET
+│   └── /ping                               GET
 ├── /service
 │   ├── /start                              POST
 │   ├── /stop                               POST
 │   └── /log                                GET
-├── /info/                                  GET
-│   └── /ping                               GET
-├── /health/                                GET
-│   ├── /live                               GET
-│   └── /ready                              GET
-└── /backup
-    ├── /list                               GET
-    ├── /create                             POST
-    ├── /download/{filename}                GET
-    ├── /restore/{filename}                 POST
-    ├── /{filename}                         DELETE
-    ├── /export                             GET
-    ├── /import                             POST
-    └── /validate                           POST
+├── /metrics/                               GET
+├── /events
+│   └── /status                             GET
+├── /recording/                             GET, POST
+│   └── /{recording_id}                     GET
+│       └── /stop                           POST
+└── /persona/                               GET, POST
+    └── /{persona_id}                       GET, PATCH, DELETE
+        └── /validate                       POST
 ```
 
-### 3. Command Reference
+#### Commands
 
 | COMMAND | OPTIONS | DESCRIPTION |
 |---|---|---|
-| `opal look analyze run` | `--source ID`, `--pipeline ID`, `--profile ID`, `--options JSON`, `--retention JSON` | Run synchronous single-frame analysis (`POST /api/v1/analyze/`). |
-| `opal look analyze image` | `<image_path>`, `--pipeline ID`, `--profile ID`, `--tasks JSON` | Upload a still image and analyze it immediately (`POST /api/v1/analyze/image`). |
-| `opal look source list\|add\|show\|update\|remove` | `<source_id>`, `--id ID`, `--kind [rtsp\|camera\|http\|media]`, `--name TEXT`, `--locator URI`, `--secret-ref REF`, `--options JSON`, `--enabled/--disabled` | Register and manage visual input sources (`/api/v1/source/*`). |
-| `opal look source status` | `<source_id>` | Show connection health, FPS, and dropped-frame counters (`GET /api/v1/source/{id}/status`). |
-| `opal look source probe` | `<source_id>` | Actively connect and probe resolution/codec metadata (`POST /api/v1/source/{id}/probe`). |
-| `opal look source frame` | `<source_id>`, `--pipeline ID`, `--width INT`, `--height INT`, `--quality INT`, `--presentation-filter TEXT`, `--out PATH` | Fetch an immediate JPEG frame from a source (`GET /api/v1/source/{id}/frame`). |
-| `opal look source capture` | `<source_id>`, `--retain/--no-retain`, `--annotate/--no-annotate`, `--session ID`, `--observation ID` | Persist an exact frame capture returning `output_ref` (`POST /api/v1/source/{id}/capture/`). |
-| `opal look source stream` | `<source_id>`, `--annotations BOOL`, `--pipeline ID`, `--classes LIST`, `--min-confidence FLOAT`, `--target-fps FLOAT`, `--out PATH` | Stream live MJPEG video from a source (`GET /api/v1/source/{id}/stream`). |
-| `opal look session start` | `--source ID`, `--pipeline ID`, `--profile ID`, `--options JSON`, `--retention JSON`, `--auto-start BOOL` | Admit and start a continuous observation session (`POST /api/v1/session/`). |
-| `opal look session list\|show\|stop` | `<session_id>`, `--state STATE`, `--source ID`, `--limit INT` | List, inspect, or stop active observation sessions (`/api/v1/session/*`). |
-| `opal look session stream` | `<session_id>`, `--last-event-id ID` | Follow live session observations over SSE (`GET /api/v1/session/{id}/stream`). |
-| `opal look session preview` | `<session_id>`, `--classes LIST`, `--min-confidence FLOAT`, `--show-labels BOOL`, `--show-boxes BOOL`, `--target-fps FLOAT` | Stream annotated MJPEG preview for a running session (`GET /api/v1/session/{id}/preview`). |
-| `opal look engine list\|show\|update` | `<engine_id>`, `--enabled/--disabled`, `--options JSON` | Inspect or configure vision inference backends (`/api/v1/engine/*`). |
-| `opal look config model list\|add\|show\|update\|remove` | `<model_id>`, `--id ID`, `--engine ID`, `--resource-ref PATH`, `--tasks JSON`, `--display-name TEXT`, `--options JSON` | Register and manage vision models (`/api/v1/model/*`). |
-| `opal look config pipeline list\|add\|show\|update\|remove\|validate` | `<pipeline_id>`, `--id ID`, `--name TEXT`, `--stages JSON`, `--description TEXT` | Manage and dry-run multi-stage vision DAG pipelines (`/api/v1/pipeline/*`). |
-| `opal look config zone list\|add\|show\|update\|remove` | `<zone_id>`, `--id ID`, `--source ID`, `--name TEXT`, `--kind [polygon\|line]`, `--points JSON`, `--enabled/--disabled` | Define spatial polygons or tripwire lines on a source (`/api/v1/zone/*`). |
-| `opal look config rule list\|add\|show\|update\|remove` | `<rule_id>`, `--id ID`, `--name TEXT`, `--source ID`, `--zone ID`, `--kind KIND`, `--class-filters JSON`, `--threshold FLOAT`, `--minimum-duration-ms INT`, `--cooldown-ms INT`, `--capture-on-match`, `--clip-on-match` | Manage visual detection rules (`enters_zone`, `dwell_time`, `line_crosses`, `object_appears`, etc.) (`/api/v1/rule/*`). |
-| `opal look config monitor list\|add\|show\|update\|remove` | `<monitor_id>`, `--id ID`, `--name TEXT`, `--source ID`, `--pipeline ID`, `--profile ID`, `--restart-policy [always\|on_failure\|never]`, `--enabled/--disabled` | Manage always-on supervised camera monitors (`/api/v1/monitor/*`). |
-| `opal look data job submit\|list\|show\|cancel` | `<job_id>`, `--kind KIND`, `--source ID`, `--media ID`, `--pipeline ID`, `--range JSON`, `--output JSON`, `--state STATE`, `--limit INT` | Submit, list, inspect (with `output_refs`), or cancel asynchronous video/export jobs (`/api/v1/job/*`). |
-| `opal look data observation list\|show` | `<observation_id>`, `--source ID`, `--session ID`, `--job ID`, `--task TEXT`, `--label TEXT`, `--after ISO`, `--before ISO`, `--limit INT` | Query immutable retained visual observations (`/api/v1/observation/*`). |
-| `opal look data media upload\|list\|show\|remove` | `<media_id>`, `<file_path>`, `--limit INT` | Upload or manage input media files for offline analysis (`/api/v1/media/*`). |
-| `opal look data capture list\|show\|remove\|download` | `<capture_id>`, `--limit INT`, `--out PATH` | Inspect captures (with `output_ref`), delete, or download JPEG/PNG bytes (`/api/v1/capture/*`). |
-| `opal look data artifact list\|show\|remove\|download` | `<artifact_id>`, `--limit INT`, `--out PATH` | Inspect derived video/clip artifacts, delete, or download bytes (`/api/v1/artifact/*`). |
-| `opal look data recording start\|list\|show\|stop` | `<recording_id>`, `--source ID`, `--include-audio BOOL`, `--max-duration-seconds INT`, `--limit INT` | Start, inspect, or finalize source recordings into artifacts (`artifact_ref`) (`/api/v1/recording/*`). |
-| `opal look output fetch` | `<content_url>`, `--out PATH` | Unified byte retrieval: download any capture, recording, or export job via its `OutputRef.content_url`. |
-| `opal look config profile\|persona\|setting ...` | Standard suite options | Manage Look profiles, portable personas, and settings (`/api/v1/profile/*`, `/persona/*`, `/setting/*`). |
-| `opal look info capabilities\|health\|version\|ping\|live\|ready\|metrics\|events` | `--json` | Query supported tasks/codecs, health, frame counters, and ZeroMQ publisher status. |
-| `opal look service start\|stop\|log` | `--append BOOL` | Control the Look daemon process (`/api/v1/service/*`). |
-| `opal look backup list\|create\|download\|restore\|remove\|export\|import\|validate` | `<filename>`, `--file PATH`, `--out PATH` | Manage Look configuration backups (`/api/v1/backup/*`). |
+| `opal look info capabilities` | — | Discover runtime feature/task/format support. `GET /api/v1/capabilities/` |
+| `opal look engine list` | — | List engines. `GET /api/v1/engine/` |
+| `opal look engine show` | `<engine_id>` | Get engine. `GET /api/v1/engine/{engine_id}` |
+| `opal look engine update` | `<engine_id>`, `--if-match ETAG`, `--enabled/--no-enabled`, `--options JSON` | Update engine. `PATCH /api/v1/engine/{engine_id}` |
+| `opal look config model list` | — | List models. `GET /api/v1/model/` |
+| `opal look config model add` | `--if-match ETAG`, `--id ID`, `--engine-id ID`, `--resource-ref TEXT`, `--tasks JSON`, `--options JSON` | Register model. `POST /api/v1/model/` |
+| `opal look config model show` | `<model_id>` | Get model. `GET /api/v1/model/{model_id}` |
+| `opal look config model update` | `<model_id>`, `--if-match ETAG`, `--display-name TEXT`, `--options JSON` | Update model. `PATCH /api/v1/model/{model_id}` |
+| `opal look config model remove` | `<model_id>`, `--if-match ETAG` | Delete model. `DELETE /api/v1/model/{model_id}` |
+| `opal look source list` | — | List sources. `GET /api/v1/source/` |
+| `opal look source add` | `--if-match ETAG`, `--id ID`, `--kind [usb\|rtsp\|http_mjpeg\|file\|media\|adapter]`, `--name TEXT`, `--locator TEXT`, `--secret-ref TEXT`, `--options JSON`, `--enabled/--no-enabled` | Register source. `POST /api/v1/source/` |
+| `opal look source show` | `<source_id>` | Get source. `GET /api/v1/source/{source_id}` |
+| `opal look source update` | `<source_id>`, `--if-match ETAG`, `--name TEXT`, `--locator TEXT`, `--secret-ref TEXT`, `--enabled/--no-enabled`, `--options JSON` | Update source. `PATCH /api/v1/source/{source_id}` |
+| `opal look source remove` | `<source_id>`, `--if-match ETAG` | Delete source. `DELETE /api/v1/source/{source_id}` |
+| `opal look config pipeline list` | — | List pipelines. `GET /api/v1/pipeline/` |
+| `opal look config pipeline add` | `--if-match ETAG`, `--id ID`, `--name TEXT`, `--stages JSON`, `--description TEXT` | Register pipeline. `POST /api/v1/pipeline/` |
+| `opal look config pipeline show` | `<pipeline_id>` | Get pipeline. `GET /api/v1/pipeline/{pipeline_id}` |
+| `opal look config pipeline update` | `<pipeline_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--stages JSON` | Update pipeline. `PATCH /api/v1/pipeline/{pipeline_id}` |
+| `opal look config pipeline remove` | `<pipeline_id>`, `--if-match ETAG` | Delete pipeline. `DELETE /api/v1/pipeline/{pipeline_id}` |
+| `opal look config profile list` | — | List profiles. `GET /api/v1/profile/` |
+| `opal look config profile add` | `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--pipeline-id ID`, `--inference JSON`, `--retention JSON` | Create profile. `POST /api/v1/profile/` |
+| `opal look config profile show` | `<profile_id>` | Get profile. `GET /api/v1/profile/{profile_id}` |
+| `opal look config profile update` | `<profile_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--pipeline-id ID`, `--inference JSON`, `--retention JSON` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
+| `opal look config profile remove` | `<profile_id>`, `--if-match ETAG` | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
+| `opal look config zone list` | — | List zones. `GET /api/v1/zone/` |
+| `opal look config zone add` | `--if-match ETAG`, `--id ID`, `--source-id ID`, `--name TEXT`, `--kind [polygon\|line]`, `--points JSON`, `--enabled/--no-enabled` | Register zone. `POST /api/v1/zone/` |
+| `opal look config zone show` | `<zone_id>` | Get zone. `GET /api/v1/zone/{zone_id}` |
+| `opal look config zone update` | `<zone_id>`, `--if-match ETAG`, `--name TEXT`, `--points JSON`, `--enabled/--no-enabled` | Update zone. `PATCH /api/v1/zone/{zone_id}` |
+| `opal look config zone remove` | `<zone_id>`, `--if-match ETAG` | Delete zone. `DELETE /api/v1/zone/{zone_id}` |
+| `opal look config rule list` | — | List rules. `GET /api/v1/rule/` |
+| `opal look config rule add` | `--if-match ETAG`, `--id ID`, `--name TEXT`, `--source-id ID`, `--zone-id ID`, `--kind [object_appears\|object_disappears\|enters_zone\|exits_zone\|line_crosses\|count_threshold\|dwell_time]`, `--class-filters JSON`, `--threshold FLOAT`, `--minimum-duration-ms INT`, `--cooldown-ms INT`, `--enabled/--no-enabled`, `--capture-on-match/--no-capture-on-match`, `--clip-on-match/--no-clip-on-match` | Register rule. `POST /api/v1/rule/` |
+| `opal look config rule show` | `<rule_id>` | Get rule. `GET /api/v1/rule/{rule_id}` |
+| `opal look config rule update` | `<rule_id>`, `--if-match ETAG`, `--name TEXT`, `--source-id ID`, `--zone-id ID`, `--kind [object_appears\|object_disappears\|enters_zone\|exits_zone\|line_crosses\|count_threshold\|dwell_time]`, `--class-filters JSON`, `--threshold FLOAT`, `--minimum-duration-ms INT`, `--cooldown-ms INT`, `--enabled/--no-enabled`, `--capture-on-match/--no-capture-on-match`, `--clip-on-match/--no-clip-on-match` | Update rule. `PATCH /api/v1/rule/{rule_id}` |
+| `opal look config rule remove` | `<rule_id>`, `--if-match ETAG` | Delete rule. `DELETE /api/v1/rule/{rule_id}` |
+| `opal look config monitor list` | — | List monitors. `GET /api/v1/monitor/` |
+| `opal look config monitor add` | `--if-match ETAG`, `--id ID`, `--name TEXT`, `--source-id ID`, `--pipeline-id ID`, `--profile-id ID`, `--enabled/--no-enabled`, `--restart-policy [on_failure\|always\|never]`, `--options JSON` | Register monitor. `POST /api/v1/monitor/` |
+| `opal look config monitor show` | `<monitor_id>` | Get monitor. `GET /api/v1/monitor/{monitor_id}` |
+| `opal look config monitor update` | `<monitor_id>`, `--if-match ETAG`, `--name TEXT`, `--source-id ID`, `--pipeline-id ID`, `--profile-id ID`, `--enabled/--no-enabled`, `--restart-policy [on_failure\|always\|never]`, `--options JSON` | Update monitor. `PATCH /api/v1/monitor/{monitor_id}` |
+| `opal look config monitor remove` | `<monitor_id>`, `--if-match ETAG` | Delete monitor. `DELETE /api/v1/monitor/{monitor_id}` |
+| `opal look config pipeline validate` | `--id ID`, `--name TEXT`, `--stages JSON`, `--description TEXT` | Validate topology, task compatibility and capability requirements without mutation. `POST /api/v1/pipeline/validate` |
+| `opal look config profile activate` | `<profile_id>`, `--if-match ETAG` | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
+| `opal look source status` | `<source_id>` | Source connectivity and last-frame state. `GET /api/v1/source/{source_id}/status` |
+| `opal look source probe` | `<source_id>` | Probe source connectivity without persistent mutation. `POST /api/v1/source/{source_id}/probe` |
+| `opal look analyze run` | `--pipeline-id ID`, `--profile-id ID`, `--source-id ID`, `--media-id ID`, `--capture-id ID`, `--frame-at-ms INT`, `--options JSON`, `--retention JSON` | Analyze one current frame or retained media image synchronously. `POST /api/v1/analyze/` |
+| `opal look analyze image` | `<image>`, `--pipeline-id ID`, `--profile-id ID`, `--options-json TEXT`, `--persist-results/--no-persist-results` | Analyze uploaded still image synchronously. `POST /api/v1/analyze/image` |
+| `opal look session list` | `--limit INT`, `--state TEXT`, `--source-id ID` | List session executions. `GET /api/v1/session/` |
+| `opal look session start` | `--idempotency-key KEY`, `--source-id ID`, `--pipeline-id ID`, `--profile-id ID`, `--options JSON`, `--retention JSON`, `--auto-start/--no-auto-start` | Admit live video analysis. `POST /api/v1/session/` |
+| `opal look session show` | `<session_id>` | Read session state. `GET /api/v1/session/{session_id}` |
+| `opal look session stop` | `<session_id>` | Request session stop. `POST /api/v1/session/{session_id}/stop` |
+| `opal look session stream` | `<session_id>`, `--last-event-id ID` | Stream session observations over text/event-stream. `GET /api/v1/session/{session_id}/stream` |
+| `opal look session preview` | `<session_id>`, `--classes TEXT`, `--min-confidence FLOAT`, `--show-labels/--no-show-labels`, `--show-boxes/--no-show-boxes`, `--show-confidence/--no-show-confidence`, `--target-fps FLOAT`, `--width INT`, `--height INT`, `--quality INT`, `--presentation-filter TEXT`, `--out PATH` | Live annotated multipart MJPEG preview. `GET /api/v1/session/{session_id}/preview` |
+| `opal look data job list` | `--limit INT`, `--state TEXT`, `--kind TEXT` | List finite processing jobs. `GET /api/v1/job/` |
+| `opal look data job submit` | `--idempotency-key KEY`, `--kind [analyze_video\|export_annotated_video\|extract_clip]`, `--source-id ID`, `--media-id ID`, `--pipeline-id ID`, `--profile-id ID`, `--range JSON`, `--options JSON`, `--retention JSON`, `--output JSON`, `--wait` | Admit finite video analysis or media export. `POST /api/v1/job/` |
+| `opal look data job show` | `<job_id>` | Read job. `GET /api/v1/job/{job_id}` |
+| `opal look data job cancel` | `<job_id>` | Cancel finite job. `POST /api/v1/job/{job_id}/cancel` |
+| `opal look data observation list` | `--limit INT`, `--source-id ID`, `--session-id ID`, `--job-id ID`, `--task TEXT`, `--label TEXT`, `--after ISO`, `--before ISO` | Search immutable observations. `GET /api/v1/observation/` |
+| `opal look data observation show` | `<observation_id>` | Get exact immutable observation by ID. `GET /api/v1/observation/{observation_id}` |
+| `opal look data media list` | `--limit INT` | List uploaded input media. `GET /api/v1/media/` |
+| `opal look data media upload` | `<file>` | Upload finite video or image input. `POST /api/v1/media/` |
+| `opal look data media show` | `<media_id>` | Get media metadata. `GET /api/v1/media/{media_id}` |
+| `opal look data media remove` | `<media_id>` | Delete media metadata and bytes when no active users. `DELETE /api/v1/media/{media_id}` |
+| `opal look source frame` | `<source_id>`, `--pipeline-id ID`, `--target-fps FLOAT`, `--width INT`, `--height INT`, `--quality INT`, `--presentation-filter TEXT`, `--out PATH` | Get current JPEG frame without inference/retention. `GET /api/v1/source/{source_id}/frame` |
+| `opal look source capture` | `<source_id>`, `--retain/--no-retain`, `--annotate/--no-annotate`, `--session-id ID`, `--observation-id ID`, `--out PATH` | Capture current frame, optionally retain. `POST /api/v1/source/{source_id}/capture/` |
+| `opal look data capture list` | `--limit INT` | List retained captures. `GET /api/v1/capture/` |
+| `opal look data capture show` | `<capture_id>` | Get capture metadata. `GET /api/v1/capture/{capture_id}` |
+| `opal look data capture remove` | `<capture_id>` | Delete capture. `DELETE /api/v1/capture/{capture_id}` |
+| `opal look data capture download` | `<capture_id>`, `--out PATH` | Download exact capture. `GET /api/v1/capture/{capture_id}/content` |
+| `opal look data artifact list` | `--limit INT` | List derived videos, clips and snapshots. `GET /api/v1/artifact/` |
+| `opal look data artifact show` | `<artifact_id>` | Get artifact metadata. `GET /api/v1/artifact/{artifact_id}` |
+| `opal look data artifact remove` | `<artifact_id>` | Delete artifact and derived bytes. `DELETE /api/v1/artifact/{artifact_id}` |
+| `opal look data artifact download` | `<artifact_id>`, `--range BYTES`, `--out PATH` | Download complete artifact or one byte range. `GET /api/v1/artifact/{artifact_id}/content` |
+| `opal look config setting list` | — | List settings. `GET /api/v1/setting/` |
+| `opal look config setting update` | `--if-match ETAG`, `--data JSON` | Patch settings (alias: `opal look settings patch`). `PATCH /api/v1/setting/` |
+| `opal look config setting show` | `<key>` | Get setting. `GET /api/v1/setting/{key}` |
+| `opal look config setting set` | `<key>`, `<value>`, `--if-match ETAG` | Set setting. `PUT /api/v1/setting/{key}` |
+| `opal look config setting remove` | `<key>`, `--if-match ETAG` | Delete setting (alias: `opal look settings reset`). `DELETE /api/v1/setting/{key}` |
+| `opal look backup list` | — | List backups. `GET /api/v1/backup/list` |
+| `opal look backup create` | — | Create backup. `POST /api/v1/backup/create` |
+| `opal look backup download` | `<filename>`, `--out PATH` | Download backup. `GET /api/v1/backup/download/{filename}` |
+| `opal look backup restore` | `<filename>`, `--if-match ETAG` | Restore backup. `POST /api/v1/backup/restore/{filename}` |
+| `opal look backup remove` | `<filename>` | Delete backup. `DELETE /api/v1/backup/{filename}` |
+| `opal look backup export` | `--out PATH` | Export configuration. `GET /api/v1/backup/export` |
+| `opal look backup import` | `--if-match ETAG`, `--file PATH` | Import configuration. `POST /api/v1/backup/import` |
+| `opal look backup validate` | `--file PATH` | Validate configuration. `POST /api/v1/backup/validate` |
+| `opal look info health` | — | Service health report. `GET /api/v1/health/` |
+| `opal look info version` | — | Service Info. `GET /api/v1/info/` |
+| `opal look info ping` | — | Ping. `GET /api/v1/info/ping` |
+| `opal look info live` | — | Liveness probe. `GET /api/v1/health/live` |
+| `opal look info ready` | — | Readiness probe. `GET /api/v1/health/ready` |
+| `opal look service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
+| `opal look service stop` | — | Stop service. `POST /api/v1/service/stop` |
+| `opal look service log` | `--lines INT` | Tail service log. `GET /api/v1/service/log` |
+| `opal look info metrics` | — | Operational counters and latency. `GET /api/v1/metrics/` |
+| `opal look info events` | — | Inspect event publication queue and drops. `GET /api/v1/events/status` |
+| `opal look data recording list` | `--limit INT` | List recordings. `GET /api/v1/recording/` |
+| `opal look data recording start` | `--idempotency-key KEY`, `--source-id ID`, `--include-audio/--no-include-audio`, `--max-duration-seconds INT`, `--output JSON` | Start independent recording. `POST /api/v1/recording/` |
+| `opal look data recording show` | `<recording_id>` | Inspect recording. `GET /api/v1/recording/{recording_id}` |
+| `opal look data recording stop` | `<recording_id>` | Stop recording and finalize artifact. `POST /api/v1/recording/{recording_id}/stop` |
+| `opal look source stream` | `<source_id>`, `--annotations/--no-annotations`, `--pipeline-id ID`, `--classes TEXT`, `--min-confidence FLOAT`, `--show-labels/--no-show-labels`, `--show-boxes/--no-show-boxes`, `--show-confidence/--no-show-confidence`, `--target-fps FLOAT`, `--width INT`, `--height INT`, `--quality INT`, `--presentation-filter TEXT`, `--out PATH` | View live source feed without requiring a model or analysis session. `GET /api/v1/source/{source_id}/stream` |
+| `opal look config persona list` | `--enabled/--no-enabled` | List Personas. `GET /api/v1/persona/` |
+| `opal look config persona add` | `--if-match ETAG`, `--persona-id ID`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Create Persona. `POST /api/v1/persona/` |
+| `opal look config persona validate` | `<persona_id>` | Validate Persona. `POST /api/v1/persona/{persona_id}/validate` |
+| `opal look config persona show` | `<persona_id>` | Get Persona. `GET /api/v1/persona/{persona_id}` |
+| `opal look config persona update` | `<persona_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Update Persona. `PATCH /api/v1/persona/{persona_id}` |
+| `opal look config persona remove` | `<persona_id>`, `--if-match ETAG` | Delete Persona. `DELETE /api/v1/persona/{persona_id}` |
 
----
+### opal-think
 
-## INTERFACE: `opal-think`
+Bounded reasoning tasks over configured models. Think can discover and execute actions registered in Event, but it cannot administer them.
 
-*Asynchronous LLM reasoning, multi-turn conversation sessions, provider model discovery, and the suite's authoritative persona registry.*
-
-### 1. Typer Command Tree
+#### Typer command tree
 
 ```text
 opal think
-├── ask                     shortcut: create a stateless task, stream/wait, print answer
-├── chat                    shortcut: interactive or single-turn session-bound task
-├── task
-│   ├── create              submit an asynchronous reasoning task (202 Accepted)
-│   ├── list                list retained tasks (bounded array)
-│   ├── show                authoritative snapshot of task state and output
-│   ├── watch               follow SSE stream of task progress and token deltas
-│   └── cancel              request cooperative cancellation
-├── session
-│   ├── add                 create a conversation session container
-│   ├── list                list retained sessions (bounded array)
-│   ├── show                inspect session metadata and turn history
-│   └── remove              delete a session
-├── model
-│   ├── list                list discovered provider models and capabilities
-│   └── show                inspect one model's context length and features
+├── ask                   alias of `task create`
+├── chat                  alias of `task create`
+├── task                  list | create | show | watch | cancel
+├── session               list | add | show | remove
+├── model                 list | show
 ├── config
-│   ├── profile             list | add | show | update | remove | activate
-│   ├── persona             list | add | show | update | remove | validate
-│   └── setting             list | update | show | set | remove
-├── service
-│   ├── start
-│   ├── stop
-│   └── log
-├── info
-│   ├── health
-│   ├── version
-│   ├── ping
-│   ├── live
-│   └── ready
-└── backup
-    ├── list
-    ├── create
-    ├── download
-    ├── restore
-    ├── remove
-    ├── export
-    ├── import
-    └── validate
+│   ├── profile           list | add | show | update | remove | activate
+│   ├── setting           list | update | show | set | remove
+│   └── persona           list | add | validate | show | update | remove
+├── info                  health | version | ping | live | ready
+├── backup                list | create | download | restore | remove | export | import | validate
+└── service               start | stop | log
 ```
 
-### 2. REST Tree (`openapi/opal_think.yaml`)
+#### REST tree
 
 ```text
 /api/v1
 ├── /task/                                  GET, POST
 │   └── /{task_id}                          GET
-│       ├── /stream                         GET (SSE)
+│       ├── /stream                         GET
 │       └── /cancel                         POST
 ├── /session/                               GET, POST
 │   └── /{session_id}                       GET, DELETE
@@ -526,108 +622,107 @@ opal think
 ├── /profile/                               GET, POST
 │   └── /{profile_id}                       GET, PATCH, DELETE
 │       └── /activate                       POST
-├── /persona/                               GET, POST
-│   └── /{persona_id}                       GET, PATCH, DELETE
-│       └── /validate                       POST
 ├── /setting/                               GET, PATCH
 │   └── /{key}                              GET, PUT, DELETE
+├── /health/                                GET
+│   ├── /live                               GET
+│   └── /ready                              GET
+├── /info/                                  GET
+│   └── /ping                               GET
+├── /backup
+│   ├── /list                               GET
+│   ├── /create                             POST
+│   ├── /download
+│   │   └── /{filename}                     GET
+│   ├── /restore
+│   │   └── /{filename}                     POST
+│   ├── /{filename}                         DELETE
+│   ├── /export                             GET
+│   ├── /import                             POST
+│   └── /validate                           POST
 ├── /service
 │   ├── /start                              POST
 │   ├── /stop                               POST
 │   └── /log                                GET
-├── /info/                                  GET
-│   └── /ping                               GET
-├── /health/                                GET
-│   ├── /live                               GET
-│   └── /ready                              GET
-└── /backup
-    ├── /list                               GET
-    ├── /create                             POST
-    ├── /download/{filename}                GET
-    ├── /restore/{filename}                 POST
-    ├── /{filename}                         DELETE
-    ├── /export                             GET
-    ├── /import                             POST
-    └── /validate                           POST
+└── /persona/                               GET, POST
+    └── /{persona_id}                       GET, PATCH, DELETE
+        └── /validate                       POST
 ```
 
-### 3. Command Reference
+#### Commands
 
 | COMMAND | OPTIONS | DESCRIPTION |
 |---|---|---|
-| `opal think ask` | `<prompt>`, `--model ID`, `--context JSON`, `--max-steps INT`, `--timeout-seconds INT`, `--no-stream` | Shortcut for `task create` + `task watch`: submit a stateless prompt and print the answer (`POST /api/v1/task/`). |
-| `opal think chat` | `<prompt>`, `--session ID`, `--title TEXT`, `--model ID`, `--context JSON` | Shortcut for session-bound turns: create or reuse a session and run a task (`POST /api/v1/session/` + `POST /api/v1/task/`). |
-| `opal think task create` | `--prompt TEXT`, `--session ID`, `--model ID`, `--context JSON`, `--max-steps INT`, `--timeout-seconds INT`, `--metadata JSON`, `--idempotency-key KEY` | Submit an asynchronous reasoning task (`POST /api/v1/task/`). |
-| `opal think task list` | `--status STATE`, `--session ID`, `--limit INT` | List retained tasks in deterministic newest-first order (`GET /api/v1/task/`). |
-| `opal think task show` | `<task_id>` | Fetch the authoritative snapshot of a task (`GET /api/v1/task/{task_id}`). |
-| `opal think task watch` | `<task_id>`, `--last-event-id ID` | Follow a task's live SSE token and progress stream (`GET /api/v1/task/{task_id}/stream`). |
-| `opal think task cancel` | `<task_id>` | Request cooperative cancellation of a queued or running task (`POST /api/v1/task/{task_id}/cancel`). |
-| `opal think session add` | `--title TEXT` | Create a multi-turn conversation session (`POST /api/v1/session/`). |
-| `opal think session list` | `--limit INT` | List conversation sessions (`GET /api/v1/session/`). |
-| `opal think session show` | `<session_id>` | Inspect a session and its associated tasks (`GET /api/v1/session/{session_id}`). |
-| `opal think session remove` | `<session_id>` | Delete a conversation session (`DELETE /api/v1/session/{session_id}`). |
-| `opal think model list` | `--json` | List available LLM models across configured providers (`GET /api/v1/model/`). |
-| `opal think model show` | `<model_id>` | Show capabilities (`streaming`, `tool_calling`, `vision`) for one model (`GET /api/v1/model/{model_id}`). |
-| `opal think config persona list\|add\|show\|update\|remove\|validate` | `<persona_id>`, `--persona-id ID`, `--name TEXT`, `--voice ID`, `--description TEXT`, `--enabled/--disabled` | Authoritative suite persona CRUD (`origin: local`) (`/api/v1/persona/*`). |
-| `opal think config profile list\|add\|show\|update\|remove\|activate` | `<profile_id>`, `--name TEXT`, `--description TEXT`, `--active/--inactive` | Manage Think preset profiles (`/api/v1/profile/*`). |
-| `opal think config setting list\|update\|show\|set\|remove` | `<key>`, `<value_json>`, `--data JSON` | Manage Think runtime settings (`models.default_id`, provider URLs, etc.) (`/api/v1/setting/*`). |
-| `opal think service start\|stop\|log` | `--append BOOL` | Control the Think daemon process (`/api/v1/service/*`). |
-| `opal think info health\|version\|ping\|live\|ready` | `--json` | Health, provider readiness, and version probes (`/api/v1/health/*`, `/api/v1/info/*`). |
-| `opal think backup list\|create\|download\|restore\|remove\|export\|import\|validate` | `<filename>`, `--file PATH`, `--out PATH` | Backup and restore Think configuration (`/api/v1/backup/*`). |
+| `opal think task list` | `--status [queued\|running\|completed\|failed\|cancelled\|timed_out]`, `--session-id ID`, `--limit INT` | List retained tasks. `GET /api/v1/task/` |
+| `opal think task create` | `<prompt>`, `--idempotency-key KEY`, `--session-id ID`, `--model-id ID`, `--context JSON`, `--max-steps INT`, `--timeout-seconds INT`, `--metadata JSON`, `--wait` | Create task (alias: `opal think ask`, `opal think chat`). `POST /api/v1/task/` |
+| `opal think task show` | `<task_id>` | Show task. `GET /api/v1/task/{task_id}` |
+| `opal think task watch` | `<task_id>` | Watch task output and progress. `GET /api/v1/task/{task_id}/stream` |
+| `opal think task cancel` | `<task_id>` | Request task cancellation. `POST /api/v1/task/{task_id}/cancel` |
+| `opal think session list` | `--limit INT` | List sessions. `GET /api/v1/session/` |
+| `opal think session add` | `--title TEXT` | Add session. `POST /api/v1/session/` |
+| `opal think session show` | `<session_id>` | Show session. `GET /api/v1/session/{session_id}` |
+| `opal think session remove` | `<session_id>` | Remove session. `DELETE /api/v1/session/{session_id}` |
+| `opal think model list` | — | List available and known models. `GET /api/v1/model/` |
+| `opal think model show` | `<model_id>` | Show model. `GET /api/v1/model/{model_id}` |
+| `opal think config profile list` | — | List profiles. `GET /api/v1/profile/` |
+| `opal think config profile add` | `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active` | Create profile. `POST /api/v1/profile/` |
+| `opal think config profile show` | `<profile_id>` | Get profile. `GET /api/v1/profile/{profile_id}` |
+| `opal think config profile update` | `<profile_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
+| `opal think config profile remove` | `<profile_id>`, `--if-match ETAG` | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
+| `opal think config profile activate` | `<profile_id>`, `--if-match ETAG` | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
+| `opal think config setting list` | — | List settings. `GET /api/v1/setting/` |
+| `opal think config setting update` | `--if-match ETAG`, `--data JSON` | Patch settings (alias: `opal think setting patch`). `PATCH /api/v1/setting/` |
+| `opal think config setting show` | `<key>` | Get setting. `GET /api/v1/setting/{key}` |
+| `opal think config setting set` | `<key>`, `<value>`, `--if-match ETAG` | Set setting. `PUT /api/v1/setting/{key}` |
+| `opal think config setting remove` | `<key>`, `--if-match ETAG` | Delete setting. `DELETE /api/v1/setting/{key}` |
+| `opal think info health` | — | Service health report. `GET /api/v1/health/` |
+| `opal think info version` | — | Service Info. `GET /api/v1/info/` |
+| `opal think info ping` | — | Ping. `GET /api/v1/info/ping` |
+| `opal think info live` | — | Liveness probe. `GET /api/v1/health/live` |
+| `opal think info ready` | — | Readiness probe. `GET /api/v1/health/ready` |
+| `opal think backup list` | — | List backups. `GET /api/v1/backup/list` |
+| `opal think backup create` | — | Create backup. `POST /api/v1/backup/create` |
+| `opal think backup download` | `<filename>`, `--out PATH` | Download backup. `GET /api/v1/backup/download/{filename}` |
+| `opal think backup restore` | `<filename>`, `--if-match ETAG` | Restore backup. `POST /api/v1/backup/restore/{filename}` |
+| `opal think backup remove` | `<filename>` | Delete backup. `DELETE /api/v1/backup/{filename}` |
+| `opal think backup export` | `--out PATH` | Export configuration. `GET /api/v1/backup/export` |
+| `opal think backup import` | `--if-match ETAG`, `--file PATH` | Import configuration. `POST /api/v1/backup/import` |
+| `opal think backup validate` | `--file PATH` | Validate configuration. `POST /api/v1/backup/validate` |
+| `opal think service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
+| `opal think service stop` | — | Stop service. `POST /api/v1/service/stop` |
+| `opal think service log` | `--lines INT` | Tail service log. `GET /api/v1/service/log` |
+| `opal think config persona list` | `--enabled/--no-enabled` | List Personas. `GET /api/v1/persona/` |
+| `opal think config persona add` | `--if-match ETAG`, `--persona-id ID`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Create Persona. `POST /api/v1/persona/` |
+| `opal think config persona validate` | `<persona_id>` | Validate Persona. `POST /api/v1/persona/{persona_id}/validate` |
+| `opal think config persona show` | `<persona_id>` | Get Persona. `GET /api/v1/persona/{persona_id}` |
+| `opal think config persona update` | `<persona_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Update Persona. `PATCH /api/v1/persona/{persona_id}` |
+| `opal think config persona remove` | `<persona_id>`, `--if-match ETAG` | Delete Persona. `DELETE /api/v1/persona/{persona_id}` |
 
----
+### opal-event
 
-## INTERFACE: `opal-event`
+Event publication, rule routing, and registered shell, HTTP, and Python actions. A `202` here means "admitted", never "delivered"; the bus is best effort and proud of it.
 
-*The suite's nervous system: ZeroMQ + HTTP event publishing, wildcard topic routing, condition evaluation, and guarded shell/HTTP/Python action execution.*
-
-### 1. Typer Command Tree
+#### Typer command tree
 
 ```text
 opal event
-├── publish                 publish an event to the bus and rule engine (202 Accepted)
-├── topic
-│   └── list                list observed topics and event counts
-├── action
-│   └── execute             synchronously validate input and trigger an action
-├── history                 stored event log (legacy aliases under data event)
-│   ├── list
-│   ├── show
-│   ├── remove
-│   ├── clear
-│   └── topics
-├── config
-│   ├── rule                list | add | show | update | remove | test
-│   ├── action              list | add | show | update | remove
-│   ├── profile             list | add | show | update | remove | activate
-│   ├── persona             list | add | show | update | remove | validate
-│   └── setting             list | update | show | set | remove
+├── publish
 ├── data
-│   ├── event               list | show | remove | clear
-│   └── execution           list | show
-├── service
-│   ├── start
-│   ├── stop
-│   └── log
-├── info
-│   ├── health
-│   ├── stats
-│   ├── version
-│   ├── ping
-│   ├── live
-│   └── ready
-└── backup
-    ├── list
-    ├── create
-    ├── download
-    ├── restore
-    ├── remove
-    ├── export
-    ├── import
-    └── validate
+│   ├── event             list | clear | show | remove
+│   ├── topic             list
+│   └── execution         list | show
+├── config
+│   ├── rule              list | add | show | update | remove | test
+│   ├── action            list | add | show | update | remove | execute
+│   ├── profile           list | add | show | update | remove | activate
+│   ├── setting           list | update | show | set | remove
+│   └── persona           list | add | validate | show | update | remove
+├── info                  health | stats | version | ping | live | ready
+├── backup                list | create | download | restore | remove | export | import | validate
+└── service               start | stop | log
 ```
 
-### 2. REST Tree (`openapi/opal_event.yaml`)
+#### REST tree
 
 ```text
 /api/v1
@@ -642,1211 +737,1507 @@ opal event
 │       └── /execute                        POST
 ├── /execution/                             GET
 │   └── /{execution_id}                     GET
+├── /health/                                GET
+│   ├── /live                               GET
+│   └── /ready                              GET
 ├── /stats/                                 GET
 ├── /profile/                               GET, POST
 │   └── /{profile_id}                       GET, PATCH, DELETE
 │       └── /activate                       POST
-├── /persona/                               GET, POST
-│   └── /{persona_id}                       GET, PATCH, DELETE
-│       └── /validate                       POST
 ├── /setting/                               GET, PATCH
 │   └── /{key}                              GET, PUT, DELETE
+├── /info/                                  GET
+│   └── /ping                               GET
+├── /backup
+│   ├── /list                               GET
+│   ├── /create                             POST
+│   ├── /download
+│   │   └── /{filename}                     GET
+│   ├── /restore
+│   │   └── /{filename}                     POST
+│   ├── /{filename}                         DELETE
+│   ├── /export                             GET
+│   ├── /import                             POST
+│   └── /validate                           POST
 ├── /service
 │   ├── /start                              POST
 │   ├── /stop                               POST
 │   └── /log                                GET
-├── /info/                                  GET
-│   └── /ping                               GET
-├── /health/                                GET
-│   ├── /live                               GET
-│   └── /ready                              GET
-└── /backup
-    ├── /list                               GET
-    ├── /create                             POST
-    ├── /download/{filename}                GET
-    ├── /restore/{filename}                 POST
-    ├── /{filename}                         DELETE
-    ├── /export                             GET
-    ├── /import                             POST
-    └── /validate                           POST
+└── /persona/                               GET, POST
+    └── /{persona_id}                       GET, PATCH, DELETE
+        └── /validate                       POST
 ```
 
-### 3. Command Reference
+#### Commands
 
 | COMMAND | OPTIONS | DESCRIPTION |
 |---|---|---|
-| `opal event publish` | `--topic TOPIC`, `--data JSON`, `--source TEXT`, `--id ID`, `--timestamp ISO` | Publish an event into the store and rule engine (`POST /api/v1/event/`). |
-| `opal event history list` | `--topic TOPIC`, `--source TEXT`, `--from ISO`, `--to ISO`, `--limit INT` | List stored events (bounded array, newest first) (`GET /api/v1/event/`). |
-| `opal event history show` | `<event_id>` | Inspect a single stored event (`GET /api/v1/event/{event_id}`). |
-| `opal event history remove` | `<event_id>` | Delete one stored event (`DELETE /api/v1/event/{event_id}`). |
-| `opal event history clear` | `--yes` | Purge all stored events (`DELETE /api/v1/event/`). |
-| `opal event topic list` | `--json` | List observed event topics and counts (`GET /api/v1/topic/`). |
-| `opal event config rule list\|add\|show\|update\|remove` | `<rule_id>`, `--id ID`, `--topic PATTERN`, `--conditions JSON`, `--actions JSON`, `--enabled/--disabled` | Manage topic-matching rules (`*` and `#` wildcards supported) (`/api/v1/rule/*`). |
-| `opal event config rule test` | `<rule_id>`, `--event JSON` | Dry-run an event payload against a rule without firing actions (`POST /api/v1/rule/{rule_id}/test`). |
-| `opal event config action list\|add\|show\|update\|remove` | `<action_id>`, `--id ID`, `--type [shell\|http\|python]`, `--mode [exec\|bash]`, `--executable PATH`, `--script-path PATH`, `--args JSON`, `--method HTTP`, `--url URL`, `--body-mode MODE`, `--module MOD`, `--function FN`, `--input-schema JSON`, `--timeout-seconds FLOAT`, `--description TEXT`, `--keywords JSON` | Register and manage shell, HTTP, or Python actions (`/api/v1/action/*`). |
-| `opal event action execute` | `<action_id>`, `--event JSON` | Manually fire an action (validates `input_schema` synchronously; returns `422` on mismatch, `202` on admission) (`POST /api/v1/action/{action_id}/execute`). |
-| `opal event data execution list\|show` | `<execution_id>`, `--status [queued\|running\|succeeded\|failed\|timed_out\|dropped]`, `--rule-id ID`, `--action-id ID`, `--event-id ID`, `--limit INT` | Inspect action execution records and error codes (`GET /api/v1/execution/*`). |
-| `opal event config profile\|persona\|setting ...` | Standard suite options | Manage Event profiles, personas, and settings (`/api/v1/profile/*`, `/persona/*`, `/setting/*`). |
-| `opal event info health\|stats\|version\|ping\|live\|ready` | `--json` | Inspect service health and event/execution counters (`GET /api/v1/stats/`, `/api/v1/health/*`). |
-| `opal event service start\|stop\|log` | `--append BOOL` | Control the Event daemon process (`/api/v1/service/*`). |
-| `opal event backup list\|create\|download\|restore\|remove\|export\|import\|validate` | `<filename>`, `--file PATH`, `--out PATH` | Backup and restore rules, actions, and settings (`/api/v1/backup/*`). |
+| `opal event data event list` † | `--limit INT`, `--topic TEXT`, `--source TEXT`, `--from ISO`, `--to ISO` | List stored events. `GET /api/v1/event/` |
+| `opal event publish` † | `--id ID`, `--topic TEXT`, `--source TEXT`, `--timestamp ISO`, `--data JSON` | Publish an event (202 means admitted, not delivered). `POST /api/v1/event/` |
+| `opal event data event clear` † | — | Clear all stored events. `DELETE /api/v1/event/` |
+| `opal event data event show` † | `<event_id>` | Get stored event. `GET /api/v1/event/{event_id}` |
+| `opal event data event remove` † | `<event_id>` | Delete stored event. `DELETE /api/v1/event/{event_id}` |
+| `opal event data topic list` † | — | List observed topics. `GET /api/v1/topic/` |
+| `opal event config rule list` † | — | List rules. `GET /api/v1/rule/` |
+| `opal event config rule add` † | `--if-match ETAG`, `--id ID`, `--enabled/--no-enabled`, `--topic TEXT`, `--conditions JSON`, `--actions JSON` | Create rule. `POST /api/v1/rule/` |
+| `opal event config rule show` † | `<rule_id>` | Get rule. `GET /api/v1/rule/{rule_id}` |
+| `opal event config rule update` † | `<rule_id>`, `--if-match ETAG`, `--enabled/--no-enabled`, `--topic TEXT`, `--conditions JSON`, `--actions JSON` | Partially update rule. `PATCH /api/v1/rule/{rule_id}` |
+| `opal event config rule remove` † | `<rule_id>`, `--if-match ETAG` | Delete rule. `DELETE /api/v1/rule/{rule_id}` |
+| `opal event config rule test` † | `<rule_id>`, `--event JSON` | Evaluate rule without execution. `POST /api/v1/rule/{rule_id}/test` |
+| `opal event config action list` † | — | List actions. `GET /api/v1/action/` |
+| `opal event config action add` † | `--if-match ETAG`, `--id ID`, `--type [shell\|http\|python]`, `--enabled/--no-enabled`, `--description TEXT`, `--input-schema JSON`, `--keywords JSON`, `--suggested-prompts JSON`, `--mode [exec\|sh\|bash\|cmd\|powershell]`, `--executable PATH`, `--script-path PATH`, `--args JSON`, `--stdin [event_json\|none]`, `--timeout-seconds INT`, `--method [GET\|POST\|PUT\|PATCH\|DELETE]`, `--url URL`, `--headers JSON`, `--body JSON`, `--body-mode [template\|event_json\|none]`, `--module TEXT`, `--function TEXT` | Create action. `POST /api/v1/action/` |
+| `opal event config action show` † | `<action_id>` | Get action. `GET /api/v1/action/{action_id}` |
+| `opal event config action update` † | `<action_id>`, `--if-match ETAG`, `--enabled/--no-enabled`, `--mode [exec\|sh\|bash\|cmd\|powershell]`, `--executable PATH`, `--script-path PATH`, `--args JSON`, `--stdin [event_json\|none]`, `--timeout-seconds INT`, `--description TEXT`, `--input-schema JSON`, `--keywords JSON`, `--suggested-prompts JSON`, `--method [GET\|POST\|PUT\|PATCH\|DELETE]`, `--url URL`, `--headers JSON`, `--body JSON`, `--body-mode [template\|event_json\|none]`, `--module TEXT`, `--function TEXT` | Partially update action. `PATCH /api/v1/action/{action_id}` |
+| `opal event config action remove` † | `<action_id>`, `--if-match ETAG` | Delete unused action. `DELETE /api/v1/action/{action_id}` |
+| `opal event config action execute` † | `<action_id>`, `--event JSON`, `--wait` | Execute registered action manually. `POST /api/v1/action/{action_id}/execute` |
+| `opal event data execution list` † | `--status TEXT`, `--rule-id ID`, `--action-id ID`, `--event-id ID`, `--limit INT` | List executions. `GET /api/v1/execution/` |
+| `opal event data execution show` † | `<execution_id>` | Get execution result. `GET /api/v1/execution/{execution_id}` |
+| `opal event info health` † | — | Service health report. `GET /api/v1/health/` |
+| `opal event info stats` † | — | Get event and execution counters. `GET /api/v1/stats/` |
+| `opal event config profile list` † | — | List profiles. `GET /api/v1/profile/` |
+| `opal event config profile add` † | `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active` | Create profile. `POST /api/v1/profile/` |
+| `opal event config profile show` † | `<profile_id>` | Get profile. `GET /api/v1/profile/{profile_id}` |
+| `opal event config profile update` † | `<profile_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
+| `opal event config profile remove` † | `<profile_id>`, `--if-match ETAG` | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
+| `opal event config profile activate` † | `<profile_id>`, `--if-match ETAG` | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
+| `opal event config setting list` | — | List settings (alias: `opal event setting get`). `GET /api/v1/setting/` |
+| `opal event config setting update` | `--if-match ETAG`, `--data JSON` | Patch settings (alias: `opal event config setting patch`). `PATCH /api/v1/setting/` |
+| `opal event config setting show` | `<key>` | Get setting (alias: `opal event setting get-key`). `GET /api/v1/setting/{key}` |
+| `opal event config setting set` | `<key>`, `<value>`, `--if-match ETAG` | Set setting (alias: `opal event setting set-key`). `PUT /api/v1/setting/{key}` |
+| `opal event config setting remove` | `<key>`, `--if-match ETAG` | Delete setting (alias: `opal event setting reset-key`). `DELETE /api/v1/setting/{key}` |
+| `opal event info version` † | — | Service Info. `GET /api/v1/info/` |
+| `opal event info ping` † | — | Ping. `GET /api/v1/info/ping` |
+| `opal event info live` † | — | Liveness probe. `GET /api/v1/health/live` |
+| `opal event info ready` † | — | Readiness probe. `GET /api/v1/health/ready` |
+| `opal event backup list` † | — | List backups. `GET /api/v1/backup/list` |
+| `opal event backup create` † | — | Create backup. `POST /api/v1/backup/create` |
+| `opal event backup download` † | `<filename>`, `--out PATH` | Download backup. `GET /api/v1/backup/download/{filename}` |
+| `opal event backup restore` † | `<filename>`, `--if-match ETAG` | Restore backup. `POST /api/v1/backup/restore/{filename}` |
+| `opal event backup remove` † | `<filename>` | Delete backup. `DELETE /api/v1/backup/{filename}` |
+| `opal event backup export` † | `--out PATH` | Export configuration. `GET /api/v1/backup/export` |
+| `opal event backup import` † | `--if-match ETAG`, `--file PATH` | Import configuration. `POST /api/v1/backup/import` |
+| `opal event backup validate` † | `--file PATH` | Validate configuration. `POST /api/v1/backup/validate` |
+| `opal event service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
+| `opal event service stop` | — | Stop service. `POST /api/v1/service/stop` |
+| `opal event service log` | `--lines INT` | Tail service log. `GET /api/v1/service/log` |
+| `opal event config persona list` † | `--enabled/--no-enabled` | List Personas. `GET /api/v1/persona/` |
+| `opal event config persona add` † | `--if-match ETAG`, `--persona-id ID`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Create Persona. `POST /api/v1/persona/` |
+| `opal event config persona validate` † | `<persona_id>` | Validate Persona. `POST /api/v1/persona/{persona_id}/validate` |
+| `opal event config persona show` † | `<persona_id>` | Get Persona. `GET /api/v1/persona/{persona_id}` |
+| `opal event config persona update` † | `<persona_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Update Persona. `PATCH /api/v1/persona/{persona_id}` |
+| `opal event config persona remove` † | `<persona_id>`, `--if-match ETAG` | Delete Persona. `DELETE /api/v1/persona/{persona_id}` |
+
+† Proposed name; the operation has no `x-opal-cli` annotation yet.
 
 ---
 
-## USECASES
+<a id="opal-devices"></a>
 
-Ten single-service recipes per service. No `jq` gymnastics, no bash loops—just the Typer CLI doing its day job.
+### opal-devices
 
-### `opal-say`
+Optional device registry: identity, inventory, discovery, capabilities, preferred defaults and availability for audio, video and compute hardware. It never operates devices — no capture, playback, reservation, inference or GPU scheduling. Registries can federate: explicit trusted peers share filtered inventory snapshots over the same API.
 
-**1. Cut a museum audio-guide track at 0.9x speed so visitors can actually absorb the dates.**
+#### Typer command tree
 
-```bash
-opal say generate \
-  --text "To your left stands a 14th-century astrolabe, used by sailors who refused to ask for directions." \
-  --voice en-gb-alan-low --speed 0.9 --output-format wav --out room3-astrolabe.wav
+```text
+opal devices
+├── info                  health | live | ready | version | ping
+├── catalog
+├── list | add | show | update | remove
+├── capabilities | status | test
+├── discover
+├── watch
+├── event                 list
+├── default               list | set | remove
+├── label                 list | set | remove
+├── tag                   list | add | remove
+├── group                 list | add | show | update | remove
+│   └── member            list | add | remove
+├── peer                  list | add | show | update | remove | status | sync | discover
+├── sharing               list | add | remove
+├── plugin                list | show | enable | disable | test | discover
+├── federation            inventory | registry
+├── config
+│   ├── setting           list | update | show | set | remove
+│   └── profile           list | add | show | update | remove | activate
+├── backup                list | create | download | restore | remove | export | import | validate-stored | validate
+└── service               start | stop | log
 ```
 
-**2. Stream a progressive raw PCM boarding announcement straight to a PA pipe (`--stream` on `generate`).**
+#### REST tree
 
-```bash
-opal say generate \
-  --text "Final boarding call for flight 404 to Nowhere. Gate closes in ninety seconds." \
-  --stream --sample-rate 22050 --out boarding-404.pcm
+```text
+/api/v1
+├── /device/                                GET, POST
+│   └── /{device_id}                        GET, PATCH, DELETE
+│       ├── /capabilities                   GET
+│       ├── /status                         GET
+│       ├── /test                           POST
+│       ├── /label                          GET
+│       │   └── /{key}                      PUT, DELETE
+│       └── /tag                            GET, POST
+│           └── /{tag}                      DELETE
+├── /discovery/scan                         POST
+├── /default/                               GET
+│   └── /{scope}/{target}                   PUT, DELETE
+├── /group/                                 GET, POST
+│   └── /{group_id}                         GET, PATCH, DELETE
+│       └── /member                         GET
+│           └── /{device_id}                PUT, DELETE
+├── /peer/                                  GET, POST
+│   ├── /discover                           POST
+│   ├── /sync                               POST
+│   └── /{peer_id}                          GET, PATCH, DELETE
+│       ├── /status                         GET
+│       └── /sync                           POST
+├── /sharing/policy/                        GET, POST
+│   └── /{policy_id}                        DELETE
+├── /plugin/                                GET
+│   └── /{plugin_id}                        GET
+│       ├── /enable                         POST
+│       ├── /disable                        POST
+│       ├── /test                           POST
+│       └── /discover                       POST
+├── /event/                                 GET
+│   └── /stream                             GET (SSE)
+├── /federation
+│   ├── /inventory                          GET
+│   └── /registry                           GET
+├── /catalog                                GET
+├── /profile/                               GET, POST
+│   └── /{profile_id}                       GET, PATCH, DELETE
+│       └── /activate                       POST
+├── /setting/                               GET, PATCH
+│   └── /{key}                              GET, PUT, DELETE
+├── /health/                                GET
+│   ├── /live                               GET
+│   └── /ready                              GET
+├── /backup
+│   ├── /list                               GET
+│   ├── /create                             POST
+│   ├── /download/{filename}                GET
+│   ├── /restore/{filename}                 POST
+│   ├── /{filename}                         DELETE
+│   ├── /export                             GET
+│   ├── /import                             POST
+│   └── /validate                           GET, POST
+├── /info/                                  GET
+│   └── /ping                               GET
+└── /service
+    ├── /start                              POST
+    ├── /stop                               POST
+    └── /log                                GET
 ```
 
-**3. Register a Japanese Kokoro voice model that already lives on disk and verify the engine accepts it.**
+#### Commands
+
+| COMMAND | OPTIONS | DESCRIPTION |
+|---|---|---|
+| `opal devices backup create` | — | Create backup. `POST /api/v1/backup/create` |
+| `opal devices backup download` | — | Download backup. `GET /api/v1/backup/download/{filename}` |
+| `opal devices backup export` | — | Export configuration. `GET /api/v1/backup/export` |
+| `opal devices backup import` | — | Import configuration. `POST /api/v1/backup/import` |
+| `opal devices backup list` | — | List backups. `GET /api/v1/backup/list` |
+| `opal devices backup restore` | — | Restore backup. `POST /api/v1/backup/restore/{filename}` |
+| `opal devices backup validate` | — | Validate stored configuration. `GET /api/v1/backup/validate` |
+| `opal devices backup validate` | — | Validate configuration. `POST /api/v1/backup/validate` |
+| `opal devices backup remove` | — | Delete backup. `DELETE /api/v1/backup/{filename}` |
+| `opal devices catalog` | — | Discover device types, discovery backends and event names. `GET /api/v1/catalog` |
+| `opal devices default list` | — | List preferred defaults. `GET /api/v1/default/` |
+| `opal devices default set` | --if-match ETAG | Set preferred defaults for device, type, host or global scope. `PUT /api/v1/default/{scope}/{target}` |
+| `opal devices default remove` | — | Remove preferred defaults. `DELETE /api/v1/default/{scope}/{target}` |
+| `opal devices list` | — | List and filter local and federated device inventory. `GET /api/v1/device/` |
+| `opal devices add` | — | Register user-managed device. `POST /api/v1/device/` |
+| `opal devices show` | — | Show device metadata. `GET /api/v1/device/{device_id}` |
+| `opal devices update` | --if-match ETAG | Update editable device metadata. `PATCH /api/v1/device/{device_id}` |
+| `opal devices remove` | — | Remove registered device. `DELETE /api/v1/device/{device_id}` |
+| `opal devices capabilities` | — | Show device capabilities. `GET /api/v1/device/{device_id}/capabilities` |
+| `opal devices label list` | — | List device labels. `GET /api/v1/device/{device_id}/label` |
+| `opal devices label set` | --if-match ETAG | Set key-value device label. `PUT /api/v1/device/{device_id}/label/{key}` |
+| `opal devices label remove` | — | Remove device label. `DELETE /api/v1/device/{device_id}/label/{key}` |
+| `opal devices status` | — | Show device availability. `GET /api/v1/device/{device_id}/status` |
+| `opal devices tag list` | — | List device tags. `GET /api/v1/device/{device_id}/tag` |
+| `opal devices tag add` | — | Add device tag. `POST /api/v1/device/{device_id}/tag` |
+| `opal devices tag remove` | — | Remove device tag. `DELETE /api/v1/device/{device_id}/tag/{tag}` |
+| `opal devices test` | — | Perform safe non-invasive checks. `POST /api/v1/device/{device_id}/test` |
+| `opal devices discover` | — | Discover local devices without operating them. `POST /api/v1/discovery/scan` |
+| `opal devices event list` | — | Browse recent device and peer event history. `GET /api/v1/event/` |
+| `opal devices watch` | — | Subscribe to native SSE device and peer events. `GET /api/v1/event/stream` |
+| `opal devices federation inventory` | — | Read filtered inventory as a trusted peer. `GET /api/v1/federation/inventory` |
+| `opal devices federation registry` | — | Read local registry identity and federation metadata. `GET /api/v1/federation/registry` |
+| `opal devices group list` | — | List device groups. `GET /api/v1/group/` |
+| `opal devices group add` | — | Create static or dynamic group. `POST /api/v1/group/` |
+| `opal devices group show` | — | Show group definition. `GET /api/v1/group/{group_id}` |
+| `opal devices group update` | --if-match ETAG | Update group definition. `PATCH /api/v1/group/{group_id}` |
+| `opal devices group remove` | — | Remove group. `DELETE /api/v1/group/{group_id}` |
+| `opal devices group member list` | — | List group members. `GET /api/v1/group/{group_id}/member` |
+| `opal devices group member add` | --if-match ETAG | Add device to static group. `PUT /api/v1/group/{group_id}/member/{device_id}` |
+| `opal devices group member remove` | — | Remove device from static group. `DELETE /api/v1/group/{group_id}/member/{device_id}` |
+| `opal devices info health` | — | Service health report. `GET /api/v1/health/` |
+| `opal devices info live` | — | Liveness probe. `GET /api/v1/health/live` |
+| `opal devices info ready` | — | Readiness probe. `GET /api/v1/health/ready` |
+| `opal devices info version` | — | Service Info. `GET /api/v1/info/` |
+| `opal devices info ping` | — | Ping. `GET /api/v1/info/ping` |
+| `opal devices peer list` | — | List federation peers. `GET /api/v1/peer/` |
+| `opal devices peer add` | — | Register an explicit peer. `POST /api/v1/peer/` |
+| `opal devices peer discover` | — | Discover untrusted peer candidates using mDNS when enabled. `POST /api/v1/peer/discover` |
+| `opal devices peer sync` | — | Refresh all trusted peer caches now. `POST /api/v1/peer/sync` |
+| `opal devices peer show` | — | Show peer. `GET /api/v1/peer/{peer_id}` |
+| `opal devices peer update` | --if-match ETAG | Update peer metadata or trust. `PATCH /api/v1/peer/{peer_id}` |
+| `opal devices peer remove` | — | Remove peer. `DELETE /api/v1/peer/{peer_id}` |
+| `opal devices peer status` | — | Check peer health and synchronization freshness. `GET /api/v1/peer/{peer_id}/status` |
+| `opal devices peer sync` | — | Refresh one peer cache now. `POST /api/v1/peer/{peer_id}/sync` |
+| `opal devices plugin list` | — | List installed discovery plugins. `GET /api/v1/plugin/` |
+| `opal devices plugin show` | — | Show plugin metadata. `GET /api/v1/plugin/{plugin_id}` |
+| `opal devices plugin disable` | — | Disable plugin. `POST /api/v1/plugin/{plugin_id}/disable` |
+| `opal devices plugin discover` | — | Discover local devices through one plugin. `POST /api/v1/plugin/{plugin_id}/discover` |
+| `opal devices plugin enable` | — | Enable an installed plugin. `POST /api/v1/plugin/{plugin_id}/enable` |
+| `opal devices plugin test` | — | Test plugin requirements and discovery capability safely. `POST /api/v1/plugin/{plugin_id}/test` |
+| `opal devices config profile list` | — | List profiles. `GET /api/v1/profile/` |
+| `opal devices config profile add` | — | Create profile. `POST /api/v1/profile/` |
+| `opal devices config profile show` | — | Get profile. `GET /api/v1/profile/{profile_id}` |
+| `opal devices config profile update` | --if-match ETAG | Update profile. `PATCH /api/v1/profile/{profile_id}` |
+| `opal devices config profile remove` | — | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
+| `opal devices config profile activate` | — | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
+| `opal devices service log` | — | Tail service log. `GET /api/v1/service/log` |
+| `opal devices service start` | — | Start service. `POST /api/v1/service/start` |
+| `opal devices service stop` | — | Stop service. `POST /api/v1/service/stop` |
+| `opal devices config setting list` | — | List settings. `GET /api/v1/setting/` |
+| `opal devices config setting update` | — | Patch settings. `PATCH /api/v1/setting/` |
+| `opal devices config setting show` | — | Get setting. `GET /api/v1/setting/{key}` |
+| `opal devices config setting update` | — | Set setting. `PUT /api/v1/setting/{key}` |
+| `opal devices config setting remove` | — | Delete setting. `DELETE /api/v1/setting/{key}` |
+| `opal devices sharing list` | — | List metadata visibility policies. `GET /api/v1/sharing/policy/` |
+| `opal devices sharing add` | — | Create allow or deny inventory visibility rule (aliases: allow, deny). `POST /api/v1/sharing/policy/` |
+| `opal devices sharing remove` | — | Remove sharing policy. `DELETE /api/v1/sharing/policy/{policy_id}` |
+
+Device IDs are UUIDs; human-readable host-qualified names may contain `/` and must be URL-encoded in path parameters. Device configuration mutations require `If-Match` against the registry's strong ETag; the CLI fetches and attaches it automatically unless `--if-match` is given. Federation routes (`federation inventory`, `federation registry`) are what trusted peers call; the local `peer` group administers those trust relationships.
+
+---
+
+## Part 2: Usecases
+
+One-liners per service. Each one calls only the service it is filed under, with no shell logic.
+
+<a id="opal-say-usecases"></a>
+
+### opal-say
+
+**1. Say something out loud, right now.**
 
 ```bash
-opal say config voice add \
-  --voice-id ja-jp-kokoro-alpha \
-  --name "Kokoro Alpha (JP)" \
-  --engine kokoro \
-  --engine-voice-ref /opt/models/kokoro/ja_alpha.pt \
-  --language ja-JP
-opal say config voice validate ja-jp-kokoro-alpha
+opal say generate "The build is green. I repeat, the build is green. This is not a drill." --play
 ```
 
-**4. Audition a newly registered voice with a pangram before letting it near production.**
+**2. Save a greeting as a WAV file.**
 
 ```bash
-opal say config voice test ja-jp-kokoro-alpha \
-  --text "Sphinx of black quartz, judge my vow." \
-  --speed 1.05 --volume 1.0 --output-format wav --out audition-kokoro.wav
+opal say generate "Welcome to the museum. Please do not lick the exhibits." --out welcome.wav
 ```
 
-**5. Create a "Midnight Whisper" preset profile for late-night notifications and make it the active default.**
+**3. Pick a specific voice.**
 
 ```bash
-opal say config profile add \
-  --name midnight-whisper \
-  --description "Low volume, unhurried cadence for after-hours alerts" \
-  --voice en-us-lessac-medium --speed 0.82 --volume 0.35 --output-format wav
-opal say config profile activate 2
+opal say generate "Tea is served in the library." --voice-id en-gb-alan-low --play
 ```
 
-**6. Demonstrate the three-tier voice precedence: active profile vs. named persona vs. explicit `--voice` override.**
+**4. Speak as a persona and let its bound voice follow along.**
 
 ```bash
-# 1. Uses the active profile's voice (en-us-lessac-medium):
-opal say generate --text "Spoken in the active profile voice." --out tier1-profile.wav
-
-# 2. Persona 'duchess' overrides the active profile with her bound voice:
-opal say config persona add --persona-id duchess --name "The Duchess" --voice en-gb-alan-low
-opal say generate --text "Spoken in the Duchess persona voice." --persona duchess --out tier2-persona.wav
-
-# 3. Explicit --voice overrides both the persona and the profile:
-opal say generate --text "Explicit voice wins every argument." \
-  --persona duchess --voice en-us-ryan-high --out tier3-explicit.wav
+opal say generate "Good evening. I will be your narrator." --persona vox --play
 ```
 
-**7. Disable a misbehaving synthesis engine without uninstalling it, then verify the remaining engines.**
+**5. Slow down for the people in the back.**
 
 ```bash
-opal say engine update espeak --disabled
+opal say generate "Your verification code is four, seven, one, nine." --speed 0.8 --play
+```
+
+**6. Use an indoor voice.**
+
+```bash
+opal say generate "The baby is finally asleep. Nobody move." --volume 0.3 --play
+```
+
+**7. Produce raw 16 kHz PCM for a telephony system.**
+
+```bash
+opal say generate "Please hold. Your call is important to us, allegedly." --output-format pcm --sample-rate 16000 --out hold.pcm
+```
+
+**8. Stream a whole chapter as it is synthesized instead of waiting for the end.**
+
+```bash
+opal say stream @chapter-one.txt --play
+```
+
+**9. See which engines the host has installed.**
+
+```bash
 opal say engine list
 ```
 
-**8. Batch-tune runtime limits in one atomic `If-Match` patch using `config setting update`.**
+**10. Check that an engine can run before blaming the voice.**
 
 ```bash
-opal say config setting update \
-  --data '{"max_text_length": 8192, "default_sample_rate": 24000}'
-opal say config setting list
+opal say engine validate piper
 ```
 
-**9. Point Say at OPAL Think as its authoritative persona owner so unknown personas are fetched on demand.**
+**11. Put a misbehaving engine in time-out without uninstalling it.**
 
 ```bash
-opal say config setting set persona_owner_url '"http://127.0.0.1:8084"'
-opal say config setting show persona_owner_url
+opal say engine update kokoro --no-enabled
 ```
 
-**10. Export the entire voice, profile, and persona catalog, validate the bundle offline, and create a timestamped server snapshot.**
+**12. Register a voice model that already lives on disk.**
 
 ```bash
-opal say backup export --out say-studio-bundle.json
-opal say backup validate --file say-studio-bundle.json
-opal say backup create
+opal say config voice add --voice-id en-us-lessac-medium --name "Lessac (US)" --engine-id piper --engine-voice-ref /opt/piper/voices/en_US-lessac-medium.onnx --language en-US
 ```
 
----
+**13. Confirm that a voice's engine and files resolve.**
 
-### `opal-listen`
+```bash
+opal say config voice validate en-us-lessac-medium
+```
 
-**1. Enumerate every microphone attached to the host before blaming the STT engine for deafness.**
+**14. Audition a voice with a pangram.**
+
+```bash
+opal say config voice test en-us-lessac-medium --text "Sphinx of black quartz, judge my vow." --play
+```
+
+**15. List the enabled British voices.**
+
+```bash
+opal say config voice list --language en-GB --enabled
+```
+
+**16. Create a bedtime profile: slower, quieter, kinder.**
+
+```bash
+opal say config profile add --name bedtime --description "Slow and quiet for after dark" --voice-id en-gb-alan-low --speed 0.85 --volume 0.4
+```
+
+**17. Make that profile the default for every request that does not say otherwise.**
+
+```bash
+opal say config profile activate 2
+```
+
+**18. Create a persona bound to a voice.**
+
+```bash
+opal say config persona add --persona-id vox --name Vox --description "Calm narrator" --voice-id en-gb-alan-low
+```
+
+**19. Check that a persona's voice binding still resolves.**
+
+```bash
+opal say config persona validate vox
+```
+
+**20. Export the whole configuration before you start experimenting.**
+
+```bash
+opal say backup export --out say-config.json
+```
+
+<a id="opal-listen-usecases"></a>
+
+### opal-listen
+
+**1. Find the microphone before accusing the software of deafness.**
 
 ```bash
 opal listen info audio-devices
 ```
 
-**2. Register a custom wakeword with a strict confidence floor so the TV stops triggering the house.**
+**2. Register a wakeword with a stricter threshold.**
 
 ```bash
-opal listen config wakeword add --name "brigadier" --confidence-threshold 0.88 --enabled
-opal listen config wakeword list
+opal listen config wakeword add --name "hey opal" --confidence-threshold 0.85
 ```
 
-**3. Create an espresso-barista intent with initial training phrases.**
+**3. Create an intent with its first training phrases.**
 
 ```bash
-opal listen config intent add \
-  --name barista.brew \
-  --description "Start pulling an espresso shot" \
-  --confidence-threshold 0.75 \
-  --phrase "pull a shot of [drink]" \
-  --phrase "make me a [drink]" \
-  --phrase "brew an [drink] please"
+opal listen config intent add --name lights.turn_on --description "Turn on the lights" --phrases '["turn on the lights","lights on","let there be light"]'
 ```
 
-**4. Build a `drink` slot with canonical values and regional spoken aliases.**
+**4. Teach an existing intent one more way to say it.**
 
 ```bash
-opal listen config slot add --name drink --slot-type list --description "Coffee bar menu items"
-opal listen config slot value add 1 --value americano
-opal listen config slot value add 1 --value cortado
-opal listen config slot alias add 1 1 --alias "long black"
-opal listen config slot alias add 1 2 --alias "gibraltar"
+opal listen config phrase add 1 --phrase "illuminate the room"
 ```
 
-**5. Use the unified `recognition test` command to dry-run text and assert the matched intent in one step.**
+**5. Create a slot for room names.**
 
 ```bash
-opal listen recognition test \
-  --text "brigadier, make me a gibraltar" \
-  --expect-intent barista.brew --no-save --verbose
+opal listen config slot add --name room --slot-type list --description "Rooms in the house"
 ```
 
-**6. Dry-run a noisy kitchen WAV recording through wakeword + STT + NLU requiring the wakeword to be present.**
+**6. Add a canonical value to the slot.**
 
 ```bash
-opal listen recognition test \
-  --audio ./fixtures/noisy-kitchen-cortado.wav \
-  --require-wakeword --expect-intent barista.brew
+opal listen config slot-value add 1 --value kitchen
 ```
 
-**7. Inspect the failed-utterance queue, annotate a misunderstood mumble, and promote it straight into both a training phrase and a regression test.**
+**7. Give that value a nickname people actually use.**
 
 ```bash
-opal listen data failed-utterance list --reviewed false --limit 10
-opal listen data failed-utterance update 12 \
-  --expected-intent barista.brew --notes "User had a croissant in their mouth" --reviewed true
-opal listen data failed-utterance promote 12 \
-  --intent-name barista.brew --create-regression true
+opal listen config slot-alias add 1 1 --alias "the galley"
 ```
 
-**8. Add an explicit slot-checking regression case and run the full regression suite.**
+**8. Test a sentence against intents and slots without making a sound.**
 
 ```bash
-opal listen regression add \
-  --name "gibraltar alias resolves to cortado" \
-  --phrase "make me a gibraltar" \
-  --expected-intent barista.brew \
-  --expected-slots '{"drink": "cortado"}'
-opal listen regression run --enabled-only true
+opal listen recognition test-text --text "turn on the lights in the galley"
 ```
 
-**9. Create a "Workshop Mode" recognition profile that only listens for safety-cutoff intents and activate it.**
+**9. Run a recording through the full pipeline, wakeword included.**
 
 ```bash
-opal listen config profile add \
-  --name workshop-safety \
-  --description "High noise floor; only emergency and tool intents active" \
-  --wakeword-names '["brigadier"]' \
-  --enabled-intents '["shop.emergency_stop", "shop.dust_collector_on"]'
-opal listen config profile activate 3
+opal listen recognition test-audio kitchen-lights.wav --require-wakeword
 ```
 
-**10. Audit recognition latency across the last 25 utterances to see whether VAD or STT is eating the budget.**
+**10. Try a silly sentence without cluttering the recognition log.**
 
 ```bash
-opal listen performance last
-opal listen performance summary --limit 25
-opal listen performance history --limit 25
+opal listen recognition test-text --text "what is the airspeed velocity of an unladen swallow" --no-save-log
 ```
 
----
+**11. Start listening on the live microphone.**
 
-### `opal-look`
+```bash
+opal listen recognition start
+```
 
-**1. Query runtime capabilities to verify whether hardware-accelerated ONNX and annotated video export are supported on this host.**
+**12. Watch live results, with debug detail, as they happen.**
+
+```bash
+opal listen recognition stream --debug
+```
+
+**13. Check pipeline state, queue depth, and dropped audio.**
+
+```bash
+opal listen recognition status
+```
+
+**14. Review the ten most recent misses nobody has looked at.**
+
+```bash
+opal listen data failed-utterance list --no-reviewed --limit 10
+```
+
+**15. Turn a miss into a training phrase and a regression case in one move.**
+
+```bash
+opal listen data failed-utterance promote 7 --intent-name lights.turn_on --create-regression
+```
+
+**16. Pin down expected behavior with a regression case.**
+
+```bash
+opal listen regression add --name "galley lights" --phrase "turn on the lights in the galley" --expected-intent lights.turn_on --expected-slots '{"room":"kitchen"}'
+```
+
+**17. Run the regression suite before you ship that "small tweak".**
+
+```bash
+opal listen regression run
+```
+
+**18. See where the milliseconds go.**
+
+```bash
+opal listen performance summary --limit 50
+```
+
+**19. Create a night profile that only understands light switches.**
+
+```bash
+opal listen config profile add --name night-mode --wakeword-names '["hey opal"]' --enabled-intents '["lights.turn_on","lights.turn_off"]'
+```
+
+**20. Allow live microphone matches to be published as events.**
+
+```bash
+opal listen config setting set event_publication_enabled true
+```
+
+<a id="opal-look-usecases"></a>
+
+### opal-look
+
+**1. Ask the service what it can actually do.**
 
 ```bash
 opal look info capabilities
 ```
 
-**2. Register a wildlife-detection model and an RTSP bird-feeder camera with credentials resolved from an environment secret ref.**
+**2. Register a camera, keeping its password out of the locator.**
 
 ```bash
-opal look config model add \
-  --id yolov8-avian \
-  --engine onnx \
-  --resource-ref /opt/models/yolov8-birds.onnx \
-  --tasks '["detect"]'
-opal look source add \
-  --id cam-feeder \
-  --kind rtsp \
-  --name "South Bird Feeder" \
-  --locator rtsp://10.0.20.14:554/h264Preview_01_main \
-  --secret-ref feeder-cam-auth
-opal look source probe cam-feeder
+opal look source add --id cam-front --kind rtsp --name "Front Yard" --locator rtsp://192.168.1.40:554/stream1 --secret-ref cam-front-credentials
 ```
 
-**3. Validate a three-stage preprocess → inference → annotate DAG pipeline before saving it.**
+**3. Probe the camera's connectivity without changing anything.**
 
 ```bash
-opal look config pipeline validate \
-  --id avian-tracker \
-  --name "Feeder Species Tracker" \
-  --stages '[
-    {"id":"prep","kind":"preprocess","options":{"resize":[640,640]}},
-    {"id":"detect","kind":"inference","model_id":"yolov8-avian","task":"detect","inputs":["prep"]},
-    {"id":"overlay","kind":"annotate","inputs":["detect"]}
-  ]'
-opal look config pipeline add \
-  --id avian-tracker \
-  --name "Feeder Species Tracker" \
-  --stages '[
-    {"id":"prep","kind":"preprocess","options":{"resize":[640,640]}},
-    {"id":"detect","kind":"inference","model_id":"yolov8-avian","task":"detect","inputs":["prep"]},
-    {"id":"overlay","kind":"annotate","inputs":["detect"]}
-  ]'
+opal look source probe cam-front
 ```
 
-**4. Take an exact retained frame capture and fetch its JPEG bytes using the unified `output fetch` command.**
+**4. Grab the current frame as a JPEG.**
 
 ```bash
-opal look source capture cam-feeder --retain --annotate
-# Response includes: "output_ref": {"kind": "capture", "id": "cap-8f2d41a0", "content_url": "/api/v1/capture/cap-8f2d41a0/content"}
-opal look output fetch /api/v1/capture/cap-8f2d41a0/content --out cardinal-annotated.jpg
+opal look source frame cam-front --width 1280 --quality 85 --out front.jpg
 ```
 
-**5. Draw a polygon zone around the suet cage and trigger a rule whenever a squirrel lingers for more than 4 seconds.**
+**5. Drop in on a camera's live feed; no model required.**
 
 ```bash
-opal look config zone add \
-  --id zone-suet \
-  --source cam-feeder \
-  --name "Suet Cage Perimeter" \
-  --kind polygon \
-  --points '[[0.30,0.20],[0.70,0.20],[0.70,0.85],[0.30,0.85]]'
-opal look config rule add \
-  --id squirrel-heist \
-  --name "Squirrel lingered on suet cage" \
-  --source cam-feeder \
-  --zone zone-suet \
-  --kind dwell_time \
-  --class-filters '["squirrel"]' \
-  --minimum-duration-ms 4000 \
-  --cooldown-ms 30000 \
-  --capture-on-match --clip-on-match
+opal look source stream cam-front --target-fps 10 --out front.mjpeg
 ```
 
-**6. Launch a self-healing monitor so Look restarts the camera session automatically if the Wi-Fi hiccups.**
+**6. Register a detection model that is already on the host.**
 
 ```bash
-opal look config monitor add \
-  --id mon-feeder \
-  --name "24x7 Feeder Watch" \
-  --source cam-feeder \
-  --pipeline avian-tracker \
-  --restart-policy always --enabled
-opal look config monitor show mon-feeder
+opal look config model add --id yolo-det --engine-id onnx --resource-ref /opt/models/yolo11n.onnx --tasks '["detection"]'
 ```
 
-**7. Record a 60-second clip of the feeder, stop it early, and download the finalized artifact via its `artifact_ref`.**
+**7. Build a one-stage pipeline around that model.**
 
 ```bash
-opal look data recording start --source cam-feeder --max-duration-seconds 60
-opal look data recording stop rec-51c2
-# Response includes: "artifact_ref": {"kind": "artifact", "id": "art-rec-51c2", "content_url": "/api/v1/artifact/art-rec-51c2/content"}
-opal look output fetch /api/v1/artifact/art-rec-51c2/content --out squirrel-evidence.mjpeg
+opal look config pipeline add --id people --name "People detector" --stages '[{"id":"detect","kind":"inference","model_id":"yolo-det","task":"detection"}]'
 ```
 
-**8. Upload a dashcam still, run an asynchronous clip-export job, and retrieve the exported artifact via `output_refs`.**
+**8. Analyze the camera's current frame.**
 
 ```bash
-opal look data media upload ./dashcam/meteor-shower.jpg
-opal look data job submit --kind clip_export --source cam-feeder
-opal look data job show job-9a3f
-# Response includes: "output_refs": [{"kind": "artifact", "id": "art-job-9a3f-clip", "content_url": "/api/v1/artifact/art-job-9a3f-clip/content"}]
-opal look output fetch /api/v1/artifact/art-job-9a3f-clip/content --out meteor-export.mp4
+opal look analyze run --source-id cam-front --pipeline-id people
 ```
 
-**9. Query retained observations filtered by label and time window.**
+**9. Analyze a photo from your laptop.**
 
 ```bash
-opal look data observation list \
-  --source cam-feeder \
-  --label pileated_woodpecker \
-  --after 2026-04-01T06:00:00Z \
-  --before 2026-04-01T18:00:00Z \
-  --limit 25
+opal look analyze image driveway.jpg --pipeline-id people
 ```
 
-**10. Inspect pipeline frame-drop telemetry and ZeroMQ event-publisher health.**
+**10. Start a live analysis session.**
 
 ```bash
-opal look info metrics
-opal look info events
+opal look session start --source-id cam-front --pipeline-id people
 ```
 
----
+**11. Follow the session's observations as they arrive.**
 
-### `opal-think`
+```bash
+opal look session stream ses-42
+```
 
-**1. Discover which provider models support vision and tool calling before dispatching a task.**
+**12. Watch an annotated preview that only draws people and dogs.**
+
+```bash
+opal look session preview ses-42 --classes person,dog --min-confidence 0.5 --out preview.mjpeg
+```
+
+**13. Draw a polygon around the front yard.**
+
+```bash
+opal look config zone add --id front-yard --source-id cam-front --name "Front Yard" --kind polygon --points '[{"x":0.10,"y":0.40},{"x":0.90,"y":0.40},{"x":0.95,"y":0.98},{"x":0.05,"y":0.98}]'
+```
+
+**14. Add a rule that matches when a person enters that zone.**
+
+```bash
+opal look config rule add --id person-in-yard --name "Person in front yard" --source-id cam-front --zone-id front-yard --kind enters_zone --class-filters '["person"]' --cooldown-ms 60000 --capture-on-match
+```
+
+**15. Keep the camera watched around the clock, restarts included.**
+
+```bash
+opal look config monitor add --id watch-front --name "Watch the front" --source-id cam-front --pipeline-id people --restart-policy always
+```
+
+**16. Capture and keep an annotated frame.**
+
+```bash
+opal look source capture cam-front --retain --annotate
+```
+
+**17. Record two minutes of video.**
+
+```bash
+opal look data recording start --source-id cam-front --max-duration-seconds 120
+```
+
+**18. Upload a clip for offline analysis.**
+
+```bash
+opal look data media upload doorbell.mp4
+```
+
+**19. Analyze the uploaded clip and wait for the job to finish.**
+
+```bash
+opal look data job submit --kind analyze_video --media-id med-7 --pipeline-id people --wait
+```
+
+**20. Search today's observations for people.**
+
+```bash
+opal look data observation list --label person --after 2026-11-10T00:00:00Z --limit 20
+```
+
+<a id="opal-think-usecases"></a>
+
+### opal-think
+
+**1. Ask a question and get the answer.**
+
+```bash
+opal think ask "Why is the sky blue? One sentence, no poetry."
+```
+
+**2. See which models are available right now.**
 
 ```bash
 opal think model list
-opal think model show ollama:llava-llama3
 ```
 
-**2. Author a suite-wide portable persona in Think (the authoritative registry, `origin: local`).**
+**3. Ask a specific model.**
 
 ```bash
-opal think config persona add \
-  --persona-id sherlock \
-  --name "Consulting Detective" \
-  --voice en-gb-alan-low \
-  --description "Deductive, concise, mildly exasperated by obvious questions"
-opal think config persona validate sherlock
+opal think ask "Explain ETags to a golden retriever." --model-id ollama:llama3.2
 ```
 
-**3. Ask a one-shot question using the `ask` shortcut (creates a task and streams the response to stdout).**
+**4. Submit a task with a leash: five steps, two minutes.**
 
 ```bash
-opal think ask "Why do mirrors flip left-to-right instead of top-to-bottom? Explain in two sentences."
+opal think task create "Summarize the trade-offs between RTSP and MJPEG for home cameras." --max-steps 5 --timeout-seconds 120
 ```
 
-**4. Submit a bounded asynchronous task with untrusted structured `--context` and an idempotency key.**
+**5. Watch a task's progress live.**
 
 ```bash
-opal think task create \
-  --prompt "Summarize the anomalous readings and rank their severity." \
-  --model ollama:llama3.2 \
-  --context '{"sensor":"kiln-thermocouple-2","readings_c":[1020,1024,1198,1245],"limit_c":1150}' \
-  --max-steps 4 \
-  --timeout-seconds 60 \
-  --idempotency-key kiln-check-2026-04-19-01
+opal think task watch tsk-123
 ```
 
-**5. Follow a running task's token stream over SSE, then inspect its final persisted snapshot.**
+**6. Read the final, authoritative task record.**
 
 ```bash
-opal think task watch task-7c91e0
-opal think task show task-7c91e0
+opal think task show tsk-123
 ```
 
-**6. Cancel a runaway philosophical task before it heats the garage.**
+**7. Cancel a task that has wandered off.**
 
 ```bash
-opal think task cancel task-7c91e0
-opal think task list --status cancelled --limit 5
+opal think task cancel tsk-123
 ```
 
-**7. Start a multi-turn architecture review session and run two sequential turns inside it.**
+**8. List recent failures.**
 
 ```bash
-opal think session add --title "Greenhouse Irrigation Redesign"
-opal think chat --session sess-402 \
-  "We have 4 zones and a 12L/min pump. Each dripper line takes 5L/min. How many zones can run at once?"
-opal think chat --session sess-402 \
-  "If we add a rainwater barrel booster adding 4L/min, how does the schedule change?"
-opal think session show sess-402
+opal think task list --status failed --limit 10
 ```
 
-**8. Switch Think's default model and temperature via the standardized `config setting` commands.**
+**9. Open a session so follow-up questions have context.**
 
 ```bash
-opal think config setting set models.default_id '"ollama:qwen2.5:14b"'
-opal think config setting update --data '{"inference.default_temperature": 0.2}'
-opal think config setting list
+opal think session add --title "Lisbon trip"
 ```
 
-**9. Create and activate a "Strict JSON Grader" profile for deterministic evaluation workloads.**
+**10. Start a conversation in that session.**
 
 ```bash
-opal think config profile add \
-  --name strict-grader \
-  --description "Low temperature, concise analytical defaults"
-opal think config profile activate 1
+opal think chat "Plan a three-day trip to Lisbon for someone who hates hills." --session-id ses-lisbon
 ```
 
-**10. Prune finished brainstorming sessions and snapshot Think's configuration.**
+**11. Follow up without repeating yourself.**
 
 ```bash
-opal think session list --limit 10
-opal think session remove sess-402
-opal think backup create
+opal think chat "Swap day two for something indoors; rain is forecast." --session-id ses-lisbon
 ```
 
----
-
-### `opal-event`
-
-**1. Publish a custom smart-home telemetry event to the bus.**
+**12. Review every task in the session.**
 
 ```bash
-opal event publish \
-  --topic greenhouse.soil.moisture \
-  --source esp32-bed-north \
-  --data '{"bed":"tomatoes","moisture_pct":18.4,"temp_c":26.1}'
+opal think task list --session-id ses-lisbon
 ```
 
-**2. Browse the stored event history and inspect observed topics without touching the publish path.**
+**13. Remove the session and its retained tasks.**
 
 ```bash
-opal event history list --topic greenhouse.soil.moisture --limit 10
-opal event topic list
+opal think session remove ses-lisbon
 ```
 
-**3. Register an HTTP webhook action with templating and searchable discovery metadata.**
+**14. Supply facts as structured context.**
 
 ```bash
-opal event config action add \
-  --id open_irrigation_valve \
-  --type http \
-  --method POST \
-  --url http://10.0.10.50:8080/valve/north/open \
-  --body-mode template \
-  --body '{"duration_sec": 300, "reason": "moisture={{data.moisture_pct}}"}' \
-  --timeout-seconds 10 \
-  --description "Open the north greenhouse solenoid valve for 5 minutes" \
-  --keywords '["greenhouse","irrigation","valve"]'
+opal think ask "Which of these temperature readings looks wrong, and why?" --context '{"readings_c":[21.5,21.7,98.6,21.4]}'
 ```
 
-**4. Lock down the action with a JSON Schema `input_schema` so malformed payloads are rejected before execution.**
+**15. Tag a task with evaluation metadata.**
 
 ```bash
-opal event config action update open_irrigation_valve \
-  --input-schema '{
-    "type": "object",
-    "required": ["bed", "moisture_pct"],
-    "properties": {
-      "bed": {"type": "string"},
-      "moisture_pct": {"type": "number", "minimum": 0, "maximum": 100}
-    }
-  }'
+opal think task create "What is 17 times 23?" --metadata '{"evalset":"arithmetic","case_id":"mul-017"}' --wait
 ```
 
-**5. Register a direct `exec`-mode shell action (no shell interpolation) for local LED strip signalling.**
+**16. Make a retry-safe submission with an idempotency key.**
 
 ```bash
-opal event config action add \
-  --id flash_status_led \
-  --type shell \
-  --mode exec \
-  --executable /usr/local/bin/ledctl \
-  --args '["--color", "amber", "--pulses", "3"]' \
-  --timeout-seconds 5 \
-  --description "Pulse the hallway status LED amber three times"
+opal think task create "Draft the nightly status report." --idempotency-key nightly-report-2026-11-10
 ```
 
-**6. Register an in-process Python action for ledger logging.**
+**17. Set the default model.**
 
 ```bash
-opal event config action add \
-  --id log_watering_audit \
-  --type python \
-  --module greenhouse_ops.audit \
-  --function record_irrigation_cycle \
-  --timeout-seconds 15
+opal think config setting set models.default_id '"ollama:llama3.2"'
 ```
 
-**7. Wire a wildcard rule that triggers all three actions when soil moisture drops below 22%.**
+**18. Lower the default step budget.**
 
 ```bash
-opal event config rule add \
-  --id dry_tomato_bed \
-  --topic 'greenhouse.soil.*' \
-  --conditions '[
-    {"path": "data.bed", "operator": "eq", "value": "tomatoes"},
-    {"path": "data.moisture_pct", "operator": "lt", "value": 22}
-  ]' \
-  --actions '["open_irrigation_valve", "flash_status_led", "log_watering_audit"]' \
-  --enabled
+opal think config setting set task.default_max_steps 8
 ```
 
-**8. Dry-run the rule with `config rule test` to verify condition matching without opening a single water valve.**
+**19. Change several task limits in one atomic patch.**
 
 ```bash
-opal event config rule test dry_tomato_bed \
-  --event '{"topic":"greenhouse.soil.moisture","data":{"bed":"tomatoes","moisture_pct":17.9}}'
+opal think config setting update --data '{"task.max_concurrent":2,"task.retention_days":14}'
 ```
 
-**9. Manually execute the action with both a valid payload (`202 Accepted`) and a schema-violating payload (`422` synchronous rejection), then check the execution log.**
+**20. Register a persona in the suite's authoritative persona registry.**
 
 ```bash
-opal event action execute open_irrigation_valve \
-  --event '{"topic":"manual.drill","data":{"bed":"tomatoes","moisture_pct":19.0}}'
-opal event data execution list --action-id open_irrigation_valve --limit 5
+opal think config persona add --persona-id amy --name Amy --description "Ops assistant" --voice-id en-gb-alan-low
 ```
 
-**10. Inspect bus throughput statistics and clear stale test events from history.**
+<a id="opal-event-usecases"></a>
+
+### opal-event
+
+**1. Publish an event.**
 
 ```bash
-opal event info stats
-opal event history remove evt-0192a
+opal event publish --topic home.doorbell.pressed --data '{"door":"front"}'
 ```
 
----
-
-## COMBINED: 50 Multi-Service Recipes
-
-Fifty ways to wire `say`, `listen`, `look`, `think`, and `event` into an unreasonably capable organism.
-
----
-
-### I. The Persona & Voice Testing Foundry (`think` + `say` + `listen`)
-
-#### 1. Generate the Same Phrase Across Every Registered Persona to Stress-Test Intent Recognition
-Author three distinct personas in `think` (the authoritative owner), let `say` synthesize the exact same command in each persona's bound voice, and feed every WAV into `listen` to prove your NLU handles all of them.
+**2. Publish a sensor reading with a named source.**
 
 ```bash
-# 1. Define personas in Think (authoritative owner):
-opal think config persona add --persona-id butler --name "Jeeves" --voice en-gb-alan-low
-opal think config persona add --persona-id dispatcher --name "Dispatch" --voice en-us-lessac-medium
-opal think config persona add --persona-id captain --name "Captain" --voice en-us-ryan-high
-
-# 2. Generate the identical utterance in each persona's voice:
-opal say generate --text "arm the perimeter floodlights" --persona butler --out test-butler.wav
-opal say generate --text "arm the perimeter floodlights" --persona dispatcher --out test-dispatcher.wav
-opal say generate --text "arm the perimeter floodlights" --persona captain --out test-captain.wav
-
-# 3. Verify Listen matches the exact same intent for all three voices:
-opal listen recognition test --audio test-butler.wav --expect-intent security.floodlights_on
-opal listen recognition test --audio test-dispatcher.wav --expect-intent security.floodlights_on
-opal listen recognition test --audio test-captain.wav --expect-intent security.floodlights_on
+opal event publish --topic garden.soil.moisture --source greenhouse-pi --data '{"bed":"tomatoes","moisture_pct":14.2}'
 ```
 
-#### 2. Speed-Sweep Torture Test for Wakeword + STT
-Synthesize a wakeword command at 0.75x, 1.0x, and 1.5x speed and verify where STT recognition starts to crack.
+**3. List the five most recent doorbell events.**
 
 ```bash
-opal say generate --text "brigadier, make me a cortado" --speed 0.75 --out slow.wav
-opal say generate --text "brigadier, make me a cortado" --speed 1.00 --out normal.wav
-opal say generate --text "brigadier, make me a cortado" --speed 1.50 --out caffeinated.wav
-opal listen recognition test --audio slow.wav --require-wakeword --expect-intent barista.brew
-opal listen recognition test --audio normal.wav --require-wakeword --expect-intent barista.brew
-opal listen recognition test --audio caffeinated.wav --require-wakeword --expect-intent barista.brew
+opal event data event list --topic home.doorbell.pressed --limit 5
 ```
 
-#### 3. Homophone & Accent Trap Generator
-Ask `think` to invent tricky homophone sentences for a target intent, synthesize them with `say`, and test them in `listen`.
+**4. See every topic the service has observed.**
 
 ```bash
-opal think ask "Write one spoken command to turn on the 'flour mill' that sounds nearly identical to 'flower mill'."
-opal say generate --text "brigadier, start the flour mill" --persona butler --out homophone.wav
-opal listen recognition test --audio homophone.wav --verbose
+opal event data topic list
 ```
 
-#### 4. Automated Miss-to-Regression Promotion Loop
-When a synthetic persona recording fails recognition, promote the logged failed utterance directly into the intent's training phrases and regression suite, then re-test.
+**5. Register a shell action that plays a chime.**
 
 ```bash
-opal listen data failed-utterance list --reviewed false --limit 5
-opal listen data failed-utterance promote 19 --intent-name security.floodlights_on --create-regression true
-opal listen regression run
-opal listen recognition test --audio test-captain.wav --expect-intent security.floodlights_on
+opal event config action add --id ring-bell --type shell --mode exec --executable /usr/bin/aplay --args '["/opt/sounds/ding-dong.wav"]' --stdin none --description "Play the doorbell chime."
 ```
 
-#### 5. Multilingual Voice & Intent Handshake
-Register a Spanish intent in `listen`, synthesize a test phrase through a Spanish voice in `say`, and verify round-trip recognition.
+**6. Register an HTTP action that forwards the whole event to a webhook.**
 
 ```bash
-opal listen config intent add --name luces.encender --phrase "enciende las luces del salón"
-opal say generate --text "enciende las luces del salón" --voice es-es-carlfm-high --out salon.wav
-opal listen recognition test --audio salon.wav --expect-intent luces.encender
+opal event config action add --id notify-webhook --type http --method POST --url https://hooks.example.com/opal --body-mode event_json --timeout-seconds 10
 ```
 
----
-
-### II. Perimeter & Property Guardians (`look` + `event` + `say` + `think`)
-
-#### 6. Verbally Notify Me When Someone Is in My Front Yard
-Define a polygon zone on the front-yard camera, arm an `enters_zone` rule in `look`, and wire an `event` rule that calls `say` to announce the visitor out loud.
+**7. Register an HTTP action with a templated body.**
 
 ```bash
-# 1. Fence the front yard and arm the visual rule in Look:
-opal look config zone add --id front-yard --source cam-front --name "Front Yard" \
-  --kind polygon --points '[[0.10,0.40],[0.90,0.40],[0.95,0.98],[0.05,0.98]]'
-opal look config rule add --id person-in-front-yard --name "Person in Front Yard" \
-  --source cam-front --zone front-yard --kind enters_zone \
-  --class-filters '["person"]' --cooldown-ms 45000 --capture-on-match --enabled
-
-# 2. Register an HTTP action in Event that triggers OPAL Say:
-opal event config action add --id speak_front_yard_alert --type http \
-  --method POST --url http://127.0.0.1:8081/api/v1/generate \
-  --body-mode template \
-  --body '{"text":"Heads up: someone just stepped into the front yard.","persona":"butler","output_format":"wav"}'
-
-# 3. Connect Look's rule-match event topic to the spoken alert:
-opal event config rule add --id notify_front_yard_person \
-  --topic 'opal.look.rule.matched' \
-  --conditions '[{"path":"data.rule_id","operator":"eq","value":"person-in-front-yard"}]' \
-  --actions '["speak_front_yard_alert"]' --enabled
+opal event config action add --id log-door --type http --method POST --url https://hooks.example.com/doors --body-mode template --body '{"door":"{{data.door}}","event":"{{event}}"}'
 ```
 
-#### 7. Porch Pirate Deterrent with Live Recording & Polite British Warning
-When a person lingers near a detected package on the porch, start a 90-second recording in `look` and have `say` broadcast a polite warning that the camera is recording.
+**8. Register a Python plugin action.**
 
 ```bash
-opal look config rule add --id porch-linger --name "Lingering near porch" \
-  --source cam-porch --zone zone-mat --kind dwell_time \
-  --class-filters '["person"]' --minimum-duration-ms 8000 --capture-on-match
-opal event config action add --id start_porch_recording --type http \
-  --method POST --url http://127.0.0.1:8082/api/v1/recording/ \
-  --body-mode template --body '{"source_id":"cam-porch","max_duration_seconds":90}'
-opal event config action add --id polite_deterrent --type http \
-  --method POST --url http://127.0.0.1:8081/api/v1/generate \
-  --body-mode template \
-  --body '{"text":"Good afternoon. The porch camera is recording in high definition. Do smile.","persona":"butler"}'
-opal event config rule add --id porch_defense --topic 'opal.look.rule.matched' \
-  --conditions '[{"path":"data.rule_id","operator":"eq","value":"porch-linger"}]' \
-  --actions '["start_porch_recording","polite_deterrent"]' --enabled
+opal event config action add --id process-detection --type python --module opal_plugin --function process_detection --timeout-seconds 30
 ```
 
-#### 8. Driveway Vehicle Arrival & License-Plate Frame Capture
-Cross a driveway tripwire line with a `car` or `truck`, snap an exact retained capture, and fetch the image via `output fetch`.
+**9. Route doorbell events to the chime.**
 
 ```bash
-opal look config zone add --id driveway-gate --source cam-driveway --name "Gate Line" \
-  --kind line --points '[[0.15,0.65],[0.85,0.65]]'
-opal look config rule add --id vehicle-arrived --name "Vehicle crossed gate" \
-  --source cam-driveway --zone driveway-gate --kind line_crosses \
-  --class-filters '["car","truck"]' --capture-on-match
-opal look data capture list --limit 1
-opal look output fetch /api/v1/capture/cap-0042a/content --out driveway-arrival.jpg
+opal event config rule add --id doorbell-chime --topic home.doorbell.pressed --conditions '[]' --actions '["ring-bell"]'
 ```
 
-#### 9. Dog-on-the-Couch Scolder
-Monitor the living room couch polygon for `dog` detections while nobody is home and have the owner's persona firmly tell Barnaby to get down.
+**10. Route a whole topic family, but only when a condition holds.**
 
 ```bash
-opal look config zone add --id zone-sofa --source cam-living --name "Forbidden Sofa" \
-  --kind polygon --points '[[0.22,0.50],[0.78,0.50],[0.78,0.88],[0.22,0.88]]'
-opal look config rule add --id dog-on-sofa --name "Barnaby on the sofa" \
-  --source cam-living --zone zone-sofa --kind enters_zone \
-  --class-filters '["dog"]' --cooldown-ms 20000 --capture-on-match
-opal event config action add --id scold_barnaby --type http \
-  --method POST --url http://127.0.0.1:8081/api/v1/generate \
-  --body-mode template \
-  --body '{"text":"Barnaby. Off the couch immediately. We have photographic evidence.","volume":1.3}'
-opal event config rule add --id sofa_enforcement --topic 'opal.look.rule.matched' \
-  --conditions '[{"path":"data.rule_id","operator":"eq","value":"dog-on-sofa"}]' \
-  --actions '["scold_barnaby"]' --enabled
+opal event config rule add --id dry-tomatoes --topic 'garden.*' --conditions '[{"path":"data.moisture_pct","operator":"lt","value":20}]' --actions '["notify-webhook"]'
 ```
 
-#### 10. End-of-Day Security Digest (Observations → Think Summary → Spoken Briefing)
-Query today's perimeter observations from `look`, pass them as structured context to `think` for a two-sentence executive briefing, and render the audio with `say`.
+**11. Dry-run a rule against a sample event; no actions fire.**
 
 ```bash
-opal look data observation list --source cam-front --after 2026-04-19T00:00:00Z --limit 50
-opal think ask "Summarize today's front camera activity in two calm sentences for the homeowner." \
-  --context '{"observations":[{"time":"08:14","label":"person","note":"mail carrier"},{"time":"14:02","label":"squirrel","count":3},{"time":"17:45","label":"car","note":"family return"}]}'
-opal say generate \
-  --text "All quiet on the front perimeter today: the mail carrier visited at 8:14 AM, three squirrels held a brief summit at 2:02 PM, and the family car returned at 5:45 PM." \
-  --persona butler --out evening-security-brief.wav
+opal event config rule test dry-tomatoes --event '{"topic":"garden.soil.moisture","data":{"bed":"tomatoes","moisture_pct":14.2}}'
 ```
 
----
-
-### III. The Academy: Quizzes, Math, Facts & Storytelling (`think` + `say` + `listen` + `event`)
-
-#### 11. Verbal Quizzes: Pub Trivia Host That Speaks Questions & Grades Spoken Answers
-Start a trivia session in `think`, read the question out loud with `say`, capture the player's spoken answer in `listen`, and have `think` score the round.
+**12. Fire an action by hand and wait for the result.**
 
 ```bash
-# 1. Start a trivia session and generate Round 1:
-opal think session add --title "Friday Night Pub Trivia"
-opal think chat --session sess-trivia-1 \
-  "You are a witty pub quizmaster. Ask Question 1 (science, medium difficulty) in one sentence. Do not reveal the answer yet."
-
-# 2. Speak the question to the room:
-opal say generate \
-  --text "Question one: Which chemical element, named after the Greek word for 'stranger', is used in high-intensity arc lamps and ion thrusters?" \
-  --persona butler --out trivia-q1.wav
-
-# 3. Player answers into the microphone (or WAV test); Listen matches the answer intent:
-opal listen recognition test --text "is it xenon" --verbose
-
-# 4. Think grades the response inside the same session and Say announces the score:
-opal think chat --session sess-trivia-1 "The contestant answered 'xenon'. Grade it and give the score (1/1)."
-opal say generate \
-  --text "Spot on! Xenon it is—one point on the board." \
-  --persona butler --out trivia-verdict1.wav
+opal event config action execute ring-bell --event '{"topic":"manual.test","data":{}}' --wait
 ```
 
-#### 12. Mental Math Questions with Progressive Difficulty
-Have `think` generate a timed arithmetic challenge, read it aloud via `say`, parse the spoken number in `listen`, and verify the calculation.
+**13. List recent failed executions.**
 
 ```bash
-opal think ask "Give me one mental-math word problem involving two-digit multiplication, phrased for spoken delivery in one sentence."
-opal say generate \
-  --text "If a baker puts fourteen croissants on each of six trays, and eats three for quality control, how many croissants remain?" \
-  --persona dispatcher --speed 0.95 --out math-q1.wav
-opal listen recognition test --text "eighty one"
-opal think ask "Problem: 14 * 6 - 3. User answered 'eighty one'. State whether they are right and show the quick mental shortcut."
-opal say generate \
-  --text "Correct! Six times ten is sixty, six times four is twenty-four for eighty-four, minus three leaves eighty-one." \
-  --persona dispatcher --out math-a1.wav
+opal event data execution list --status failed --limit 20
 ```
 
-#### 13. Random Facts Dispenser ("Tell Me Something Weird")
-Voice trigger `"tell me a random fact"` fires a `think` prompt for an obscure, verifiable fact and streams the spoken audio via `say`.
+**14. See everything one action has done lately.**
 
 ```bash
-opal listen config intent add --name curiosity.random_fact \
-  --phrase "tell me a random fact" \
-  --phrase "hit me with a weird fact" \
-  --phrase "teach me something useless"
-opal listen recognition test --text "tell me a random fact" --expect-intent curiosity.random_fact
-opal think ask "Share one surprising, verifiable historical or scientific fact in under 35 words."
-opal say stream \
-  --text "Oxford University is older than the Aztec Empire: teaching started at Oxford around 1096, while Tenochtitlan was founded in 1325." \
-  --persona butler --sample-rate 22050 --out weird-fact.pcm
+opal event data execution list --action-id ring-bell --limit 10
 ```
 
-#### 14. "Make Up a Story About..." Interactive Bedtime Storyteller
-Capture a child's (or sleep-deprived engineer's) spoken topic via `listen`, spin a bespoke story in `think`, and narrate it softly using a slow-cadence `say` profile.
+**15. Disable a rule without deleting it.**
 
 ```bash
-# 1. Match the spoken story request and extract slots:
-opal listen config slot add --name protagonist --slot-type freeform
-opal listen config intent add --name story.tell \
-  --phrase "make up a story about [protagonist]" \
-  --phrase "tell me a bedtime story about [protagonist]"
-opal listen recognition test \
-  --text "make up a story about a nearsighted lighthouse keeper and a polite kraken" \
-  --expect-intent story.tell
-
-# 2. Think writes the story:
-opal think ask \
-  "Make up a cozy 4-sentence bedtime story about a nearsighted lighthouse keeper and a polite kraken who returns lost rowboats."
-
-# 3. Narrate at 0.85x speed with the midnight-whisper profile:
-opal say generate \
-  --text "Every fog-bound Tuesday, Barnaby polished his lighthouse lens with the wrong spectacles and mistook the kraken for a floating pier. The kraken, too well-mannered to correct him, simply handed up three lost oars and a lobster pot with a gentle bow. Barnaby brewed a kettle of kelp tea and lowered a mug on a rope. By midnight, both the bay and the monster were fast asleep." \
-  --profile 2 --persona butler --out lighthouse-kraken.wav
+opal event config rule update dry-tomatoes --no-enabled
 ```
 
-#### 15. Socratic Flashcard Drill for Medical / Aviation Exams
-Load a deck topic into a `think` session, quiz the student aloud, and keep drilling missed cards until they pass.
+**16. Tighten an action's timeout.**
 
 ```bash
-opal think session add --title "FAA Private Pilot Weather Flashcards"
-opal think chat --session sess-faa "Ask me one flashcard question about METAR cloud ceiling abbreviations."
-opal say generate --text "In a METAR report, which two cloud coverage codes constitute a ceiling?" --out faa-card1.wav
-opal listen recognition test --text "broken and overcast"
-opal think chat --session sess-faa "Student answered 'broken and overcast' (BKN and OVC). Confirm and ask the next card."
+opal event config action update notify-webhook --timeout-seconds 5
 ```
 
-#### 16. "Explain Like I'm Five" vs. "Explain Like I'm a Principal Engineer" Dual-Persona Debate
-Have `think` answer the same question twice—once simply, once rigorously—and voice them with two contrasting personas in `say`.
-
-```bash
-opal think ask "Explain how a differential gear works in one sentence for a seven-year-old."
-opal say generate \
-  --text "When a car turns a corner, the outside wheel has to travel a longer path than the inside wheel, and the differential is the clever gear box that lets them spin at different speeds without skidding." \
-  --persona dispatcher --out diff-eli5.wav
-
-opal think ask "Explain a bevel-gear open automotive differential in one technical sentence."
-opal say generate \
-  --text "An open planetary bevel-gear differential splits input torque equally across both half-shafts while permitting differential angular velocity proportional to turn radius." \
-  --persona butler --out diff-technical.wav
-```
-
-#### 17. Foreign-Language Pronunciation Coach
-`say` models a Japanese phrase, the learner repeats it into a WAV file, `listen` transcribes what it heard, and `think` gives gentle phonetic coaching.
-
-```bash
-opal say generate --text "木漏れ日" --voice ja-jp-kokoro-alpha --speed 0.85 --out teacher-komorebi.wav
-opal listen recognition test --audio ./student-attempt.wav --verbose
-opal think ask "Target word: 'komorebi' (sunlight filtering through trees). Student transcript: 'komorabi'. Give a one-sentence pronunciation tip."
-opal say generate --text "Almost there—keep the third syllable a crisp 'reh' as in 'red' rather than 'rah'." --persona butler --out coaching.wav
-```
-
-#### 18. Historical Roleplay Interview ("Press Conference with Ada Lovelace")
-Bind a `think` session to a historical persona and conduct a two-way spoken interview.
-
-```bash
-opal think config persona add --persona-id lovelace --name "Ada Lovelace" --voice en-gb-alan-low \
-  --description "Mathematician and author of Note G on the Analytical Engine, 1843"
-opal think session add --title "Interview with Lady Lovelace"
-opal think chat --session sess-ada \
-  "In character as Ada Lovelace, answer in two sentences: can Mr. Babbage's Analytical Engine originate anything of its own?"
-opal say generate \
-  --text "The Analytical Engine has no pretensions whatever to originate anything. It can do whatever we know how to order it to perform, and no more." \
-  --persona lovelace --out ada-reply.wav
-```
-
-#### 19. Geography Capital-City Lightning Round
-Fire rapid-fire capital questions and log each round's score onto the `event` bus for leaderboard tracking.
-
-```bash
-opal think ask "Ask a lightning-round question: capital of Kazakhstan, one short sentence."
-opal say generate --text "Lightning round: what is the capital city of Kazakhstan?" --speed 1.15 --out geo-q.wav
-opal listen recognition test --text "astana"
-opal event publish --topic quiz.geography.score --source quiz-host \
-  --data '{"player":"alice","country":"Kazakhstan","answer":"Astana","correct":true,"time_ms":1840}'
-```
-
-#### 20. Choose-Your-Own-Adventure Audio Book
-A `think` session tracks inventory and story state; `say` narrates each room; `listen` maps `"go north"` or `"open the brass chest"` to the next turn.
-
-```bash
-opal listen config intent add --name adventure.choice \
-  --phrase "open the [object]" --phrase "take the [object]" --phrase "go [direction]"
-opal think session add --title "The Clockwork Observatory"
-opal think chat --session sess-cyoa \
-  "Start an interactive audio adventure in an abandoned brass observatory. End with two clear choices."
-opal say generate \
-  --text "Rain drums against the cracked dome above the telescope. Before you sit a ticking astrolabe and a locked mahogany trapdoor. Do you examine the astrolabe, or force the trapdoor?" \
-  --persona butler --out cyoa-turn1.wav
-opal listen recognition test --text "open the trapdoor" --expect-intent adventure.choice
-```
-
----
-
-### IV. Workshop, Kitchen & Lab Assistants (`look` + `listen` + `think` + `say` + `event`)
-
-#### 21. Hands-Full Soldering Bench Assistant ("Read Me That Resistor")
-When both hands are holding a soldering iron and PCB, speak `"inspect the bench"`, snap a high-res frame in `look`, pass it to a vision-capable model in `think`, and hear the colour bands read aloud by `say`.
-
-```bash
-opal listen config intent add --name bench.inspect --phrase "inspect the bench" --phrase "read this component"
-opal look source capture cam-bench-macro --retain
-opal think ask "Read the four colour bands on the resistor in the center of the bench capture and state its resistance." \
-  --model ollama:llava-llama3 \
-  --context '{"capture_url":"/api/v1/capture/cap-bench-09/content","bands_observed":["brown","black","red","gold"]}'
-opal say generate --text "Brown, black, red, gold: that is a one-kilohm resistor with five percent tolerance." \
-  --persona dispatcher --out resistor.wav
-```
-
-#### 22. 3D-Printer Spaghetti & Nozzle-Blob Watchdog
-`look` watches the printer bed for `spaghetti_defect`, publishes a match event, and `event` simultaneously cuts power to the smart plug and pages the workshop speaker via `say`.
-
-```bash
-opal look config model add --id fdm-defect-net --engine onnx \
-  --resource-ref /opt/models/fdm-spaghetti.onnx --tasks '["detect"]'
-opal look config rule add --id print-spaghetti --name "FDM Spaghetti Detected" \
-  --source cam-voron --kind object_appears --class-filters '["spaghetti_defect"]' \
-  --threshold 0.82 --capture-on-match
-opal event config action add --id pause_klipper --type http \
-  --method POST --url http://10.0.30.12:7125/printer/print/pause --body-mode none
-opal event config action add --id announce_spaghetti --type http \
-  --method POST --url http://127.0.0.1:8081/api/v1/generate \
-  --body-mode template \
-  --body '{"text":"Warning: Voron printer nozzle spaghetti detected. Print paused automatically.","persona":"dispatcher"}'
-opal event config rule add --id stop_bad_print --topic 'opal.look.rule.matched' \
-  --conditions '[{"path":"data.rule_id","operator":"eq","value":"print-spaghetti"}]' \
-  --actions '["pause_klipper","announce_spaghetti"]' --enabled
-```
-
-#### 23. Flour-Covered Hands Sourdough Timer & Hydration Calculator
-Voice-commanded baker's percentage math and step readbacks without smearing dough on a touchscreen.
-
-```bash
-opal listen recognition test --text "brigadier, how much water for eight hundred grams of flour at seventy-eight percent hydration"
-opal think ask "Compute 78% hydration water weight and 2% salt weight for 800g flour. Reply in one short spoken sentence."
-opal say generate \
-  --text "For eight hundred grams of flour at seventy-eight percent hydration, weigh out six hundred twenty-four grams of water and sixteen grams of salt." \
-  --persona butler --out hydration.wav
-```
-
-#### 24. Stove-Burner Left On After Kitchen Vacated
-`look` detects `stove_flame` inside the cooktop zone while zero `person` detections appear for 10 minutes; `event` triggers a high-volume spoken alert.
-
-```bash
-opal look config zone add --id zone-cooktop --source cam-kitchen --name "Cooktop" \
-  --kind polygon --points '[[0.40,0.45],[0.65,0.45],[0.65,0.62],[0.40,0.62]]'
-opal look config rule add --id unattended-burner --name "Burner on unattended" \
-  --source cam-kitchen --zone zone-cooktop --kind dwell_time \
-  --class-filters '["flame_on"]' --minimum-duration-ms 600000 --capture-on-match
-opal event config action add --id kitchen_burner_siren --type http \
-  --method POST --url http://127.0.0.1:8081/api/v1/generate \
-  --body-mode template \
-  --body '{"text":"Kitchen safety alert! A stove burner has been left on for ten minutes.","volume":1.8}'
-opal event config rule add --id burner_safety_rule --topic 'opal.look.rule.matched' \
-  --conditions '[{"path":"data.rule_id","operator":"eq","value":"unattended-burner"}]' \
-  --actions '["kitchen_burner_siren"]' --enabled
-```
-
-#### 25. Chemical Fume-Hood Sash Height Monitor
-If a lab fume-hood sash stays above the safe mark in `look`, log an audit event in `event` and remind the researcher aloud via `say`.
-
-```bash
-opal look config zone add --id sash-high-line --source cam-lab2 --name "Max Safe Sash Height" \
-  --kind line --points '[[0.20,0.35],[0.80,0.35]]'
-opal look config rule add --id sash-too-high --name "Fume hood sash above safe line" \
-  --source cam-lab2 --zone sash-high-line --kind line_crosses \
-  --class-filters '["sash_handle"]' --cooldown-ms 15000
-opal say generate --text "Lab two reminder: please lower the fume hood sash below the thirty-centimeter mark." \
-  --persona dispatcher --out sash-warning.wav
-```
-
----
-
-### V. Studio, Podcast & Accessibility Workflows (`say` + `listen` + `think` + `look`)
-
-#### 26. Two-Host Synthetic Morning Show From Server Logs
-Feed overnight `event` stats and `look` metrics into `think` to script a 30-second banter segment between two personas, then synthesize both tracks with `say`.
+**17. Read the event and execution counters.**
 
 ```bash
 opal event info stats
-opal look info metrics
-opal think ask "Write a two-line morning radio exchange between hosts 'Jeeves' and 'Dispatch' summarizing 1,420 processed events, 0 failed actions, and 12 nocturnal raccoon sightings."
-opal say generate --text "Good morning! One thousand four hundred and twenty events flew across the bus last night with zero failures—though the patio camera did clock twelve raccoons holding a committee meeting." \
-  --persona dispatcher --out host1-intro.wav
-opal say generate --text "Quite so, Dispatch. Their agenda remains classified, but the garbage cans held firm." \
-  --persona butler --out host2-rejoinder.wav
 ```
 
-#### 27. Live Visual Scene Narrator for Low-Vision Accessibility
-A single spoken request captures the hallway camera in `look`, runs object detection, turns the bounding-box list into spatial prose in `think`, and speaks it immediately.
+**18. Clear the stored event history.**
 
 ```bash
-opal look analyze run --source cam-hallway --pipeline detect-objects
-opal think ask "Convert these detections into clear spatial navigation advice for a blind resident: [{'label':'umbrella_stand','x':0.15,'y':0.7},{'label':'delivery_box','x':0.52,'y':0.85}]."
-opal say stream \
-  --text "The umbrella stand is tucked to your far left, but there is a cardboard delivery box directly in the center of the hallway about two paces ahead." \
-  --persona butler --sample-rate 22050 --out hallway-nav.pcm
+opal event data event clear
 ```
 
-#### 28. Audiobook Chapter Proofreader (Catch Typos by Ear)
-Synthesize a markdown draft chapter with `say`, run the generated WAV back through `listen` to verify no words collapse into unintelligible mush, and flag discrepancies.
+**19. Cap the size of accepted events.**
 
 ```bash
-opal say generate --text-file ./drafts/chapter-04.txt --persona butler --out ch04-proof.wav
-opal listen recognition test --audio ch04-proof.wav --no-save --verbose
+opal event config setting set max_event_bytes 262144
 ```
 
-#### 29. Silent-Doorbell Visual & Spoken Relay for Hard-of-Hearing Workshop
-When `listen` or an intercom sensor publishes a `doorbell.pressed` event, `look` snaps a frame of who is outside, and `event` flashes the workbench strobe while `say` announces the visitor on the bone-conduction headset.
+**20. Take a backup before rewiring the house.**
 
 ```bash
-opal event publish --topic home.doorbell.pressed --source front-chime --data '{"button":"main"}'
-opal look source capture cam-front --retain --annotate
-opal say generate --text "Front doorbell pressed. Capture saved to cap-9921." --persona dispatcher --out headset-chime.wav
-```
-
-#### 30. Automated Podcast Ad-Read Generator in Character
-Let `think` draft a sponsor read for a fictional product in the `sherlock` persona's voice and render the WAV in `say`.
-
-```bash
-opal think ask "In character as Sherlock Holmes, write a two-sentence endorsement for a waterproof notebook."
-opal say generate \
-  --text "When pursuing a mudlark across the Thames embankment in a November squall, an ink-stained cuff is an amateur's blunder. I record my monographs exclusively on waxed storm-proof vellum." \
-  --persona sherlock --out sponsor-holmes.wav
+opal event backup create
 ```
 
 ---
 
-### VI. Wildlife, Garden & Observatory (`look` + `event` + `think` + `say`)
+<a id="opal-devices-usecases"></a>
 
-#### 31. Backyard Birding Life-List Logger & Spoken Spotter
-When `look` spots a rare species at the feeder with high confidence, save an annotated capture, log the sighting on the `event` bus, and have `say` whisper the alert inside the study.
+### opal-devices
+
+**1. See what hardware this host knows about.**
 
 ```bash
-opal look config rule add --id rare-warbler --name "Cerulean Warbler Spotted" \
-  --source cam-feeder --kind object_appears --class-filters '["cerulean_warbler"]' \
-  --threshold 0.90 --capture-on-match
-opal event publish --topic wildlife.bird.spotted --source look-feeder \
-  --data '{"species":"Setophaga cerulea","confidence":0.94,"capture_id":"cap-warbler-1"}'
-opal say generate \
-  --text "Pardon the interruption: a Cerulean Warbler just landed on the south feeder." \
-  --profile 2 --persona butler --out warbler-whisper.wav
+opal devices list
 ```
 
-#### 32. Chicken Coop Automatic Dusk Headcount
-At sunset, run `look analyze run` on the roost camera, pass the detected hen count to `think`, and announce whether any hen is still AWOL in the yard.
+**2. Find a camera you can actually use.**
 
 ```bash
-opal look analyze run --source cam-coop-roost --pipeline count-hens
-opal think ask "Coop roster is 8 hens. Camera detected 7 hens on the roost bar at dusk. Formulate a one-sentence alert."
-opal say generate \
-  --text "Coop headcount is seven of eight—one hen is still out in the run before the automatic door closes." \
-  --persona dispatcher --out coop-check.wav
+opal devices list --type camera --status available
 ```
 
-#### 33. All-Sky Cloud-Cover Check Before Opening the Telescope Roof
-Snap a frame from the all-sky fisheye camera, evaluate cloud cover, and prevent `event` from opening the roll-off roof if rain clouds are present.
+**3. What can this thing do?**
 
 ```bash
-opal look source capture cam-allsky --retain
-opal look analyze run --source cam-allsky --pipeline sky-classifier
-opal event publish --topic observatory.sky.state --source cam-allsky \
-  --data '{"cloud_pct":12,"precipitation":false,"safe_to_open":true}'
-opal event config rule test open_roof_if_clear \
-  --event '{"topic":"observatory.sky.state","data":{"cloud_pct":12,"precipitation":false,"safe_to_open":true}}'
+opal devices capabilities dev-3fa8-microphone-array
 ```
 
-#### 34. Deer-in-the-Hostas Ultrasonic & Verbal Shoo-Away
-Detect `deer` entering the garden bed polygon at 4 AM, trigger a short clip recording for posterity, and fire an action.
+**4. Scan for new hardware without touching it.**
 
 ```bash
-opal look config zone add --id zone-hostas --source cam-garden --name "Hosta Bed" \
-  --kind polygon --points '[[0.12,0.50],[0.88,0.50],[0.88,0.95],[0.12,0.95]]'
-opal look config rule add --id deer-in-hostas --name "Deer eating the hostas" \
-  --source cam-garden --zone zone-hostas --kind enters_zone \
-  --class-filters '["deer"]' --capture-on-match --clip-on-match
-opal look data artifact list --limit 5
+opal devices discover
 ```
 
-#### 35. Beehive Entrance Traffic & Swarm Early-Warning
-Compare bee-traffic density observations from `look` against normal afternoon baselines using `think`.
+**5. Register a device the scanner cannot see.**
 
 ```bash
-opal look data observation list --source cam-hive-1 --task detect --limit 20
-opal think ask "Hive 1 entrance observations jumped from 45 bees/frame to 310 bees/frame at 13:15 on a warm May afternoon. Assess swarm likelihood in one sentence."
-opal say generate \
-  --text "Hive one entrance activity has spiked nearly sevenfold—classic bearding or imminent primary swarm; inspect queen cells immediately." \
-  --persona butler --out hive-alert.wav
+opal devices add --name "lab/gpu-0" --type gpu --host-id workstation-2 --host-name "Workstation 2" --backend cuda --access local
+```
+
+**6. Prefer the studio microphone everywhere.**
+
+```bash
+opal devices default set --scope type --target microphone --values '{"device_id":"dev-3fa8-microphone-array"}'
+```
+
+**7. Group the porch cameras.**
+
+```bash
+opal devices group add --name porch-cams --mode static
+opal devices group member add grp-porch dev-cam-front
+opal devices group member add grp-porch dev-cam-side
+```
+
+**8. Tag it for the humans.**
+
+```bash
+opal devices tag add dev-cam-front outdoor
+opal devices label set dev-cam-front location porch
+```
+
+**9. Meet your neighbor's registry.**
+
+```bash
+opal devices peer add --name garage --base-url http://192.168.1.20:8085 --trusted
+opal devices peer sync garage
+```
+
+**10. Hide the lab GPU from peers.**
+
+```bash
+opal devices sharing deny --device-id dev-lab-gpu
+```
+
+**11. Watch the registry breathe.**
+
+```bash
+opal devices watch
+```
+
+**12. What did I miss while I was away?**
+
+```bash
+opal devices event list --limit 20
+```
+
+**13. Which discovery backends are installed?**
+
+```bash
+opal devices plugin list
+```
+
+**14. Whole fleet at a glance.**
+
+```bash
+opal devices federation inventory
+```
+
+**15. Snapshot before renumbering the studio.**
+
+```bash
+opal devices backup create
 ```
 
 ---
 
-### VII. Smart Home & Office Choreography (`listen` + `event` + `look` + `think` + `say`)
+## Part 3: Combined
 
-#### 36. "I'm Heading Out" — One Spoken Phrase Arms Monitors, Switches Profiles & Confirms Aloud
-Speak `"brigadier, I'm heading out"`, match `home.depart` in `listen`, publish `home.mode.away` in `event`, enable the indoor camera monitor in `look`, and confirm via `say`.
+Fifty recipes that use two or more services. Pipes between `opal` commands are the only shell used.
 
-```bash
-opal listen config intent add --name home.depart \
-  --phrase "I'm heading out" --phrase "nobody is home" --phrase "arm away mode"
-opal listen recognition test --text "brigadier, I'm heading out" --expect-intent home.depart
-opal event publish --topic home.mode.changed --source listen \
-  --data '{"mode":"away","triggered_by":"voice"}'
-opal look config monitor update mon-front --enabled
-opal say generate --text "Away mode armed. Perimeter monitors are active. Have a good trip." \
-  --persona butler --out away-armed.wav
-```
+### Plumbing (do this once)
 
-#### 37. "Where Did I Leave My Keys?" Visual Retro-Search
-Query recent `look` observations for `key_ring` or `glasses` across indoor cameras and let `say` tell you which room won.
+Most recipes rely on a few shared fixtures. Set them up first.
+
+**Let Think find Event**, so tasks can discover and execute registered actions:
 
 ```bash
-opal look data observation list --label keys --limit 5
-opal think ask "Turn this observation into a helpful spoken answer: {'source_id':'cam-entryway','label':'keys','zone':'console-table','timestamp':'2026-04-19T16:42:10Z'}."
-opal say generate --text "Your keys were last spotted on the entryway console table at 4:42 PM." \
-  --persona butler --out keys-found.wav
+opal think config setting set event.base_url '"http://127.0.0.1:8080"'
 ```
 
-#### 38. Focus-Mode Do-Not-Disturb Gatekeeper
-Activate a quiet profile in `say`, set `think` to queue non-urgent summaries, and have `event` suppress chime actions unless an event carries `priority: critical`.
+**Let Listen publish live matches** to Event on `opal.listen.intent.match`. Only live microphone matches are published; `test-text` and `test-audio` results never are.
+
+```bash
+opal listen config setting update --data '{"event_publication_enabled":true,"event_transport":"http"}'
+```
+
+**Check Look's event output**, which is disabled by default and allowlisted. The contracts leave the enabling setting to the implementation, so find its key with `opal look config setting list`, turn it on, and confirm here:
+
+```bash
+opal look info events
+```
+
+**Register a `speak` action.** Say returns audio bytes and plays nothing, so an HTTP action that posts to Say would synthesize speech that nobody hears. The `speak` action runs the CLI on the Event host instead, where `--play` reaches a speaker. Adjust the executable path to wherever `opal` is installed.
+
+```bash
+opal event config action add --id speak --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","{{data.text}}","--play"]' --stdin none --description "Speak data.text aloud through OPAL Say on this host's speakers." --keywords '["speak","say","announce"]' --input-schema '{"type":"object","properties":{"text":{"type":"string"}},"required":["text"]}'
+```
+
+Things to know before you wire anything:
+
+- **Rule topics** are an exact topic or a `prefix.*` pattern. Conditions are ANDed. There are no timers, aggregation, or rule chains.
+- **Templates** use `{{data.path}}` or `{{event}}`. A missing path fails the execution with `template_error`.
+- **HTTP action destinations** must be on Event's allowlist.
+- **Referenced resources must exist.** Recipes name cameras, zones, pipelines, intents, and sessions by ID without always creating them. Part 2 shows how to create each kind.
+- **Speech is a Think decision.** Recipes that tell Think to "use the speak action" depend on the model choosing to call it. Read the task record with `opal think task show` when the house stays silent.
+- **Payload field names are assumed.** The contracts name the topics (`opal.listen.intent.match`, `opal.look.condition.matched`, `opal.look.monitor.failed`) but do not fix the fields under `data`. These recipes assume Listen publishes its recognition result fields (`data.intent_name`, `data.slot_values`, `data.transcript`) and Look publishes `data.rule_id`. Check a real event before trusting a condition:
+
+```bash
+opal event data event list --topic opal.look.condition.matched --limit 1
+```
+
+### Voice lab
+
+#### 1. One phrase, every persona
+
+*say + listen.* Generate the same phrase in each known persona's voice, then feed every recording to Listen to prove the intent matches regardless of who is talking. Repeat the pair of commands for each persona in the list.
+
+```bash
+opal say config persona list --enabled
+opal say generate "hey opal, turn on the lights" --persona vox --out lights-vox.wav
+opal say generate "hey opal, turn on the lights" --persona amy --out lights-amy.wav
+opal say generate "hey opal, turn on the lights" --persona butler --out lights-butler.wav
+opal listen recognition test-audio lights-vox.wav --require-wakeword
+opal listen recognition test-audio lights-amy.wav --require-wakeword
+opal listen recognition test-audio lights-butler.wav --require-wakeword
+```
+
+#### 2. Speed sweep
+
+*say + listen.* Find out how fast someone can talk before recognition gives up.
+
+```bash
+opal say generate "hey opal, set a timer for ten minutes" --speed 0.75 --out timer-slow.wav
+opal say generate "hey opal, set a timer for ten minutes" --speed 1.0 --out timer-normal.wav
+opal say generate "hey opal, set a timer for ten minutes" --speed 1.5 --out timer-espresso.wav
+opal listen recognition test-audio timer-slow.wav --require-wakeword
+opal listen recognition test-audio timer-normal.wav --require-wakeword
+opal listen recognition test-audio timer-espresso.wav --require-wakeword
+```
+
+#### 3. Paraphrase factory
+
+*think + listen.* Let Think invent a new way to say something and add it straight to the intent's training phrases.
+
+```bash
+opal think ask "Give me one natural way a person might ask to turn on the lights that is not 'turn on the lights'. Reply with the phrase only, lowercase, no punctuation." | opal listen config phrase add 1 --phrase -
+```
+
+#### 4. Synthetic round trip
+
+*think + say + listen.* Think writes a tricky utterance, Say speaks it, and Listen tries to understand it. No humans were inconvenienced.
+
+```bash
+opal think ask "Write one short, slightly mumbled-sounding way to ask for the kitchen lights to be turned on. Reply with the phrase only." | opal say generate - --out tricky.wav
+opal listen recognition test-audio tricky.wav
+```
+
+#### 5. The miss whisperer
+
+*listen + think.* Hand a failed utterance to Think and ask what the speaker meant.
+
+```bash
+opal listen data failed-utterance show 7 | opal think ask "This utterance matched no intent. My intents are lights.turn_on, lights.turn_off, and timer.set. Which one did the speaker most likely mean? Reply with the intent name only." --context -
+opal listen data failed-utterance promote 7 --intent-name lights.turn_on --create-regression
+```
+
+#### 6. Spoken regression report
+
+*listen + think + say.* Run the regression suite and have the result read to you while you get coffee.
+
+```bash
+opal listen regression run | opal think ask "Summarize this regression run in one sentence. Mention the pass rate and name any failing case." --context - | opal say generate - --play
+```
+
+#### 7. One persona, two services
+
+*think + say.* Think owns the authoritative persona registry; Say binds the voice. Register the same `persona_id` in both, validate the binding, and use it.
+
+```bash
+opal think config persona add --persona-id amy --name Amy --description "Ops assistant" --voice-id en-gb-alan-low
+opal say config persona add --persona-id amy --name Amy --description "Ops assistant" --voice-id en-gb-alan-low
+opal say config persona validate amy
+opal think ask "Introduce yourself as Amy, the ops assistant, in one friendly sentence." | opal say generate - --persona amy --play
+```
+
+### Eyes on the property
+
+#### 8. Verbally notify me when someone is in my front yard
+
+*look + event + say.* Look matches a person entering the zone, Event routes the match, and Say announces it.
+
+```bash
+opal look config zone add --id front-yard --source-id cam-front --name "Front Yard" --kind polygon --points '[{"x":0.10,"y":0.40},{"x":0.90,"y":0.40},{"x":0.95,"y":0.98},{"x":0.05,"y":0.98}]'
+opal look config rule add --id person-in-yard --name "Person in front yard" --source-id cam-front --zone-id front-yard --kind enters_zone --class-filters '["person"]' --cooldown-ms 60000
+opal look config monitor add --id watch-front --name "Watch the front" --source-id cam-front --pipeline-id people --restart-policy always
+opal event config action add --id announce-front-yard --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Heads up. Someone is in the front yard.","--play"]' --stdin none --description "Announce a visitor in the front yard."
+opal event config rule add --id front-yard-visitor --topic opal.look.condition.matched --conditions '[{"path":"data.rule_id","operator":"eq","value":"person-in-yard"}]' --actions '["announce-front-yard"]'
+```
+
+#### 9. What does the camera see?
+
+*look + think + say.* Drop in on a camera and get a spoken one-sentence description.
+
+```bash
+opal look analyze run --source-id cam-front --pipeline-id people | opal think ask "Describe what the camera sees in one plain sentence, using only these observations." --context - | opal say generate - --play
+```
+
+#### 10. Package on the porch
+
+*look + event + say.* A package appears; the house says so.
+
+```bash
+opal look config rule add --id package-arrived --name "Package arrived" --source-id cam-porch --kind object_appears --class-filters '["package"]' --cooldown-ms 300000 --capture-on-match
+opal event config action add --id announce-package --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","A package has arrived. Act natural.","--play"]' --stdin none --description "Announce a delivered package."
+opal event config rule add --id package-alert --topic opal.look.condition.matched --conditions '[{"path":"data.rule_id","operator":"eq","value":"package-arrived"}]' --actions '["announce-package"]'
+```
+
+#### 11. The loiterer
+
+*look + event + say.* Someone lingers at the door for ten seconds: start a recording and let them know, politely.
+
+```bash
+opal look config rule add --id porch-linger --name "Lingering at the porch" --source-id cam-porch --zone-id porch-mat --kind dwell_time --class-filters '["person"]' --minimum-duration-ms 10000 --cooldown-ms 120000
+opal event config action add --id record-porch --type http --method POST --url http://127.0.0.1:8082/api/v1/recording/ --body-mode template --body '{"source_id":"cam-porch","max_duration_seconds":90}' --description "Record 90 seconds from the porch camera."
+opal event config action add --id warn-loiterer --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Hello there. You are being recorded. Have a lovely day.","--persona","vox","--play"]' --stdin none --description "Politely warn a lingering visitor."
+opal event config rule add --id porch-linger-response --topic opal.look.condition.matched --conditions '[{"path":"data.rule_id","operator":"eq","value":"porch-linger"}]' --actions '["record-porch","warn-loiterer"]'
+```
+
+#### 12. Driveway is full
+
+*look + event + say.* Three or more cars in the driveway means company.
+
+```bash
+opal look config rule add --id driveway-full --name "Driveway full" --source-id cam-driveway --kind count_threshold --class-filters '["car"]' --threshold 3 --cooldown-ms 600000
+opal event config action add --id announce-driveway --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","The driveway is full. Either we have guests or someone is very lost.","--play"]' --stdin none --description "Announce a full driveway."
+opal event config rule add --id driveway-alert --topic opal.look.condition.matched --conditions '[{"path":"data.rule_id","operator":"eq","value":"driveway-full"}]' --actions '["announce-driveway"]'
+```
+
+#### 13. The camera went dark
+
+*look + event + say.* A monitor fails; you hear about it before the burglars do.
+
+```bash
+opal event config action add --id announce-camera-down --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","A camera monitor has failed. Please check the cameras.","--play"]' --stdin none --description "Announce a failed camera monitor."
+opal event config rule add --id camera-down --topic opal.look.monitor.failed --conditions '[]' --actions '["announce-camera-down"]'
+```
+
+#### 14. Off the couch, Biscuit
+
+*look + event + think + say.* The dog enters the couch zone. Think writes a fresh scolding every time, so Biscuit never gets used to it, and delivers it through the `speak` action.
+
+```bash
+opal look config rule add --id dog-on-couch --name "Dog on couch" --source-id cam-living-room --zone-id couch --kind enters_zone --class-filters '["dog"]' --cooldown-ms 120000
+opal event config action add --id scold-dog --type http --method POST --url http://127.0.0.1:8083/api/v1/task/ --body-mode template --body '{"prompt":"A dog named Biscuit just climbed onto the couch. Write one short, firm, funny sentence telling him to get off, then say it aloud with the speak action.","max_steps":4}' --description "Ask Think to scold the dog out loud."
+opal event config rule add --id couch-patrol --topic opal.look.condition.matched --conditions '[{"path":"data.rule_id","operator":"eq","value":"dog-on-couch"}]' --actions '["scold-dog"]'
+```
+
+#### 15. The visitor digest
+
+*look + think + say.* Summarize who came by today.
+
+```bash
+opal look data observation list --source-id cam-front --label person --after 2026-11-10T00:00:00Z --limit 100 | opal think ask "Summarize today's front-yard visitors in two sentences: roughly how many visits and at what times of day." --context - | opal say generate - --play
+```
+
+#### 16. Say "cheese"
+
+*listen + event + look.* A spoken command captures and keeps a frame.
+
+```bash
+opal listen config intent add --name camera.snapshot --description "Capture a frame from the front camera" --phrases '["take a picture","snapshot the front yard","say cheese"]'
+opal event config action add --id capture-front --type http --method POST --url http://127.0.0.1:8082/api/v1/source/cam-front/capture/ --body-mode template --body '{"retain":true,"annotate":true}' --description "Capture and retain an annotated frame from the front camera."
+opal event config rule add --id voice-snapshot --topic opal.listen.intent.match --conditions '[{"path":"data.intent_name","operator":"eq","value":"camera.snapshot"}]' --actions '["capture-front"]'
+```
+
+#### 17. "Who's at the door?"
+
+*listen + event + think + look + say.* All five services, one question. Listen hears it, Event hands it to Think, Think runs the camera check through a registered action, reads the execution result, and answers with `speak`.
+
+```bash
+opal listen config intent add --name door.who --description "Ask who is at the front door" --phrases '["who is at the door","is someone outside","check the front door"]'
+opal event config action add --id look-front-door --type http --method POST --url http://127.0.0.1:8082/api/v1/analyze/ --body-mode template --body '{"pipeline_id":"people","source":{"source_id":"cam-front"}}' --description "Analyze the current front door camera frame and return the observations." --keywords '["camera","door","look"]'
+opal event config action add --id answer-door --type http --method POST --url http://127.0.0.1:8083/api/v1/task/ --body-mode template --body '{"prompt":"Run the look-front-door action, then use the speak action to say in one sentence who or what is at the front door.","max_steps":6}' --description "Ask Think to check the door and answer aloud."
+opal event config rule add --id who-is-there --topic opal.listen.intent.match --conditions '[{"path":"data.intent_name","operator":"eq","value":"door.who"}]' --actions '["answer-door"]'
+```
+
+### The classroom
+
+#### 18. Random facts
+
+*think + say.* One fact, spoken, on demand.
+
+```bash
+opal think ask "Tell me one surprising, true fact about octopuses in a single sentence." | opal say generate - --play
+```
+
+#### 19. "Tell me something interesting"
+
+*listen + event + think + say.* The same trick, hands-free.
+
+```bash
+opal listen config intent add --name fact.random --description "Ask for a random fact" --phrases '["tell me something interesting","give me a fun fact","surprise me"]'
+opal event config action add --id tell-fact --type http --method POST --url http://127.0.0.1:8083/api/v1/task/ --body-mode template --body '{"prompt":"Pick one surprising, true fact from science or history and say it aloud in a single sentence with the speak action.","max_steps":3}' --description "Ask Think to speak a random fact."
+opal event config rule add --id fact-on-demand --topic opal.listen.intent.match --conditions '[{"path":"data.intent_name","operator":"eq","value":"fact.random"}]' --actions '["tell-fact"]'
+```
+
+#### 20. Make up a story about...
+
+*think + say.* A bedtime story, streamed so the narration starts before the ending is synthesized.
+
+```bash
+opal think ask "Make up a two-minute bedtime story about a lighthouse keeper's cat who is afraid of the dark." --timeout-seconds 300 | opal say stream - --persona vox --speed 0.9 --play
+```
+
+#### 21. A story about whatever they just asked for
+
+*listen + event + think + say.* Say "tell me a story about dragons" and the transcript carries the subject into Think's prompt.
+
+```bash
+opal listen config intent add --name story.tell --description "Ask for a made-up story" --phrases '["tell me a story about","make up a story about","story time"]'
+opal event config action add --id tell-story --type http --method POST --url http://127.0.0.1:8083/api/v1/task/ --body-mode template --body '{"prompt":"A child asked for a story with these words: {{data.transcript}}. Make up a one-minute story on that subject and tell it aloud with the speak action.","timeout_seconds":300}' --description "Ask Think to tell a story about the requested topic."
+opal event config rule add --id story-time --topic opal.listen.intent.match --conditions '[{"path":"data.intent_name","operator":"eq","value":"story.tell"}]' --actions '["tell-story"]'
+```
+
+#### 22. Multiplication tables
+
+*think + say.* The seven times table, recited at a pace a nine-year-old can follow.
+
+```bash
+opal think ask "Recite the 7 times table from 7 times 1 through 7 times 12. One fact per sentence, with numbers written as words." | opal say generate - --speed 0.85 --play
+```
+
+#### 23. Timed multiplication tables
+
+*think + say + listen + event.* A drill with a clock. Think asks each question through `speak`. The student answers into the live microphone, Listen publishes the match, and Event forwards the transcript plus the whole event, timestamp included, into the same Think session. Think marks late answers and asks the next question.
+
+```bash
+opal think session add --title "Timed sevens"
+opal listen config intent add --name math.answer --description "A spoken answer to a math question" --phrases '["the answer is","my answer is","is it"]'
+opal event config action add --id grade-answer --type http --method POST --url http://127.0.0.1:8083/api/v1/task/ --body-mode template --body '{"session_id":"ses-sevens","prompt":"The student answered: {{data.transcript}}. The context holds the answer event with its timestamp. If the answer is wrong, or arrived more than five seconds after your last question, count it as a miss. Use the speak action to give the verdict and ask the next question. After ten questions, speak the final score instead.","context":"{{event}}","max_steps":4}' --description "Grade a spoken answer in the timed drill session."
+opal event config rule add --id timed-drill --topic opal.listen.intent.match --conditions '[{"path":"data.intent_name","operator":"eq","value":"math.answer"}]' --actions '["grade-answer"]'
+opal listen recognition start
+opal think chat "Start a timed drill of the 7 times table. Ask the first question aloud with the speak action and remember when you asked it." --session-id ses-sevens
+```
+
+#### 24. Verbal quiz
+
+*think + say + listen.* Think asks, Say speaks, Listen transcribes the answer, and Think grades it. The session keeps score between turns.
+
+```bash
+opal think session add --title "Capitals quiz"
+opal think chat "You are a quizmaster. Ask me question one about world capitals. Do not reveal the answer." --session-id ses-quiz | opal say generate - --play
+opal listen recognition test-audio answer-1.wav | opal think chat "The context is a recognition result. Grade its transcript as my answer, tell me the score so far, and ask the next question." --session-id ses-quiz --context - | opal say generate - --play
+```
+
+#### 25. Math questions
+
+*think + say + listen.* A word problem, a spoken attempt, and feedback that explains instead of just judging.
+
+```bash
+opal think session add --title "Word problems"
+opal think chat "Ask me one word problem about fractions suitable for a ten-year-old. Do not give the answer." --session-id ses-math | opal say generate - --play
+opal listen recognition test-audio my-answer.wav | opal think chat "The context is a recognition result. Check its transcript against the problem you asked. If it is wrong, explain the first mistake in two sentences without giving the final answer." --session-id ses-math --context - | opal say generate - --play
+```
+
+#### 26. Spelling bee
+
+*think + say + listen.* Say pronounces the word slowly; the student spells it aloud; Think is the judge.
+
+```bash
+opal think session add --title "Spelling bee"
+opal think chat "Pick one commonly misspelled English word for a twelve-year-old. Reply with the word only." --session-id ses-bee | opal say generate - --speed 0.8 --play
+opal listen recognition test-audio spelling-attempt.wav | opal think chat "The context is a recognition result whose transcript is my letter-by-letter spelling of your word. Tell me whether it is correct, then spell the word properly." --session-id ses-bee --context - | opal say generate - --play
+```
+
+#### 27. Language practice
+
+*think + say.* Translate a sentence and hear it in a native voice.
+
+```bash
+opal think ask "Translate into Spanish: Where is the library, and does it have snacks? Reply with the translation only." | opal say generate - --voice-id es-es-davefx-medium --speed 0.9 --play
+```
+
+#### 28. Read my homework to me
+
+*look + think + say.* Photograph a worksheet, extract the text, and get a hint rather than the answer. This needs a pipeline with an OCR task, which is an optional capability.
+
+```bash
+opal look analyze image worksheet.jpg --pipeline-id ocr | opal think ask "These observations are OCR text from a homework problem. Explain how to approach it in three short steps without giving the final answer." --context - | opal say generate - --play
+```
+
+### Voice assistant
+
+#### 29. Ask Opal anything
+
+*listen + event + think + say.* The classic. A catch-all intent forwards the transcript to Think, which answers out loud.
+
+```bash
+opal listen config intent add --name assistant.ask --description "A general question for the assistant" --phrases '["i have a question","answer me this","can you tell me"]'
+opal event config action add --id ask-think --type http --method POST --url http://127.0.0.1:8083/api/v1/task/ --body-mode template --body '{"prompt":"Answer the question in this transcript in at most two sentences, and say the answer aloud with the speak action. Transcript: {{data.transcript}}","max_steps":4}' --description "Ask Think to answer a spoken question aloud."
+opal event config rule add --id ask-opal --topic opal.listen.intent.match --conditions '[{"path":"data.intent_name","operator":"eq","value":"assistant.ask"}]' --actions '["ask-think"]'
+```
+
+#### 30. Lights, with manners
+
+*listen + event + say.* One rule, two independent actions: the hub switches the lights and the house confirms. The `room` slot fills the URL path.
+
+```bash
+opal event config action add --id lights-on --type http --method POST --url 'http://127.0.0.1:8123/api/lights/{{data.slot_values.room}}/on' --body-mode none --description "Turn on the lights in the requested room."
+opal event config action add --id confirm-lights --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Lights on in the {{data.slot_values.room}}.","--play"]' --stdin none --description "Confirm the lights aloud."
+opal event config rule add --id lights-on-rule --topic opal.listen.intent.match --conditions '[{"path":"data.intent_name","operator":"eq","value":"lights.turn_on"},{"path":"data.slot_values.room","operator":"exists","value":true}]' --actions '["lights-on","confirm-lights"]'
+```
+
+#### 31. The dinner bell
+
+*listen + event + say.* Say "call everyone for dinner" and let a louder voice do the shouting.
+
+```bash
+opal listen config intent add --name announce.dinner --description "Announce that dinner is ready" --phrases '["call everyone for dinner","dinner is ready","ring the dinner bell"]'
+opal event config action add --id announce-dinner --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Dinner is ready. This is not a suggestion.","--volume","1.5","--play"]' --stdin none --description "Announce dinner loudly."
+opal event config rule add --id dinner-bell --topic opal.listen.intent.match --conditions '[{"path":"data.intent_name","operator":"eq","value":"announce.dinner"}]' --actions '["announce-dinner"]'
+```
+
+#### 32. Morning briefing
+
+*think + event + look + say.* One command. Think checks the porch through the `look-front-door` action from recipe 17 and reports through `speak`.
+
+```bash
+opal think ask "Give me a morning briefing. Run the look-front-door action to check the porch, then use the speak action to tell me in two sentences what is out there and wish me a good morning." --max-steps 6
+```
+
+#### 33. How is my hearing?
+
+*listen + think + say.* A spoken verdict on the voice pipeline's latency.
+
+```bash
+opal listen performance summary --limit 50 | opal think ask "In one sentence, say whether this voice pipeline is fast or slow and which stage takes the longest." --context - | opal say generate - --play
+```
+
+#### 34. Goodnight mode
+
+*say + listen + look.* Three profile switches: a quiet voice, a short list of night-time intents, and a night-vision pipeline.
 
 ```bash
 opal say config profile activate 2
-opal event config rule add --id critical_only_chime --topic 'home.alert.*' \
-  --conditions '[{"path":"data.priority","operator":"eq","value":"critical"}]' \
-  --actions '["speak_front_yard_alert"]' --enabled
+opal listen config profile activate 3
+opal look config profile activate 2
 ```
 
-#### 39. Baby Crib Wake-Up Detector with Gentle Lullaby Response
-When `look` sees movement in the crib zone and `listen` hears activity, play a pre-synthesized gentle story via `say` while notifying the parents' dashboard via `event`.
+### Home automation
+
+#### 35. The doorbell
+
+*event + say + look.* Any device that can publish an event becomes a doorbell that announces itself and takes a picture. It reuses `capture-front` from recipe 16.
 
 ```bash
-opal event publish --topic nursery.awake --source crib-monitor --data '{"movement":true,"audio_db":52}'
-opal say generate \
-  --text "Hush now, little astronaut, the stars are still on night watch." \
-  --profile 2 --persona butler --speed 0.80 --out nursery-soothe.wav
+opal event config action add --id announce-doorbell --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Someone is at the {{data.door}} door.","--play"]' --stdin none --description "Announce which doorbell was pressed."
+opal event config rule add --id doorbell --topic home.doorbell.pressed --conditions '[]' --actions '["announce-doorbell","capture-front"]'
+opal event publish --topic home.doorbell.pressed --data '{"door":"front"}'
 ```
 
-#### 40. Garage Door Left Open After Dark Check
-Combine a `look` single-frame classification (`garage_door_open`) with an `event` rule that warns the house at 10 PM.
+#### 36. Welcome home
+
+*look + event + say.* A line across the hallway; a greeting when someone crosses it.
 
 ```bash
-opal look analyze run --source cam-garage --pipeline door-state-check
-opal event publish --topic garage.door.state --source cam-garage --data '{"state":"open","hour":22}'
-opal event config rule test warn_open_garage \
-  --event '{"topic":"garage.door.state","data":{"state":"open","hour":22}}'
-opal say generate --text "Notice: it is ten P.M. and the main garage door is still open." \
-  --persona butler --out garage-open.wav
+opal look config zone add --id hallway-line --source-id cam-hallway --name "Hallway tripwire" --kind line --points '[{"x":0.20,"y":0.60},{"x":0.80,"y":0.60}]'
+opal look config rule add --id came-home --name "Someone came home" --source-id cam-hallway --zone-id hallway-line --kind line_crosses --class-filters '["person"]' --cooldown-ms 300000
+opal event config action add --id welcome-home --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Welcome home. The dog has been told you were gone for years.","--play"]' --stdin none --description "Greet someone arriving home."
+opal event config rule add --id greet-arrival --topic opal.look.condition.matched --conditions '[{"path":"data.rule_id","operator":"eq","value":"came-home"}]' --actions '["welcome-home"]'
 ```
 
----
+#### 37. Thirsty tomatoes
 
-### VIII. Incident Forensics, DevOps & Fleet Reliability (All Five Services)
-
-#### 41. Portable Persona Propagator: Author Once in Think, Validate Everywhere
-Create a new persona in `think` (the authoritative writer), sync/register it across the suite, and run `persona validate` on every service.
+*event + think + say.* A moisture sensor publishes a reading. Below 20 percent, Think turns the number into a reminder and speaks it.
 
 ```bash
-opal think config persona add --persona-id quartermaster --name "Q" \
-  --voice en-gb-alan-low --description "Gadgets, logistics, and dry warnings about returning equipment in one piece"
-opal think config persona validate quartermaster
-opal say config persona add --persona-id quartermaster --name "Q" --voice en-gb-alan-low
-opal say config persona validate quartermaster
-opal listen config persona add --persona-id quartermaster --name "Q" --voice en-gb-alan-low
-opal look config persona add --persona-id quartermaster --name "Q" --voice en-gb-alan-low
-opal event config persona add --persona-id quartermaster --name "Q" --voice en-gb-alan-low
+opal event config action add --id water-reminder --type http --method POST --url http://127.0.0.1:8083/api/v1/task/ --body-mode template --body '{"prompt":"A garden sensor reports low soil moisture. The reading is in the context. Use the speak action to give a one-sentence watering reminder that names the bed and the moisture percentage.","context":"{{event}}","max_steps":3}' --description "Ask Think to speak a watering reminder."
+opal event config rule add --id thirsty-plants --topic 'garden.*' --conditions '[{"path":"data.moisture_pct","operator":"lt","value":20}]' --actions '["water-reminder"]'
+opal event publish --topic garden.soil.moisture --source greenhouse-pi --data '{"bed":"tomatoes","moisture_pct":14.2}'
 ```
 
-#### 42. Unified `config setting` Parity Audit Across All Five Services
-Verify that every service responds identically to the canonical `config setting list` and `config setting show` commands introduced in v1.7.1.
+#### 38. Leak alarm
+
+*event + say + look.* A water sensor trips: announce it and record the basement so you can watch the damage later in high definition.
 
 ```bash
-opal say config setting list
-opal listen config setting list
-opal look config setting list
-opal think config setting list
-opal event config setting list
+opal event config action add --id announce-leak --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Water detected in the {{data.location}}. This is not the fun kind of indoor pool.","--volume","1.5","--play"]' --stdin none --description "Announce a water leak."
+opal event config action add --id record-basement --type http --method POST --url http://127.0.0.1:8082/api/v1/recording/ --body-mode template --body '{"source_id":"cam-basement","max_duration_seconds":300}' --description "Record five minutes from the basement camera."
+opal event config rule add --id leak-response --topic home.leak.detected --conditions '[]' --actions '["announce-leak","record-basement"]'
 ```
 
-#### 43. Dead-Action Forensic Postmortem (Dropped Execution → Think Root-Cause → Spoken Report)
-When an `event` rule-triggered execution lands in `status: dropped` due to `input_validation_failed`, pull the execution record and offending event, let `think` explain the schema mismatch, and read the postmortem aloud.
+#### 39. Workshop safety officer
+
+*look + event + say.* Step into the saw zone and get reminded about your eyes.
 
 ```bash
-opal event data execution list --status dropped --limit 5
-opal event data execution show exec-4091b
-opal event history show evt-8821a
-opal think ask "Explain why this event payload failed the action's input_schema and how to fix the producer." \
-  --context '{"error_code":"input_validation_failed","error_message":"moisture_pct is required","payload":{"bed":"tomatoes","moisture":18.4}}'
-opal say generate \
-  --text "Postmortem on execution 4091b: the sensor published 'moisture' instead of 'moisture_pct', so the valve action's input schema rightly dropped it." \
-  --persona quartermaster --out postmortem.wav
+opal look config rule add --id near-the-saw --name "Person near the table saw" --source-id cam-workshop --zone-id saw-zone --kind enters_zone --class-filters '["person"]' --cooldown-ms 900000
+opal event config action add --id safety-reminder --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Safety glasses. You only get two eyes, and no, the warranty has expired.","--play"]' --stdin none --description "Remind the woodworker about safety glasses."
+opal event config rule add --id saw-safety --topic opal.look.condition.matched --conditions '[{"path":"data.rule_id","operator":"eq","value":"near-the-saw"}]' --actions '["safety-reminder"]'
 ```
 
-#### 44. Zero-Downtime Fleet Configuration Export & Pre-Flight Validation
-Export portable configuration bundles from all five services and run `backup validate` on each before upgrading a host.
+### Office and computer
+
+#### 40. The build finished
+
+*event + say.* Any script that can publish an event can talk. The `speak` action reads `data.text`.
 
 ```bash
-opal say backup export --out backup-say.json
-opal listen backup export --out backup-listen.json
-opal look backup export --out backup-look.json
-opal think backup export --out backup-think.json
-opal event backup export --out backup-event.json
-
-opal say backup validate --file backup-say.json
-opal listen backup validate --file backup-listen.json
-opal look backup validate --file backup-look.json
-opal think backup validate --file backup-think.json
-opal event backup validate --file backup-event.json
+opal event config rule add --id ci-announcer --topic 'ci.*' --conditions '[{"path":"data.text","operator":"exists","value":true}]' --actions '["speak"]'
+opal event publish --topic ci.build.finished --source jenkins --data '{"text":"The build passed. You may now exhale."}'
 ```
 
-#### 45. Five-Service Liveness & Readiness Sweep
-Check `/health/live`, `/health/ready`, and `/info/ping` across the entire OPAL stack before starting an integration test run.
+#### 41. Log triage
+
+*look + think + say.* Let Think read the log tail so you do not have to.
+
+```bash
+opal look service log --lines 50 | opal think ask "This is a service log tail. Name the most serious problem in one sentence, or say that it looks healthy." --context - | opal say generate - --play
+```
+
+#### 42. Your laptop left without you
+
+*look + event + say.* The laptop disappears from the desk camera for thirty seconds.
+
+```bash
+opal look config rule add --id laptop-gone --name "Laptop left the desk" --source-id cam-desk --kind object_disappears --class-filters '["laptop"]' --minimum-duration-ms 30000 --capture-on-match
+opal event config action add --id announce-laptop --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Your laptop has left the desk. I hope it was with you.","--play"]' --stdin none --description "Announce a missing laptop."
+opal event config rule add --id laptop-alert --topic opal.look.condition.matched --conditions '[{"path":"data.rule_id","operator":"eq","value":"laptop-gone"}]' --actions '["announce-laptop"]'
+```
+
+#### 43. Stand-up digest
+
+*event + think + say.* Yesterday's events, in three sentences, before the meeting that should have been an email.
+
+```bash
+opal event data event list --from 2026-11-09T00:00:00Z --to 2026-11-10T00:00:00Z --limit 200 | opal think ask "Summarize these events in three short sentences for a team stand-up. Group them by topic." --context - | opal say generate - --play
+```
+
+#### 44. Video review
+
+*look + think.* Upload a clip, analyze it, and ask for the highlights.
+
+```bash
+opal look data media upload loading-dock.mp4
+opal look data job submit --kind analyze_video --media-id med-7 --pipeline-id people --retention '{"persist_results":true}' --wait
+opal look data observation list --job-id job-9a3f --limit 200 | opal think ask "Summarize this video analysis in three sentences: what appeared, when, and anything unusual." --context -
+```
+
+#### 45. Why didn't that work?
+
+*event + think + say.* Hand a failed execution record to Think for a diagnosis.
+
+```bash
+opal event data execution list --status failed --limit 5
+opal event data execution show exe-41 | opal think ask "This is a failed action execution record. Explain the most likely cause in one sentence and suggest one fix." --context - | opal say generate - --play
+```
+
+### Fleet operations
+
+#### 46. Readiness roll call
+
+*say + listen + look + think + event.* Five probes, then a spoken all-clear.
 
 ```bash
 opal say info ready
@@ -1854,78 +2245,48 @@ opal listen info ready
 opal look info ready
 opal think info ready
 opal event info ready
-opal say info ping
-opal listen info ping
-opal look info ping
-opal think info ping
-opal event info ping
+opal say generate "All five services report ready. Suspiciously ready." --play
 ```
 
-#### 46. Look Output Retrieval Trifecta (Capture + Recording + Job Export via One Command)
-Prove that `opal look output fetch` retrieves bytes uniformly across all three Look output lifecycles without branching on resource type.
+#### 47. Back up everything
+
+*say + listen + look + think + event.* A server-side snapshot of every service's configuration, with a receipt you can hear.
 
 ```bash
-# 1. Capture -> Capture.output_ref.content_url
-opal look data capture show cap-8f2d41a0
-opal look output fetch /api/v1/capture/cap-8f2d41a0/content --out out-capture.jpg
-
-# 2. Finalized Recording -> Recording.artifact_ref.content_url
-opal look data recording show rec-51c2
-opal look output fetch /api/v1/artifact/art-rec-51c2/content --out out-recording.mjpeg
-
-# 3. Completed Export Job -> Job.output_refs[0].content_url
-opal look data job show job-9a3f
-opal look output fetch /api/v1/artifact/art-job-9a3f-clip/content --out out-export.mp4
-```
-
-#### 47. Voice-Activated Incident Freeze ("Freeze Everything and Save Snapshots")
-When an operator says `"brigadier, freeze state"`, `listen` matches the intent, and you immediately snapshot all five databases with `backup create` plus a camera capture.
-
-```bash
-opal listen config intent add --name ops.freeze_state \
-  --phrase "freeze state" --phrase "snapshot everything right now"
-opal listen recognition test --text "brigadier, freeze state" --expect-intent ops.freeze_state
-opal look source capture cam-front --retain --annotate
 opal say backup create
 opal listen backup create
 opal look backup create
 opal think backup create
 opal event backup create
+opal say generate "All five configurations are backed up. You may now break things." --play
 ```
 
-#### 48. Synthetic Chaos Drill: Test Every Event Rule Without Firing Real Hardware
-Use `opal event config rule test` across your vision, voice, and sensor rules to prove routing logic after a config import.
+#### 48. Configuration audit
+
+*event + look + think.* Export two configurations and ask Think to find loose ends.
 
 ```bash
-opal event config rule test notify_front_yard_person \
-  --event '{"topic":"opal.look.rule.matched","data":{"rule_id":"person-in-front-yard","source_id":"cam-front"}}'
-opal event config rule test dry_tomato_bed \
-  --event '{"topic":"greenhouse.soil.moisture","data":{"bed":"tomatoes","moisture_pct":14.2}}'
-opal event config rule test stop_bad_print \
-  --event '{"topic":"opal.look.rule.matched","data":{"rule_id":"print-spaghetti","confidence":0.91}}'
+opal event backup export | opal think ask "This is an event service configuration export. List any rule that references an action ID that is not defined, or say there are none." --context -
+opal look backup export | opal think ask "This is a vision service configuration export. List any rule or monitor that references a source, zone, or pipeline that is not defined, or say there are none." --context -
 ```
 
-#### 49. Live Latency & Bottleneck Triage (Listen Performance + Look Metrics + Think Task Inspection)
-When the voice-to-vision-to-speech loop feels sluggish, pull the timing breakdown from each service's telemetry endpoint and let `think` finger the culprit.
+#### 49. Rehearsal without hardware
+
+*listen + event + say.* Prove the whole chain without a microphone or a camera: Listen matches the text, Event dry-runs the rule, and `speak` is fired by hand.
 
 ```bash
-opal listen performance summary --limit 20
-opal look info metrics
-opal think task list --status completed --limit 5
-opal think ask "Given STT average 140ms, NLU 4ms, Look frame inference 38ms, and LLM task duration 2,900ms, tell me in one dry sentence where our latency budget went."
-opal say generate \
-  --text "Ninety-four percent of your latency budget is being spent waiting for the large language model to clear its throat." \
-  --persona quartermaster --out latency-verdict.wav
+opal listen recognition test-text --text "call everyone for dinner"
+opal event config rule test dinner-bell --event '{"topic":"opal.listen.intent.match","data":{"intent_name":"announce.dinner","transcript":"call everyone for dinner"}}'
+opal event config action execute speak --event '{"topic":"manual.test","data":{"text":"This is a rehearsal. Dinner is not actually ready."}}' --wait
 ```
 
-#### 50. Graceful Fleet Shutdown with Final Spoken Sign-Off
-Have `say` synthesize a sign-off message, log a shutdown marker on `event`, and cleanly stop all five background services via `service stop`.
+#### 50. Lights out
+
+*say + listen + look + think + event.* A dignified sign-off, a marker in the event history, and five clean stops. Event goes last so it can record the others leaving.
 
 ```bash
-opal say generate \
-  --text "All OPAL subsystems standing down for maintenance. Goodnight." \
-  --persona butler --out signoff.wav
-opal event publish --topic ops.fleet.shutdown --source cli --data '{"reason":"scheduled_maintenance"}'
+opal say generate "All OPAL services are standing down for maintenance. Goodnight." --play
+opal event publish --topic ops.fleet.shutdown --source cli --data '{"reason":"scheduled maintenance"}'
 opal look service stop
 opal listen service stop
 opal think service stop
