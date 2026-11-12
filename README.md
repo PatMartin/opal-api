@@ -45,19 +45,19 @@ All files below declare OpenAPI **3.1.0** and contract version **1.7.1**.
 | [Look](openapi/opal_look.yaml) | Visual observation and processing | Sources, models, pipelines, live sessions, finite jobs, observations, zones, rules, monitors, media, captures, artifacts, recordings |
 | [Say](openapi/opal_say.yaml) | Text-to-speech (TTS) over host-installed engines | Engine discovery/configuration, voice registration and validation, completed audio generation, progressive PCM streaming |
 | [Think](openapi/opal_think.yaml) | Bounded reasoning work using configured models and Event actions | Asynchronous tasks, progress/output streams, cancellation, optional conversation sessions, model discovery |
-| [Devices](openapi/opal_devices.yaml) | Optional device identity, inventory, and federation registry | Devices, discovery, defaults, groups, peers, sharing policies, plugins, SSE events, federated inventory |
+| [Devices](openapi/opal_device.yaml) | Optional device identity, inventory, and federation registry | Devices, discovery, defaults, groups, peers, sharing policies, plugins, SSE events, federated inventory |
 | [Shared kernel](openapi/shared/opal_kernel.yaml) | Common contract building blocks | Parameters, response headers, error responses, schemas, reusable Path Items, and suite extensions |
-| [Shared devices base](openapi/shared/opal_devices.yaml) | Devices-domain contract building blocks | Device, group, peer, plugin, sharing, and federation Path Items plus domain schemas |
+| [Shared devices base](openapi/shared/opal_device_kernel.yaml) | Devices-domain contract building blocks | Device, group, peer, plugin, sharing, and federation Path Items plus domain schemas |
 
 The shared bases have no public routes of their own (`paths: {}`). Service documents mount reusable **Path Items**—OpenAPI definitions of operations at a path—and reference common components through external `$ref` links.
 
 ```text
 openapi/shared/opal_kernel.yaml
-openapi/shared/opal_devices.yaml
+openapi/shared/opal_device_kernel.yaml
             |
             | external $ref references
             v
-openapi/opal_{devices,event,listen,look,say,think}.yaml
+openapi/opal_{device,event,listen,look,say,think}.yaml
             |
             +--> Redocly and Spectral validation
             +--> Python contract assertions
@@ -90,14 +90,14 @@ Several distinctions matter when building integrations:
 
 ```text
 openapi/
-  opal_devices.yaml                Devices contract
+  opal_device.yaml                Devices contract
   opal_event.yaml                  Event contract
   opal_listen.yaml                 Listen contract
   opal_look.yaml                   Look contract
   opal_say.yaml                    Say contract
   opal_think.yaml                  Think contract
   shared/opal_kernel.yaml          Shared components and reusable Path Items
-  shared/opal_devices.yaml         Devices-domain Path Items and schemas
+  shared/opal_device_kernel.yaml         Devices-domain Path Items and schemas
 tests/
   spec_util.py                    Resolves local and shared-base references for contract assertions
   test_lint.py                    Mutates specs to exercise lint rules
@@ -191,7 +191,7 @@ npm run bundle
 The bundle script writes:
 
 ```text
-dist/opal_devices.yaml
+dist/opal_device.yaml
 dist/opal_event.yaml
 dist/opal_listen.yaml
 dist/opal_look.yaml

@@ -10,9 +10,9 @@ One honest caveat before the fun starts: this repository ships contracts, not an
 
 - [Before you cook](#before-you-cook)
 - [Part 1: Interface](#part-1-interface)
-  - [opal-say](#opal-say) · [opal-listen](#opal-listen) · [opal-look](#opal-look) · [opal-think](#opal-think) · [opal-event](#opal-event) · [opal-devices](#opal-devices)
+  - [opal-say](#opal-say) · [opal-listen](#opal-listen) · [opal-look](#opal-look) · [opal-think](#opal-think) · [opal-event](#opal-event) · [opal-device](#opal-device)
 - [Part 2: Usecases](#part-2-usecases)
-  - [opal-say](#opal-say-usecases) · [opal-listen](#opal-listen-usecases) · [opal-look](#opal-look-usecases) · [opal-think](#opal-think-usecases) · [opal-event](#opal-event-usecases) · [opal-devices](#opal-devices-usecases)
+  - [opal-say](#opal-say-usecases) · [opal-listen](#opal-listen-usecases) · [opal-look](#opal-look-usecases) · [opal-think](#opal-think-usecases) · [opal-event](#opal-event-usecases) · [opal-device](#opal-device-usecases)
 - [Part 3: Combined](#part-3-combined)
   - [Plumbing](#plumbing-do-this-once)
   - [Voice lab](#voice-lab) · [Eyes on the property](#eyes-on-the-property) · [The classroom](#the-classroom) · [Voice assistant](#voice-assistant) · [Home automation](#home-automation) · [Office and computer](#office-and-computer) · [Fleet operations](#fleet-operations)
@@ -831,16 +831,16 @@ opal event
 
 ---
 
-<a id="opal-devices"></a>
+<a id="opal-device"></a>
 
-### opal-devices
+### opal-device
 
 Optional device registry: identity, inventory, discovery, capabilities, preferred defaults and availability for audio, video and compute hardware. It never operates devices — no capture, playback, reservation, inference or GPU scheduling. Registries can federate: explicit trusted peers share filtered inventory snapshots over the same API.
 
 #### Typer command tree
 
 ```text
-opal devices
+opal device
 ├── info                  health | live | ready | version | ping
 ├── catalog
 ├── list | add | show | update | remove
@@ -933,83 +933,83 @@ opal devices
 
 | COMMAND | OPTIONS | DESCRIPTION |
 |---|---|---|
-| `opal devices backup create` | — | Create backup. `POST /api/v1/backup/create` |
-| `opal devices backup download` | — | Download backup. `GET /api/v1/backup/download/{filename}` |
-| `opal devices backup export` | — | Export configuration. `GET /api/v1/backup/export` |
-| `opal devices backup import` | — | Import configuration. `POST /api/v1/backup/import` |
-| `opal devices backup list` | — | List backups. `GET /api/v1/backup/list` |
-| `opal devices backup restore` | — | Restore backup. `POST /api/v1/backup/restore/{filename}` |
-| `opal devices backup validate` | — | Validate stored configuration. `GET /api/v1/backup/validate` |
-| `opal devices backup validate` | — | Validate configuration. `POST /api/v1/backup/validate` |
-| `opal devices backup remove` | — | Delete backup. `DELETE /api/v1/backup/{filename}` |
-| `opal devices catalog` | — | Discover device types, discovery backends and event names. `GET /api/v1/catalog` |
-| `opal devices default list` | — | List preferred defaults. `GET /api/v1/default/` |
-| `opal devices default set` | --if-match ETAG | Set preferred defaults for device, type, host or global scope. `PUT /api/v1/default/{scope}/{target}` |
-| `opal devices default remove` | — | Remove preferred defaults. `DELETE /api/v1/default/{scope}/{target}` |
-| `opal devices list` | — | List and filter local and federated device inventory. `GET /api/v1/device/` |
-| `opal devices add` | — | Register user-managed device. `POST /api/v1/device/` |
-| `opal devices show` | — | Show device metadata. `GET /api/v1/device/{device_id}` |
-| `opal devices update` | --if-match ETAG | Update editable device metadata. `PATCH /api/v1/device/{device_id}` |
-| `opal devices remove` | — | Remove registered device. `DELETE /api/v1/device/{device_id}` |
-| `opal devices capabilities` | — | Show device capabilities. `GET /api/v1/device/{device_id}/capabilities` |
-| `opal devices label list` | — | List device labels. `GET /api/v1/device/{device_id}/label` |
-| `opal devices label set` | --if-match ETAG | Set key-value device label. `PUT /api/v1/device/{device_id}/label/{key}` |
-| `opal devices label remove` | — | Remove device label. `DELETE /api/v1/device/{device_id}/label/{key}` |
-| `opal devices status` | — | Show device availability. `GET /api/v1/device/{device_id}/status` |
-| `opal devices tag list` | — | List device tags. `GET /api/v1/device/{device_id}/tag` |
-| `opal devices tag add` | — | Add device tag. `POST /api/v1/device/{device_id}/tag` |
-| `opal devices tag remove` | — | Remove device tag. `DELETE /api/v1/device/{device_id}/tag/{tag}` |
-| `opal devices test` | — | Perform safe non-invasive checks. `POST /api/v1/device/{device_id}/test` |
-| `opal devices discover` | — | Discover local devices without operating them. `POST /api/v1/discovery/scan` |
-| `opal devices event list` | — | Browse recent device and peer event history. `GET /api/v1/event/` |
-| `opal devices watch` | — | Subscribe to native SSE device and peer events. `GET /api/v1/event/stream` |
-| `opal devices federation inventory` | — | Read filtered inventory as a trusted peer. `GET /api/v1/federation/inventory` |
-| `opal devices federation registry` | — | Read local registry identity and federation metadata. `GET /api/v1/federation/registry` |
-| `opal devices group list` | — | List device groups. `GET /api/v1/group/` |
-| `opal devices group add` | — | Create static or dynamic group. `POST /api/v1/group/` |
-| `opal devices group show` | — | Show group definition. `GET /api/v1/group/{group_id}` |
-| `opal devices group update` | --if-match ETAG | Update group definition. `PATCH /api/v1/group/{group_id}` |
-| `opal devices group remove` | — | Remove group. `DELETE /api/v1/group/{group_id}` |
-| `opal devices group member list` | — | List group members. `GET /api/v1/group/{group_id}/member` |
-| `opal devices group member add` | --if-match ETAG | Add device to static group. `PUT /api/v1/group/{group_id}/member/{device_id}` |
-| `opal devices group member remove` | — | Remove device from static group. `DELETE /api/v1/group/{group_id}/member/{device_id}` |
-| `opal devices info health` | — | Service health report. `GET /api/v1/health/` |
-| `opal devices info live` | — | Liveness probe. `GET /api/v1/health/live` |
-| `opal devices info ready` | — | Readiness probe. `GET /api/v1/health/ready` |
-| `opal devices info version` | — | Service Info. `GET /api/v1/info/` |
-| `opal devices info ping` | — | Ping. `GET /api/v1/info/ping` |
-| `opal devices peer list` | — | List federation peers. `GET /api/v1/peer/` |
-| `opal devices peer add` | — | Register an explicit peer. `POST /api/v1/peer/` |
-| `opal devices peer discover` | — | Discover untrusted peer candidates using mDNS when enabled. `POST /api/v1/peer/discover` |
-| `opal devices peer sync` | — | Refresh all trusted peer caches now. `POST /api/v1/peer/sync` |
-| `opal devices peer show` | — | Show peer. `GET /api/v1/peer/{peer_id}` |
-| `opal devices peer update` | --if-match ETAG | Update peer metadata or trust. `PATCH /api/v1/peer/{peer_id}` |
-| `opal devices peer remove` | — | Remove peer. `DELETE /api/v1/peer/{peer_id}` |
-| `opal devices peer status` | — | Check peer health and synchronization freshness. `GET /api/v1/peer/{peer_id}/status` |
-| `opal devices peer sync` | — | Refresh one peer cache now. `POST /api/v1/peer/{peer_id}/sync` |
-| `opal devices plugin list` | — | List installed discovery plugins. `GET /api/v1/plugin/` |
-| `opal devices plugin show` | — | Show plugin metadata. `GET /api/v1/plugin/{plugin_id}` |
-| `opal devices plugin disable` | — | Disable plugin. `POST /api/v1/plugin/{plugin_id}/disable` |
-| `opal devices plugin discover` | — | Discover local devices through one plugin. `POST /api/v1/plugin/{plugin_id}/discover` |
-| `opal devices plugin enable` | — | Enable an installed plugin. `POST /api/v1/plugin/{plugin_id}/enable` |
-| `opal devices plugin test` | — | Test plugin requirements and discovery capability safely. `POST /api/v1/plugin/{plugin_id}/test` |
-| `opal devices config profile list` | — | List profiles. `GET /api/v1/profile/` |
-| `opal devices config profile add` | — | Create profile. `POST /api/v1/profile/` |
-| `opal devices config profile show` | — | Get profile. `GET /api/v1/profile/{profile_id}` |
-| `opal devices config profile update` | --if-match ETAG | Update profile. `PATCH /api/v1/profile/{profile_id}` |
-| `opal devices config profile remove` | — | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
-| `opal devices config profile activate` | — | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
-| `opal devices service log` | — | Tail service log. `GET /api/v1/service/log` |
-| `opal devices service start` | — | Start service. `POST /api/v1/service/start` |
-| `opal devices service stop` | — | Stop service. `POST /api/v1/service/stop` |
-| `opal devices config setting list` | — | List settings. `GET /api/v1/setting/` |
-| `opal devices config setting update` | — | Patch settings. `PATCH /api/v1/setting/` |
-| `opal devices config setting show` | — | Get setting. `GET /api/v1/setting/{key}` |
-| `opal devices config setting update` | — | Set setting. `PUT /api/v1/setting/{key}` |
-| `opal devices config setting remove` | — | Delete setting. `DELETE /api/v1/setting/{key}` |
-| `opal devices sharing list` | — | List metadata visibility policies. `GET /api/v1/sharing/policy/` |
-| `opal devices sharing add` | — | Create allow or deny inventory visibility rule (aliases: allow, deny). `POST /api/v1/sharing/policy/` |
-| `opal devices sharing remove` | — | Remove sharing policy. `DELETE /api/v1/sharing/policy/{policy_id}` |
+| `opal device backup create` | — | Create backup. `POST /api/v1/backup/create` |
+| `opal device backup download` | — | Download backup. `GET /api/v1/backup/download/{filename}` |
+| `opal device backup export` | — | Export configuration. `GET /api/v1/backup/export` |
+| `opal device backup import` | — | Import configuration. `POST /api/v1/backup/import` |
+| `opal device backup list` | — | List backups. `GET /api/v1/backup/list` |
+| `opal device backup restore` | — | Restore backup. `POST /api/v1/backup/restore/{filename}` |
+| `opal device backup validate` | — | Validate stored configuration. `GET /api/v1/backup/validate` |
+| `opal device backup validate` | — | Validate configuration. `POST /api/v1/backup/validate` |
+| `opal device backup remove` | — | Delete backup. `DELETE /api/v1/backup/{filename}` |
+| `opal device catalog` | — | Discover device types, discovery backends and event names. `GET /api/v1/catalog` |
+| `opal device default list` | — | List preferred defaults. `GET /api/v1/default/` |
+| `opal device default set` | --if-match ETAG | Set preferred defaults for device, type, host or global scope. `PUT /api/v1/default/{scope}/{target}` |
+| `opal device default remove` | — | Remove preferred defaults. `DELETE /api/v1/default/{scope}/{target}` |
+| `opal device list` | — | List and filter local and federated device inventory. `GET /api/v1/device/` |
+| `opal device add` | — | Register user-managed device. `POST /api/v1/device/` |
+| `opal device show` | — | Show device metadata. `GET /api/v1/device/{device_id}` |
+| `opal device update` | --if-match ETAG | Update editable device metadata. `PATCH /api/v1/device/{device_id}` |
+| `opal device remove` | — | Remove registered device. `DELETE /api/v1/device/{device_id}` |
+| `opal device capabilities` | — | Show device capabilities. `GET /api/v1/device/{device_id}/capabilities` |
+| `opal device label list` | — | List device labels. `GET /api/v1/device/{device_id}/label` |
+| `opal device label set` | --if-match ETAG | Set key-value device label. `PUT /api/v1/device/{device_id}/label/{key}` |
+| `opal device label remove` | — | Remove device label. `DELETE /api/v1/device/{device_id}/label/{key}` |
+| `opal device status` | — | Show device availability. `GET /api/v1/device/{device_id}/status` |
+| `opal device tag list` | — | List device tags. `GET /api/v1/device/{device_id}/tag` |
+| `opal device tag add` | — | Add device tag. `POST /api/v1/device/{device_id}/tag` |
+| `opal device tag remove` | — | Remove device tag. `DELETE /api/v1/device/{device_id}/tag/{tag}` |
+| `opal device test` | — | Perform safe non-invasive checks. `POST /api/v1/device/{device_id}/test` |
+| `opal device discover` | — | Discover local devices without operating them. `POST /api/v1/discovery/scan` |
+| `opal device event list` | — | Browse recent device and peer event history. `GET /api/v1/event/` |
+| `opal device watch` | — | Subscribe to native SSE device and peer events. `GET /api/v1/event/stream` |
+| `opal device federation inventory` | — | Read filtered inventory as a trusted peer. `GET /api/v1/federation/inventory` |
+| `opal device federation registry` | — | Read local registry identity and federation metadata. `GET /api/v1/federation/registry` |
+| `opal device group list` | — | List device groups. `GET /api/v1/group/` |
+| `opal device group add` | — | Create static or dynamic group. `POST /api/v1/group/` |
+| `opal device group show` | — | Show group definition. `GET /api/v1/group/{group_id}` |
+| `opal device group update` | --if-match ETAG | Update group definition. `PATCH /api/v1/group/{group_id}` |
+| `opal device group remove` | — | Remove group. `DELETE /api/v1/group/{group_id}` |
+| `opal device group member list` | — | List group members. `GET /api/v1/group/{group_id}/member` |
+| `opal device group member add` | --if-match ETAG | Add device to static group. `PUT /api/v1/group/{group_id}/member/{device_id}` |
+| `opal device group member remove` | — | Remove device from static group. `DELETE /api/v1/group/{group_id}/member/{device_id}` |
+| `opal device info health` | — | Service health report. `GET /api/v1/health/` |
+| `opal device info live` | — | Liveness probe. `GET /api/v1/health/live` |
+| `opal device info ready` | — | Readiness probe. `GET /api/v1/health/ready` |
+| `opal device info version` | — | Service Info. `GET /api/v1/info/` |
+| `opal device info ping` | — | Ping. `GET /api/v1/info/ping` |
+| `opal device peer list` | — | List federation peers. `GET /api/v1/peer/` |
+| `opal device peer add` | — | Register an explicit peer. `POST /api/v1/peer/` |
+| `opal device peer discover` | — | Discover untrusted peer candidates using mDNS when enabled. `POST /api/v1/peer/discover` |
+| `opal device peer sync` | — | Refresh all trusted peer caches now. `POST /api/v1/peer/sync` |
+| `opal device peer show` | — | Show peer. `GET /api/v1/peer/{peer_id}` |
+| `opal device peer update` | --if-match ETAG | Update peer metadata or trust. `PATCH /api/v1/peer/{peer_id}` |
+| `opal device peer remove` | — | Remove peer. `DELETE /api/v1/peer/{peer_id}` |
+| `opal device peer status` | — | Check peer health and synchronization freshness. `GET /api/v1/peer/{peer_id}/status` |
+| `opal device peer sync` | — | Refresh one peer cache now. `POST /api/v1/peer/{peer_id}/sync` |
+| `opal device plugin list` | — | List installed discovery plugins. `GET /api/v1/plugin/` |
+| `opal device plugin show` | — | Show plugin metadata. `GET /api/v1/plugin/{plugin_id}` |
+| `opal device plugin disable` | — | Disable plugin. `POST /api/v1/plugin/{plugin_id}/disable` |
+| `opal device plugin discover` | — | Discover local devices through one plugin. `POST /api/v1/plugin/{plugin_id}/discover` |
+| `opal device plugin enable` | — | Enable an installed plugin. `POST /api/v1/plugin/{plugin_id}/enable` |
+| `opal device plugin test` | — | Test plugin requirements and discovery capability safely. `POST /api/v1/plugin/{plugin_id}/test` |
+| `opal device config profile list` | — | List profiles. `GET /api/v1/profile/` |
+| `opal device config profile add` | — | Create profile. `POST /api/v1/profile/` |
+| `opal device config profile show` | — | Get profile. `GET /api/v1/profile/{profile_id}` |
+| `opal device config profile update` | --if-match ETAG | Update profile. `PATCH /api/v1/profile/{profile_id}` |
+| `opal device config profile remove` | — | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
+| `opal device config profile activate` | — | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
+| `opal device service log` | — | Tail service log. `GET /api/v1/service/log` |
+| `opal device service start` | — | Start service. `POST /api/v1/service/start` |
+| `opal device service stop` | — | Stop service. `POST /api/v1/service/stop` |
+| `opal device config setting list` | — | List settings. `GET /api/v1/setting/` |
+| `opal device config setting update` | — | Patch settings. `PATCH /api/v1/setting/` |
+| `opal device config setting show` | — | Get setting. `GET /api/v1/setting/{key}` |
+| `opal device config setting update` | — | Set setting. `PUT /api/v1/setting/{key}` |
+| `opal device config setting remove` | — | Delete setting. `DELETE /api/v1/setting/{key}` |
+| `opal device sharing list` | — | List metadata visibility policies. `GET /api/v1/sharing/policy/` |
+| `opal device sharing add` | — | Create allow or deny inventory visibility rule (aliases: allow, deny). `POST /api/v1/sharing/policy/` |
+| `opal device sharing remove` | — | Remove sharing policy. `DELETE /api/v1/sharing/policy/{policy_id}` |
 
 Device IDs are UUIDs; human-readable host-qualified names may contain `/` and must be URL-encoded in path parameters. Device configuration mutations require `If-Match` against the registry's strong ETag; the CLI fetches and attaches it automatically unless `--if-match` is given. Federation routes (`federation inventory`, `federation registry`) are what trusted peers call; the local `peer` group administers those trust relationships.
 
@@ -1641,102 +1641,102 @@ opal event backup create
 
 ---
 
-<a id="opal-devices-usecases"></a>
+<a id="opal-device-usecases"></a>
 
-### opal-devices
+### opal-device
 
 **1. See what hardware this host knows about.**
 
 ```bash
-opal devices list
+opal device list
 ```
 
 **2. Find a camera you can actually use.**
 
 ```bash
-opal devices list --type camera --status available
+opal device list --type camera --status available
 ```
 
 **3. What can this thing do?**
 
 ```bash
-opal devices capabilities dev-3fa8-microphone-array
+opal device capabilities dev-3fa8-microphone-array
 ```
 
 **4. Scan for new hardware without touching it.**
 
 ```bash
-opal devices discover
+opal device discover
 ```
 
 **5. Register a device the scanner cannot see.**
 
 ```bash
-opal devices add --name "lab/gpu-0" --type gpu --host-id workstation-2 --host-name "Workstation 2" --backend cuda --access local
+opal device add --name "lab/gpu-0" --type gpu --host-id workstation-2 --host-name "Workstation 2" --backend cuda --access local
 ```
 
 **6. Prefer the studio microphone everywhere.**
 
 ```bash
-opal devices default set --scope type --target microphone --values '{"device_id":"dev-3fa8-microphone-array"}'
+opal device default set --scope type --target microphone --values '{"device_id":"dev-3fa8-microphone-array"}'
 ```
 
 **7. Group the porch cameras.**
 
 ```bash
-opal devices group add --name porch-cams --mode static
-opal devices group member add grp-porch dev-cam-front
-opal devices group member add grp-porch dev-cam-side
+opal device group add --name porch-cams --mode static
+opal device group member add grp-porch dev-cam-front
+opal device group member add grp-porch dev-cam-side
 ```
 
 **8. Tag it for the humans.**
 
 ```bash
-opal devices tag add dev-cam-front outdoor
-opal devices label set dev-cam-front location porch
+opal device tag add dev-cam-front outdoor
+opal device label set dev-cam-front location porch
 ```
 
 **9. Meet your neighbor's registry.**
 
 ```bash
-opal devices peer add --name garage --base-url http://192.168.1.20:8085 --trusted
-opal devices peer sync garage
+opal device peer add --name garage --base-url http://192.168.1.20:8085 --trusted
+opal device peer sync garage
 ```
 
 **10. Hide the lab GPU from peers.**
 
 ```bash
-opal devices sharing deny --device-id dev-lab-gpu
+opal device sharing deny --device-id dev-lab-gpu
 ```
 
 **11. Watch the registry breathe.**
 
 ```bash
-opal devices watch
+opal device watch
 ```
 
 **12. What did I miss while I was away?**
 
 ```bash
-opal devices event list --limit 20
+opal device event list --limit 20
 ```
 
 **13. Which discovery backends are installed?**
 
 ```bash
-opal devices plugin list
+opal device plugin list
 ```
 
 **14. Whole fleet at a glance.**
 
 ```bash
-opal devices federation inventory
+opal device federation inventory
 ```
 
 **15. Snapshot before renumbering the studio.**
 
 ```bash
-opal devices backup create
+opal device backup create
 ```
 
 ---

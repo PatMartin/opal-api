@@ -8,7 +8,7 @@ info:
     \ publishes. Human-managed YAML configuration; observed inventories and remote caches in\
     \ SQLite. Peer inventory reads require authentication; registered peers see metadata by\
     \ default unless a sharing policy denies it.\n\nThe devices domain surface is defined in\
-    \ the shared contract base `openapi/shared/opal_devices.yaml` and mounted here under\
+    \ the shared contract base `openapi/shared/opal_device_kernel.yaml` and mounted here under\
     \ `/api/v1`; the standard kernel route families are mounted from `openapi/shared/opal_kernel.yaml`.\
     \n\nOPAL SUITE STANDARD v1.2 (normative)\nX-Opal-Session-Id is an optional logical context\
     \ identifier; it does not create a server-managed session or grant authorization. Entry-point\
@@ -78,75 +78,75 @@ servers:
   description: Illustrative local endpoint; actual bind address and port are configurable.
 paths:
   /api/v1/catalog:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/catalog'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/catalog'
   /api/v1/device/:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/device_collection'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/device_collection'
   /api/v1/device/{device_id}:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/device_item'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/device_item'
   /api/v1/device/{device_id}/capabilities:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/device_capabilities'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/device_capabilities'
   /api/v1/device/{device_id}/status:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/device_status'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/device_status'
   /api/v1/device/{device_id}/test:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/device_test'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/device_test'
   /api/v1/device/{device_id}/label:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/device_label_collection'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/device_label_collection'
   /api/v1/device/{device_id}/label/{key}:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/device_label_item'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/device_label_item'
   /api/v1/device/{device_id}/tag:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/device_tag_collection'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/device_tag_collection'
   /api/v1/device/{device_id}/tag/{tag}:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/device_tag_item'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/device_tag_item'
   /api/v1/discovery/scan:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/discovery_scan'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/discovery_scan'
   /api/v1/default/:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/default_collection'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/default_collection'
   /api/v1/default/{scope}/{target}:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/default_item'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/default_item'
   /api/v1/group/:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/group_collection'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/group_collection'
   /api/v1/group/{group_id}:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/group_item'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/group_item'
   /api/v1/group/{group_id}/member:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/group_member_collection'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/group_member_collection'
   /api/v1/group/{group_id}/member/{device_id}:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/group_member_item'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/group_member_item'
   /api/v1/peer/:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/peer_collection'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/peer_collection'
   /api/v1/peer/{peer_id}:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/peer_item'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/peer_item'
   /api/v1/peer/{peer_id}/status:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/peer_status'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/peer_status'
   /api/v1/peer/{peer_id}/sync:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/peer_sync'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/peer_sync'
   /api/v1/peer/sync:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/peers_sync'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/peers_sync'
   /api/v1/peer/discover:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/peers_discover'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/peers_discover'
   /api/v1/sharing/policy/:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/sharing_policy_collection'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/sharing_policy_collection'
   /api/v1/sharing/policy/{policy_id}:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/sharing_policy_item'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/sharing_policy_item'
   /api/v1/plugin/:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/plugin_collection'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/plugin_collection'
   /api/v1/plugin/{plugin_id}:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/plugin_item'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/plugin_item'
   /api/v1/plugin/{plugin_id}/enable:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/plugin_enable'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/plugin_enable'
   /api/v1/plugin/{plugin_id}/disable:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/plugin_disable'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/plugin_disable'
   /api/v1/plugin/{plugin_id}/test:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/plugin_test'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/plugin_test'
   /api/v1/plugin/{plugin_id}/discover:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/plugin_discover'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/plugin_discover'
   /api/v1/event/:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/event_collection'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/event_collection'
   /api/v1/event/stream:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/event_stream'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/event_stream'
   /api/v1/federation/inventory:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/federation_inventory'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/federation_inventory'
   /api/v1/federation/registry:
-    $ref: './shared/opal_devices.yaml#/components/pathItems/federation_registry'
+    $ref: './shared/opal_device_kernel.yaml#/components/pathItems/federation_registry'
   /api/v1/health/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health'
     x-opal-cli:

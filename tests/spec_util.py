@@ -2,7 +2,7 @@
 
 Service specs mount shared Path Items and reference shared components in
 openapi/shared/opal_kernel.yaml (and, for OPAL Devices,
-openapi/shared/opal_devices.yaml) via external $refs. Tests assert against
+openapi/shared/opal_device_kernel.yaml) via external $refs. Tests assert against
 the effective (resolved) contract, so this helper inlines external refs and
 then dereferences internal '#/components/...' refs as well.
 
