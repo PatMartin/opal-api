@@ -7,7 +7,7 @@
     "validate": "redocly lint \"openapi/*.yaml\"",
     "lint": "spectral lint -r .spectral.yaml \"openapi/*.yaml\"",
     "lint:opal": "spectral lint -r .spectral.opal.yaml \"openapi/*.yaml\"",
-    "check": "npm run validate && npm run lint && npm run lint:opal && npm run lint:kernel && npm run lint:look && npm run lint:think && npm run bundle && npm run test:lint && npm run test:event150 && npm run test:think-event && npm run test:look-cli && npm run test:listen150 && npm run test:say150 && npm run test:rest-security",
+    "check": "npm run validate && npm run lint && npm run lint:opal && npm run lint:kernel && npm run lint:devices && npm run lint:look && npm run lint:think && npm run bundle && npm run test:lint && npm run test:event150 && npm run test:think-event && npm run test:look-cli && npm run test:listen150 && npm run test:say150 && npm run test:rest-security",
     "lint:look": "spectral lint -r .spectral.opal.look.yaml openapi/opal_look.yaml",
     "test:lint": "python tests/test_lint.py",
     "test:event150": "python tests/test_event_150.py",
@@ -19,7 +19,7 @@
     "lint:think": "spectral lint -r .spectral.opal.think.yaml openapi/opal_think.yaml",
     "lint:kernel": "spectral lint -r .spectral.opal.yaml openapi/shared/opal_kernel.yaml",
     "lint:devices": "spectral lint -r .spectral.opal.yaml openapi/shared/opal_devices.yaml",
-    "bundle": "redocly bundle openapi/opal_event.yaml -o dist/opal_event.yaml && redocly bundle openapi/opal_listen.yaml -o dist/opal_listen.yaml && redocly bundle openapi/opal_look.yaml -o dist/opal_look.yaml && redocly bundle openapi/opal_say.yaml -o dist/opal_say.yaml && redocly bundle openapi/opal_think.yaml -o dist/opal_think.yaml"
+    "bundle": "redocly bundle openapi/opal_event.yaml -o dist/opal_event.yaml && redocly bundle openapi/opal_listen.yaml -o dist/opal_listen.yaml && redocly bundle openapi/opal_look.yaml -o dist/opal_look.yaml && redocly bundle openapi/opal_say.yaml -o dist/opal_say.yaml && redocly bundle openapi/opal_think.yaml -o dist/opal_think.yaml && redocly bundle openapi/opal_devices.yaml -o dist/opal_devices.yaml"
   },
   "repository": {
     "type": "git",

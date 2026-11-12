@@ -66,6 +66,13 @@ jobs:
         continue-on-error: true
         run: npm run lint:kernel
 
+      # Shared devices contract base (openapi/shared/opal_devices.yaml)
+      # likewise; the serving spec is covered by the globs above.
+      - name: Lint OPAL devices base
+        id: lint_devices
+        continue-on-error: true
+        run: npm run lint:devices
+
       # Prove every service spec bundles into a self-contained document:
       # all external kernel $refs must resolve for published consumers.
       - name: Bundle specs
@@ -137,6 +144,7 @@ jobs:
             "lint_look=${{ steps.lint_look.outcome }}" \
             "lint_think=${{ steps.lint_think.outcome }}" \
             "lint_kernel=${{ steps.lint_kernel.outcome }}" \
+            "lint_devices=${{ steps.lint_devices.outcome }}" \
             "bundle=${{ steps.bundle.outcome }}" \
             "deps=${{ steps.deps.outcome }}" \
             "test_lint=${{ steps.test_lint.outcome }}" \
