@@ -18,6 +18,7 @@
     "test:rest-security": "python tests/test_rest_security.py",
     "lint:think": "spectral lint -r .spectral.opal.think.yaml openapi/opal_think.yaml",
     "lint:kernel": "spectral lint -r .spectral.opal.yaml openapi/shared/opal_kernel.yaml",
+    "lint:devices": "spectral lint -r .spectral.opal.yaml openapi/shared/opal_devices.yaml",
     "bundle": "redocly bundle openapi/opal_event.yaml -o dist/opal_event.yaml && redocly bundle openapi/opal_listen.yaml -o dist/opal_listen.yaml && redocly bundle openapi/opal_look.yaml -o dist/opal_look.yaml && redocly bundle openapi/opal_say.yaml -o dist/opal_say.yaml && redocly bundle openapi/opal_think.yaml -o dist/opal_think.yaml"
   },
   "repository": {
