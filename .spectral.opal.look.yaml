@@ -6,7 +6,7 @@ rules:
   opal-look-config-ifmatch:
     description: OPAL Look configuration mutations must require a strong If-Match precondition.
     severity: error
-    given: $.paths[?(@property.match(/api\/v1\/((engine|model|source|pipeline|profile|zone|rule|monitor)(\/\{[^}]+\}|\/)|profile\/{[^}]+}\/activate|setting(\/{key}|\/)|configuration\/import)$/))][?(@property.match(/^(post|put|patch|delete)$/))]
+    given: $.paths[?(@property.match(/api\/v1\/((engine|model|profile)(\/\{[^}]+\}|\/)|profile\/{[^}]+}\/activate|setting(\/{key}|\/)|configuration\/import)$/))][?(@property.match(/^(post|put|patch|delete)$/))]
     then:
       function: schema
       functionOptions:

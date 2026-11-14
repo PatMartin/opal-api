@@ -78,7 +78,7 @@ def mutate(doc, fn):
 
 
 def m_ifmatch(d):
-    op = d["paths"]["/api/v1/model/{model_id}"]["patch"]
+    op = d["paths"]["/api/v1/engine/{engine_id}"]["patch"]
     keep = [x for x in op["parameters"]
             if "/IfMatch" not in str(x.get("$ref", ""))
             and not (isinstance(x, dict) and x.get("name") == "If-Match")]
@@ -91,8 +91,8 @@ def m_probe(d):
 
 
 def m_metadata(d):
-    # Strip metadata from the declared BusEvent envelope -> rule must fire.
-    d["x-opal-event-contract"]["envelope"] = "topic frame + JSON body"
+    # Inject a BusEvent envelope missing metadata -> rule must fire.
+    d["x-opal-event-contract"] = {"envelope": "topic frame + JSON body"}
 
 
 def m_corr(d):
@@ -100,9 +100,9 @@ def m_corr(d):
         "X-Opal-Request-Id")
 
 
-def m_corr_406(d):
-    # The 406 on analyze/image loses its correlation-header block.
-    d["paths"]["/api/v1/analyze/image"]["post"]["responses"]["406"].pop("headers")
+def m_corr_413(d):
+    # The 413 on predict loses its correlation-header block.
+    d["paths"]["/api/v1/predict"]["post"]["responses"]["413"].pop("headers")
 
 
 def m_error_env(d):
@@ -114,13 +114,14 @@ def m_error_env(d):
 
 
 def m_location(d):
-    d["paths"]["/api/v1/media/"]["post"]["responses"]["201"]["headers"].pop("Location")
+    d["paths"]["/api/v1/profile/"]["post"]["responses"]["201"]["headers"].pop(
+        "Location")
 
 
 def m_dup_opid(d):
     # Copy an existing operationId onto a second operation -> duplicate.
-    d["paths"]["/api/v1/job/{job_id}"]["get"]["operationId"] = \
-        d["paths"]["/api/v1/job/"]["get"]["operationId"]
+    d["paths"]["/api/v1/stream/{stream_id}"]["get"]["operationId"] = \
+        d["paths"]["/api/v1/stream/"]["get"]["operationId"]
 
 
 def m_ifmatch_pattern(d):
@@ -156,7 +157,7 @@ def m_probe_body(d):
 
 def m_precond(d):
     # A required-If-Match config mutation stops declaring 412/428.
-    res = d["paths"]["/api/v1/model/{model_id}"]["patch"]["responses"]
+    res = d["paths"]["/api/v1/engine/{engine_id}"]["patch"]["responses"]
     res.pop("412", None)
     res.pop("428", None)
 
@@ -184,7 +185,7 @@ CASES = [
     ("probe body missing required ready", "look", m_probe_body, "look", "opal-look-health-probe", 0),
     ("envelope contract without metadata", "look", m_metadata, "look", "opal-look-event-contract", 0),
     ("missing correlation header", "look", m_corr, "opal", "opal-correlation-headers", 0),
-    ("406 missing correlation headers", "look", m_corr_406, "opal", "opal-correlation-headers", 0),
+    ("413 missing correlation headers", "look", m_corr_413, "opal", "opal-correlation-headers", 0),
     ("nonstandard error envelope", "look", m_error_env, "opal", "opal-standard-error-body", 0),
     ("If-Match op missing 412/428", "look", m_precond, "opal", "opal-ifmatch-precondition-responses", 1),
     ("201 without Location", "look", m_location, "opal", "opal-201-location-header", 0),

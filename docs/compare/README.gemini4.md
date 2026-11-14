@@ -68,7 +68,7 @@ All five service contracts and the shared kernel are currently at version **1.7.
 | [`openapi/shared/opal_kernel.yaml`](openapi/shared/opal_kernel.yaml) | OPAL Suite Kernel | `1.7.1` | *(mounted via `$ref`)* | Correlation headers/params, `If-Match`, `Idempotency-Key`, `OpalError` envelope, `BearerAuth`, and reusable `pathItems` for `health`, `info`, `setting`, `backup`, `profile`, `engine`, and `service`. |
 | [`openapi/opal_event.yaml`](openapi/opal_event.yaml) | Opal Event API | `1.7.1` | `http://127.0.0.1:8080` | REST event ingress & management for the ZeroMQ XSUB/XPUB broker: `EventInput`/`Event`, `topic/`, `Rule` (`Condition` predicates, `.*` prefix matching), discriminated `Action` (`ShellAction`, `HttpAction`, `PythonAction` with `ActionInputSchema`), `Execution` records (`queued`, `running`, `succeeded`, `failed`, `timed_out`, `dropped`), and `stats/`. |
 | [`openapi/opal_listen.yaml`](openapi/opal_listen.yaml) | Voice Intent API | `1.7.1` | `http://localhost:8000` | Wakeword detection, STT (+ async `stt_refiner`), intent matching, and slot extraction: `wakeword/`, `intent/` + `phrase`, `slot/` + `value` + `alias`, live `recognition/` (`start`, `stop`, `status`, SSE `stream`, diagnostic `test_text`/`test_audio`), `failed_utterance/` (`promote`), `regression/` (`run`), `performance/`, and `health/audio_devices`. |
-| [`openapi/opal_look.yaml`](openapi/opal_look.yaml) | OPAL Look — Visual Observation API | `1.7.1` | `http://127.0.0.1:8080` | Visual perception pipelines: `source/` (cameras/RTSP/files, MJPEG `stream`, `frame`, `capture/`, `probe`), DAG `pipeline/` (`preprocess`, `inference`, `tracker`, `filter`, `transform`, `annotate` stages + motion gating), `model/`, live `session/` (SSE `stream`, `preview`), finite `job/`, typed `observation/` (13 `ObservationItem` types), `zone/`, `rule/`, `monitor/`, `recording/`, `media/`, `capture/`, `artifact/` (with `output_ref`/`artifact_ref`), and `capabilities/`. |
+| [`openapi/opal_look.yaml`](openapi/opal_look.yaml) | OPAL Look — MVP Plus Visual Observation API | `1.7.1` | `http://127.0.0.1:8082` | Visual observation: optional discoverable detection `engine/` (+ `discover`, `capabilities`), engine-owned `model/` (`load`/`unload`), single-image `predict`, compute `hardware/`, and ephemeral RTSP `stream/` (202 admission, SSE `events`, MJPEG `video`, `snapshot`, `metrics`, `stop`; video-only streams need no engine; source credentials redacted). |
 | [`openapi/opal_say.yaml`](openapi/opal_say.yaml) | OPAL Say API | `1.7.1` | `http://127.0.0.1:8080` | Host-installed TTS engine abstraction (Piper, Kokoro, etc.): discovered `engine/`, registered `voice/` (`validate`, `test`), `generate` (completed WAV or raw `s16le` mono PCM with `X-Opal-Sample-Rate`), and `generate/stream` (progressive raw PCM). |
 | [`openapi/opal_think.yaml`](openapi/opal_think.yaml) | OPAL Think API | `1.7.1` | `http://127.0.0.1:8080` | Guarded reasoning service: asynchronous `task/` (`202 Accepted` + `Location`, SSE `stream`, cooperative `cancel`, redacted `TaskStep` summaries), optional persistent `session/`, and read-only `model/` discovery. |
 
@@ -78,11 +78,11 @@ All five service contracts and the shared kernel are currently at version **1.7.
   ┌───────────────┐  opal.listen.intent.match   ┌───────────────────────────┐
   │  opal-listen  │ ──────────────────────────► │        opal-event         │
   │ (mic / STT /  │                             │  ZeroMQ XSUB/XPUB Broker  │
-  │  intent/slot) │   opal.look.observation     │  + Rules & Action Runner  │
-  ├───────────────┤  opal.look.condition.matched│   (shell / http / python) │
-  │   opal-look   │ ──────────────────────────► │                           │
-  │ (sources /    │                             └──────┬─────────────▲──────┘
-  │  pipelines)   │                                    │             │
+  │  intent/slot) │                             │  + Rules & Action Runner  │
+  ├───────────────┤                             │   (shell / http / python) │
+  │   opal-look   │   per-stream SSE only;      │                           │
+  │ (engines /    │   republish via CLI pipe    └──────┬─────────────▲──────┘
+  │  RTSP streams)│                                    │             │
   └───────────────┘          HTTP Action: POST /task/  │             │ Least-privilege REST:
                              (untrusted event context) │             │  GET  /api/v1/action/
                                                        ▼             │  POST /api/v1/action/{id}/execute
@@ -105,7 +105,7 @@ Key architectural boundaries enforced by the contracts:
 
 - **Event is the sole action authority**: `opal-think` has no internal tool registry, shell runner, or approval engine. It discovers enabled actions in `opal-event`, validates arguments against `ActionInputSchema`, invokes `POST /api/v1/action/{action_id}/execute`, and polls `GET /api/v1/execution/{execution_id}` until terminal (`succeeded`, `failed`, `timed_out`, `dropped`).
 - **Least-privilege `think` principal**: `opal_event.yaml` (`x-opal-authorization`) grants the `think` principal only `actions:read`, `actions:execute`, and `executions:read`, explicitly denying `actions:write`, `rules:write`, and `settings:write`.
-- **Admission vs. completion**: `POST` to `/api/v1/event/`, `/api/v1/action/{action_id}/execute`, `/api/v1/task/`, and `/api/v1/job/` returns `202 Accepted` (admission only, never synchronous completion). Manual action execution validates `EventInput.data` against `input_schema` synchronously (`422` on failure); rule-triggered dispatches record failures asynchronously as `Execution` records with `status: dropped` and `error_code: input_validation_failed`.
+- **Admission vs. completion**: `POST` to `/api/v1/event/`, `/api/v1/action/{action_id}/execute`, `/api/v1/task/`, and `/api/v1/stream/` returns `202 Accepted` (admission only, never synchronous completion). Manual action execution validates `EventInput.data` against `input_schema` synchronously (`422` on failure); rule-triggered dispatches record failures asynchronously as `Execution` records with `status: dropped` and `error_code: input_validation_failed`.
 - **Loopback-first security**: Services bind `127.0.0.1` by default where `BearerAuth` may be explicitly disabled; non-loopback bindings require `BearerAuth` (and ZeroMQ CURVE in `opal-event`). Credentials are referenced via `token_env` / `credential_ref` and never appear in responses, exports, backups, or logs.
 
 ### Repository Layout
@@ -170,7 +170,7 @@ Every service contract adheres to the normative rules defined in [`openapi/share
    - All `4xx`/`5xx` JSON responses use `OpalError` (`{ "error": { "code", "message", "details", "request_id", "transaction_id", "session_id", "causation_id", "retryable" } }`), except `503` on `/health/live` and `/health/ready`, which returns `OpalHealthProbe` (`status: unavailable`, `ready: false`).
 5. **Bounded collections (no cursor pagination)**:
    - Configuration catalogs return full arrays (subject to deployment caps).
-   - Growing histories (`event/`, `execution/`, `observation/`, `task/`, `session/`, etc.) return bounded arrays in deterministic newest-first order with a `limit` query parameter (`minimum: 1`).
+   - Growing histories (`event/`, `execution/`, `task/`, `session/`, etc.) return bounded arrays in deterministic newest-first order with a `limit` query parameter (`minimum: 1`).
 6. **Profiles vs. Personas (`x-opal-persona`)**:
    - A **profile** (`/api/v1/profile/`) is a preset of service operating defaults; at most one profile is active (`is_active: true`) at a time.
    - A **persona** (`/api/v1/persona/`) is a portable identity (`^[A-Za-z0-9][A-Za-z0-9._-]*$`) with optional per-service bindings (e.g., `voice_id` in Say, model/instructions in Think).
@@ -193,9 +193,9 @@ Routes mounted from [`openapi/shared/opal_kernel.yaml`](openapi/shared/opal_kern
 ├── profile/                         GET · POST      (OpalProfile, POST requires If-Match)
 ├── profile/{profile_id}             GET · PATCH · DELETE (PATCH/DELETE require If-Match)
 ├── profile/{profile_id}/activate    POST            (requires If-Match)
-├── persona/                         GET · POST      (OpalPersonaRead/Create, POST requires If-Match)
-├── persona/{persona_id}             GET · PATCH · DELETE (PATCH/DELETE require If-Match)
-├── persona/{persona_id}/validate    POST            (OpalValidationReport)
+├── persona/                         GET · POST      (OpalPersonaRead/Create, POST requires If-Match; not mounted on look)
+├── persona/{persona_id}             GET · PATCH · DELETE (PATCH/DELETE require If-Match; not on look)
+├── persona/{persona_id}/validate    POST            (OpalValidationReport; not on look)
 ├── backup/list                      GET             (OpalBackupInfo[])
 ├── backup/create                    POST            (201 + Location)
 ├── backup/download/{filename}       GET             (application/octet-stream)
@@ -258,50 +258,22 @@ opal-listen (openapi/opal_listen.yaml)
 └── /api/v1/health/audio_devices     GET
 
 opal-look (openapi/opal_look.yaml)
-├── /api/v1/capabilities/            GET
-├── /api/v1/source/                  GET · POST
-├── /api/v1/source/{source_id}       GET · PATCH · DELETE
-├── /api/v1/source/{source_id}/status GET
-├── /api/v1/source/{source_id}/probe POST
-├── /api/v1/source/{source_id}/frame GET (image/jpeg | image/png)
-├── /api/v1/source/{source_id}/capture/ POST (201)
-├── /api/v1/source/{source_id}/stream GET (multipart/x-mixed-replace MJPEG)
-├── /api/v1/model/                   GET · POST
-├── /api/v1/model/{model_id}         GET · PATCH · DELETE
-├── /api/v1/pipeline/                GET · POST
-├── /api/v1/pipeline/{pipeline_id}   GET · PATCH · DELETE
-├── /api/v1/pipeline/validate        POST
-├── /api/v1/zone/                    GET · POST
-├── /api/v1/zone/{zone_id}           GET · PATCH · DELETE
-├── /api/v1/rule/                    GET · POST
-├── /api/v1/rule/{rule_id}           GET · PATCH · DELETE
-├── /api/v1/monitor/                 GET · POST
-├── /api/v1/monitor/{monitor_id}     GET · PATCH · DELETE
-├── /api/v1/analyze/                 POST
-├── /api/v1/analyze/image            POST (JSON or rendered image/jpeg via Accept)
-├── /api/v1/session/                 POST (202) · GET
-├── /api/v1/session/{session_id}     GET
-├── /api/v1/session/{session_id}/stop POST
-├── /api/v1/session/{session_id}/stream GET (text/event-stream SSE, Last-Event-ID resume)
-├── /api/v1/session/{session_id}/preview GET (MJPEG)
-├── /api/v1/job/                     POST (202) · GET
-├── /api/v1/job/{job_id}             GET
-├── /api/v1/job/{job_id}/cancel      POST
-├── /api/v1/observation/             GET
-├── /api/v1/observation/{observation_id} GET
-├── /api/v1/media/                   POST (201) · GET
-├── /api/v1/media/{media_id}         GET · DELETE
-├── /api/v1/capture/                 GET
-├── /api/v1/capture/{capture_id}     GET · DELETE
-├── /api/v1/capture/{capture_id}/content GET
-├── /api/v1/artifact/                GET
-├── /api/v1/artifact/{artifact_id}   GET · DELETE
-├── /api/v1/artifact/{artifact_id}/content GET
-├── /api/v1/recording/               POST (202) · GET
-├── /api/v1/recording/{recording_id} GET
-├── /api/v1/recording/{recording_id}/stop POST
-├── /api/v1/metrics/                 GET
-└── /api/v1/events/status            GET
+├── /api/v1/engine/discover          POST
+├── /api/v1/engine/{engine_id}/capabilities GET
+├── /api/v1/model/                   GET
+├── /api/v1/model/{model_id}         GET
+├── /api/v1/model/{model_id}/load    POST
+├── /api/v1/model/{model_id}/unload  POST
+├── /api/v1/predict                  POST (single-image detection)
+├── /api/v1/hardware/                GET
+├── /api/v1/hardware/{device_id}     GET
+├── /api/v1/stream/                  POST (202 + Location, Idempotency-Key) · GET
+├── /api/v1/stream/{stream_id}       GET
+├── /api/v1/stream/{stream_id}/stop  POST
+├── /api/v1/stream/{stream_id}/events GET (text/event-stream SSE)
+├── /api/v1/stream/{stream_id}/video GET (multipart/x-mixed-replace MJPEG)
+├── /api/v1/stream/{stream_id}/snapshot GET (image/jpeg)
+└── /api/v1/stream/{stream_id}/metrics GET
 
 opal-say (openapi/opal_say.yaml)
 ├── /api/v1/engine/{engine_id}/validate POST
@@ -377,15 +349,15 @@ opal
 │   ├── service       start | stop | log
 │   └── info          version | ping | health | live | ready
 ├── look
-│   ├── source        list | add | show | update | remove | status | probe | frame | capture | stream
-│   ├── session       start | list | show | stop | stream | preview
-│   ├── analyze       run | image
-│   ├── engine        list | show | update
-│   ├── config        model | pipeline | zone | rule | monitor | persona | profile | setting
-│   ├── data          observation | media | capture | artifact | recording | job
+│   ├── engine        list | show | discover | capabilities
+│   ├── model         list | show | load | unload
+│   ├── predict       image
+│   ├── hardware      list | show
+│   ├── stream        start | list | show | stop | watch | watch-video | snapshot | metrics
+│   ├── config        engine | profile | setting
 │   ├── backup        create | list | download | remove | export | import | validate | restore
 │   ├── service       start | stop | log
-│   └── info          version | ping | health | live | ready | capabilities | metrics | events
+│   └── info          version | ping | health | live | ready
 └── think
     ├── task          create (aliases: ask, chat) | list | show | watch | cancel
     ├── session       add | list | show | remove
@@ -534,7 +506,7 @@ Every stage in `npm run check` (and [`.github/workflows/openapi-validate.yml`](.
 | 8 | `npm run test:lint` | `python tests/test_lint.py` | Negative tests: mutates specs in temp files and verifies each Spectral rule triggers as expected. |
 | 9 | `npm run test:event150` | `python tests/test_event_150.py` | Event `1.7.1` action metadata fields, no duplicate YAML keys, Draft 2020-12 validation against 10 fixtures in `tests/fixtures/event_150/`, `input_validation_failed` semantics, scopes, and settings `If-Match`. |
 | 10 | `npm run test:think-event` | `python tests/test_think_event.py` | Think `x-opal-event-integration` matches Event's `think` principal scopes/denials, routes, `202` admission, and execution states. |
-| 11 | `npm run test:look-cli` | `python tests/test_look_cli.py` | Every Look operation has a unique `(group, command)` in `x-opal-cli`; RTSP sources, streams, annotations, motion filters, monitors, captures, recordings, media, and error codes exist. |
+| 11 | `npm run test:look-cli` | `python tests/test_look_cli.py` | Every Look operation has a unique `(group, command)` in `x-opal-cli`; kernel mounts, engine discover/capabilities, model load/unload, predict invariants, RTSP-only stream sources, SSE/MJPEG/snapshot/metrics routes, If-Match mutations, item-op 404s, and correlation headers are asserted. |
 | 12 | `npm run test:listen150` | `python tests/test_listen_150.py` | Listen `1.7.1` `/api/v1/setting/{key}` GET/PUT/DELETE, collection PATCH, and `backup/import` `If-Match` + `412`/`428` preconditions. |
 | 13 | `npm run test:say150` | `python tests/test_say_150.py` | Say `1.7.1` atomic `backup/import` and `backup/restore/{filename}` `If-Match` + `412`/`428` preconditions and `backup/validate`. |
 | 14 | `npm run test:rest-security` | `python tests/test_rest_security.py` | Every spec declares `BearerAuth`, top-level security, `x-opal-authorization` semantics, and `401` + `403` on every operation. |

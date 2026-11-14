@@ -1,6 +1,6 @@
 # The OPAL CLI Cookbook
 
-*Recipes for six services that can hear you, see your porch, think about it, gossip over an event bus, announce the verdict out loud, and remember which microphone heard it.*
+*Recipes for five services that can hear you, see your porch, think about it, gossip over an event bus, and announce the verdict out loud.*
 
 This cookbook describes the unified `opal` [Typer](https://typer.tiangolo.com/) CLI implied by the v1.7.1 OpenAPI contracts in [`openapi/`](../openapi) and the shared kernel at [`openapi/shared/opal_kernel.yaml`](../openapi/shared/opal_kernel.yaml). Every command maps to exactly one REST operation in those contracts.
 
@@ -10,9 +10,9 @@ One honest caveat before the fun starts: this repository ships contracts, not an
 
 - [Before you cook](#before-you-cook)
 - [Part 1: Interface](#part-1-interface)
-  - [opal-say](#opal-say) · [opal-listen](#opal-listen) · [opal-look](#opal-look) · [opal-think](#opal-think) · [opal-event](#opal-event) · [opal-device](#opal-device)
+  - [opal-say](#opal-say) · [opal-listen](#opal-listen) · [opal-look](#opal-look) · [opal-think](#opal-think) · [opal-event](#opal-event)
 - [Part 2: Usecases](#part-2-usecases)
-  - [opal-say](#opal-say-usecases) · [opal-listen](#opal-listen-usecases) · [opal-look](#opal-look-usecases) · [opal-think](#opal-think-usecases) · [opal-event](#opal-event-usecases) · [opal-device](#opal-device-usecases)
+  - [opal-say](#opal-say-usecases) · [opal-listen](#opal-listen-usecases) · [opal-look](#opal-look-usecases) · [opal-think](#opal-think-usecases) · [opal-event](#opal-event-usecases)
 - [Part 3: Combined](#part-3-combined)
   - [Plumbing](#plumbing-do-this-once)
   - [Voice lab](#voice-lab) · [Eyes on the property](#eyes-on-the-property) · [The classroom](#the-classroom) · [Voice assistant](#voice-assistant) · [Home automation](#home-automation) · [Office and computer](#office-and-computer) · [Fleet operations](#fleet-operations)
@@ -55,7 +55,7 @@ These live in the CLI, not in the contracts. The recipes lean on them, so here t
 
 ### Assumptions in the examples
 
-- **Addresses.** The contracts list `127.0.0.1:8080` as an example server for five services, and six services cannot share one port. Where a recipe needs one service to call another, it assumes Event on `8080`, Say on `8081`, Look on `8082`, Think on `8083`, Devices on `8084`, and Listen on `8000`. Adjust to your deployment.
+- **Addresses.** Event, Say, and Think all list `127.0.0.1:8080` as their example server; Look lists `127.0.0.1:8082` and Listen lists `localhost:8000`. Since three services cannot share one port, where a recipe needs one service to call another it assumes Event on `8080`, Say on `8081`, Look on `8082`, Think on `8083`, and Listen on `8000`. Adjust to your deployment.
 - **Identifiers.** Voices (`en-gb-alan-low`), engines (`piper`), cameras (`cam-front`), models (`ollama:llama3.2`), and IDs such as `ses-42` or `tsk-123` are examples. Use the IDs your services return.
 - **Shell.** Examples use POSIX quoting. In PowerShell, keep the single quotes around JSON and escape inner double quotes as your version requires.
 - **Copy button.** Every snippet is a fenced code block, so GitHub and most Markdown viewers render a copy button in its top-right corner.
@@ -363,33 +363,22 @@ opal listen
 
 ### opal-look
 
-Visual observation: sources, pipelines, live sessions, finite jobs, zones, rules, monitors, captures, and recordings. Optional tasks such as OCR, captioning, and tracking are advertised through `opal look info capabilities`.
+Visual observation: optional engine discovery, engine-owned models, single-image prediction, compute hardware, and ephemeral RTSP streams with SSE metadata, MJPEG video, JPEG snapshots, and per-stream metrics. Video-only streams run with zero installed engines; detection streams and `predict` always select an engine and model explicitly. Stream source credentials are redacted from every response, event, log, and error.
 
 #### Typer command tree
 
 ```text
 opal look
-├── info                  capabilities | health | version | ping | live | ready | metrics | events
-├── engine                list | show | update
+├── info                  version | ping | health | live | ready
+├── engine                list | show | discover | capabilities
+├── model                 list | show | load | unload
+├── predict               image
+├── hardware              list | show
+├── stream                start | list | show | stop | watch | watch-video | snapshot | metrics
 ├── config
-│   ├── model             list | add | show | update | remove
-│   ├── pipeline          list | add | show | update | remove | validate
+│   ├── engine            update
 │   ├── profile           list | add | show | update | remove | activate
-│   ├── zone              list | add | show | update | remove
-│   ├── rule              list | add | show | update | remove
-│   ├── monitor           list | add | show | update | remove
-│   ├── setting           list | update | show | set | remove
-│   └── persona           list | add | validate | show | update | remove
-├── source                list | add | show | update | remove | status | probe | frame | capture | stream
-├── analyze               run | image
-├── session               list | start | show | stop | stream | preview
-├── data
-│   ├── job               list | submit | show | cancel
-│   ├── observation       list | show
-│   ├── media             list | upload | show | remove
-│   ├── capture           list | show | remove | download
-│   ├── artifact          list | show | remove | download
-│   └── recording         list | start | show | stop
+│   └── setting           list | update | show | set | remove
 ├── backup                list | create | download | restore | remove | export | import | validate
 └── service               start | stop | log
 ```
@@ -398,52 +387,29 @@ opal look
 
 ```text
 /api/v1
-├── /capabilities/                          GET
 ├── /engine/                                GET
+│   ├── /discover                           POST
 │   └── /{engine_id}                        GET, PATCH
-├── /model/                                 GET, POST
-│   └── /{model_id}                         GET, PATCH, DELETE
-├── /source/                                GET, POST
-│   └── /{source_id}                        GET, PATCH, DELETE
-│       ├── /status                         GET
-│       ├── /probe                          POST
-│       ├── /frame                          GET
-│       ├── /capture/                       POST
-│       └── /stream                         GET
-├── /pipeline/                              GET, POST
-│   ├── /{pipeline_id}                      GET, PATCH, DELETE
-│   └── /validate                           POST
+│       └── /capabilities                   GET
+├── /model/                                 GET
+│   └── /{model_id}                         GET
+│       ├── /load                           POST
+│       └── /unload                         POST
+├── /predict                                POST
+├── /hardware/                              GET
+│   └── /{device_id}                        GET
+├── /stream/                                GET, POST
+│   └── /{stream_id}                        GET
+│       ├── /stop                           POST
+│       ├── /events                         GET (SSE)
+│       ├── /video                          GET (MJPEG)
+│       ├── /snapshot                       GET
+│       └── /metrics                        GET
+├── /setting/                               GET, PATCH
+│   └── /{key}                              GET, PUT, DELETE
 ├── /profile/                               GET, POST
 │   └── /{profile_id}                       GET, PATCH, DELETE
 │       └── /activate                       POST
-├── /zone/                                  GET, POST
-│   └── /{zone_id}                          GET, PATCH, DELETE
-├── /rule/                                  GET, POST
-│   └── /{rule_id}                          GET, PATCH, DELETE
-├── /monitor/                               GET, POST
-│   └── /{monitor_id}                       GET, PATCH, DELETE
-├── /analyze/                               POST
-│   └── /image                              POST
-├── /session/                               GET, POST
-│   └── /{session_id}                       GET
-│       ├── /stop                           POST
-│       ├── /stream                         GET
-│       └── /preview                        GET
-├── /job/                                   GET, POST
-│   └── /{job_id}                           GET
-│       └── /cancel                         POST
-├── /observation/                           GET
-│   └── /{observation_id}                   GET
-├── /media/                                 GET, POST
-│   └── /{media_id}                         GET, DELETE
-├── /capture/                               GET
-│   └── /{capture_id}                       GET, DELETE
-│       └── /content                        GET
-├── /artifact/                              GET
-│   └── /{artifact_id}                      GET, DELETE
-│       └── /content                        GET
-├── /setting/                               GET, PATCH
-│   └── /{key}                              GET, PUT, DELETE
 ├── /backup
 │   ├── /list                               GET
 │   ├── /create                             POST
@@ -460,101 +426,47 @@ opal look
 │   └── /ready                              GET
 ├── /info/                                  GET
 │   └── /ping                               GET
-├── /service
-│   ├── /start                              POST
-│   ├── /stop                               POST
-│   └── /log                                GET
-├── /metrics/                               GET
-├── /events
-│   └── /status                             GET
-├── /recording/                             GET, POST
-│   └── /{recording_id}                     GET
-│       └── /stop                           POST
-└── /persona/                               GET, POST
-    └── /{persona_id}                       GET, PATCH, DELETE
-        └── /validate                       POST
+└── /service
+    ├── /start                              POST
+    ├── /stop                               POST
+    └── /log                                GET
 ```
 
 #### Commands
 
 | COMMAND | OPTIONS | DESCRIPTION |
 |---|---|---|
-| `opal look info capabilities` | — | Discover runtime feature/task/format support. `GET /api/v1/capabilities/` |
-| `opal look engine list` | — | List engines. `GET /api/v1/engine/` |
+| `opal look engine list` | — | List discovered engines. `GET /api/v1/engine/` |
 | `opal look engine show` | `<engine_id>` | Get engine. `GET /api/v1/engine/{engine_id}` |
-| `opal look engine update` | `<engine_id>`, `--if-match ETAG`, `--enabled/--no-enabled`, `--options JSON` | Update engine. `PATCH /api/v1/engine/{engine_id}` |
-| `opal look config model list` | — | List models. `GET /api/v1/model/` |
-| `opal look config model add` | `--if-match ETAG`, `--id ID`, `--engine-id ID`, `--resource-ref TEXT`, `--tasks JSON`, `--options JSON` | Register model. `POST /api/v1/model/` |
-| `opal look config model show` | `<model_id>` | Get model. `GET /api/v1/model/{model_id}` |
-| `opal look config model update` | `<model_id>`, `--if-match ETAG`, `--display-name TEXT`, `--options JSON` | Update model. `PATCH /api/v1/model/{model_id}` |
-| `opal look config model remove` | `<model_id>`, `--if-match ETAG` | Delete model. `DELETE /api/v1/model/{model_id}` |
-| `opal look source list` | — | List sources. `GET /api/v1/source/` |
-| `opal look source add` | `--if-match ETAG`, `--id ID`, `--kind [usb\|rtsp\|http_mjpeg\|file\|media\|adapter]`, `--name TEXT`, `--locator TEXT`, `--secret-ref TEXT`, `--options JSON`, `--enabled/--no-enabled` | Register source. `POST /api/v1/source/` |
-| `opal look source show` | `<source_id>` | Get source. `GET /api/v1/source/{source_id}` |
-| `opal look source update` | `<source_id>`, `--if-match ETAG`, `--name TEXT`, `--locator TEXT`, `--secret-ref TEXT`, `--enabled/--no-enabled`, `--options JSON` | Update source. `PATCH /api/v1/source/{source_id}` |
-| `opal look source remove` | `<source_id>`, `--if-match ETAG` | Delete source. `DELETE /api/v1/source/{source_id}` |
-| `opal look config pipeline list` | — | List pipelines. `GET /api/v1/pipeline/` |
-| `opal look config pipeline add` | `--if-match ETAG`, `--id ID`, `--name TEXT`, `--stages JSON`, `--description TEXT` | Register pipeline. `POST /api/v1/pipeline/` |
-| `opal look config pipeline show` | `<pipeline_id>` | Get pipeline. `GET /api/v1/pipeline/{pipeline_id}` |
-| `opal look config pipeline update` | `<pipeline_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--stages JSON` | Update pipeline. `PATCH /api/v1/pipeline/{pipeline_id}` |
-| `opal look config pipeline remove` | `<pipeline_id>`, `--if-match ETAG` | Delete pipeline. `DELETE /api/v1/pipeline/{pipeline_id}` |
-| `opal look config profile list` | — | List profiles. `GET /api/v1/profile/` |
-| `opal look config profile add` | `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--pipeline-id ID`, `--inference JSON`, `--retention JSON` | Create profile. `POST /api/v1/profile/` |
-| `opal look config profile show` | `<profile_id>` | Get profile. `GET /api/v1/profile/{profile_id}` |
-| `opal look config profile update` | `<profile_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--pipeline-id ID`, `--inference JSON`, `--retention JSON` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
-| `opal look config profile remove` | `<profile_id>`, `--if-match ETAG` | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
-| `opal look config zone list` | — | List zones. `GET /api/v1/zone/` |
-| `opal look config zone add` | `--if-match ETAG`, `--id ID`, `--source-id ID`, `--name TEXT`, `--kind [polygon\|line]`, `--points JSON`, `--enabled/--no-enabled` | Register zone. `POST /api/v1/zone/` |
-| `opal look config zone show` | `<zone_id>` | Get zone. `GET /api/v1/zone/{zone_id}` |
-| `opal look config zone update` | `<zone_id>`, `--if-match ETAG`, `--name TEXT`, `--points JSON`, `--enabled/--no-enabled` | Update zone. `PATCH /api/v1/zone/{zone_id}` |
-| `opal look config zone remove` | `<zone_id>`, `--if-match ETAG` | Delete zone. `DELETE /api/v1/zone/{zone_id}` |
-| `opal look config rule list` | — | List rules. `GET /api/v1/rule/` |
-| `opal look config rule add` | `--if-match ETAG`, `--id ID`, `--name TEXT`, `--source-id ID`, `--zone-id ID`, `--kind [object_appears\|object_disappears\|enters_zone\|exits_zone\|line_crosses\|count_threshold\|dwell_time]`, `--class-filters JSON`, `--threshold FLOAT`, `--minimum-duration-ms INT`, `--cooldown-ms INT`, `--enabled/--no-enabled`, `--capture-on-match/--no-capture-on-match`, `--clip-on-match/--no-clip-on-match` | Register rule. `POST /api/v1/rule/` |
-| `opal look config rule show` | `<rule_id>` | Get rule. `GET /api/v1/rule/{rule_id}` |
-| `opal look config rule update` | `<rule_id>`, `--if-match ETAG`, `--name TEXT`, `--source-id ID`, `--zone-id ID`, `--kind [object_appears\|object_disappears\|enters_zone\|exits_zone\|line_crosses\|count_threshold\|dwell_time]`, `--class-filters JSON`, `--threshold FLOAT`, `--minimum-duration-ms INT`, `--cooldown-ms INT`, `--enabled/--no-enabled`, `--capture-on-match/--no-capture-on-match`, `--clip-on-match/--no-clip-on-match` | Update rule. `PATCH /api/v1/rule/{rule_id}` |
-| `opal look config rule remove` | `<rule_id>`, `--if-match ETAG` | Delete rule. `DELETE /api/v1/rule/{rule_id}` |
-| `opal look config monitor list` | — | List monitors. `GET /api/v1/monitor/` |
-| `opal look config monitor add` | `--if-match ETAG`, `--id ID`, `--name TEXT`, `--source-id ID`, `--pipeline-id ID`, `--profile-id ID`, `--enabled/--no-enabled`, `--restart-policy [on_failure\|always\|never]`, `--options JSON` | Register monitor. `POST /api/v1/monitor/` |
-| `opal look config monitor show` | `<monitor_id>` | Get monitor. `GET /api/v1/monitor/{monitor_id}` |
-| `opal look config monitor update` | `<monitor_id>`, `--if-match ETAG`, `--name TEXT`, `--source-id ID`, `--pipeline-id ID`, `--profile-id ID`, `--enabled/--no-enabled`, `--restart-policy [on_failure\|always\|never]`, `--options JSON` | Update monitor. `PATCH /api/v1/monitor/{monitor_id}` |
-| `opal look config monitor remove` | `<monitor_id>`, `--if-match ETAG` | Delete monitor. `DELETE /api/v1/monitor/{monitor_id}` |
-| `opal look config pipeline validate` | `--id ID`, `--name TEXT`, `--stages JSON`, `--description TEXT` | Validate topology, task compatibility and capability requirements without mutation. `POST /api/v1/pipeline/validate` |
-| `opal look config profile activate` | `<profile_id>`, `--if-match ETAG` | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
-| `opal look source status` | `<source_id>` | Source connectivity and last-frame state. `GET /api/v1/source/{source_id}/status` |
-| `opal look source probe` | `<source_id>` | Probe source connectivity without persistent mutation. `POST /api/v1/source/{source_id}/probe` |
-| `opal look analyze run` | `--pipeline-id ID`, `--profile-id ID`, `--source-id ID`, `--media-id ID`, `--capture-id ID`, `--frame-at-ms INT`, `--options JSON`, `--retention JSON` | Analyze one current frame or retained media image synchronously. `POST /api/v1/analyze/` |
-| `opal look analyze image` | `<image>`, `--pipeline-id ID`, `--profile-id ID`, `--options-json TEXT`, `--persist-results/--no-persist-results` | Analyze uploaded still image synchronously. `POST /api/v1/analyze/image` |
-| `opal look session list` | `--limit INT`, `--state TEXT`, `--source-id ID` | List session executions. `GET /api/v1/session/` |
-| `opal look session start` | `--idempotency-key KEY`, `--source-id ID`, `--pipeline-id ID`, `--profile-id ID`, `--options JSON`, `--retention JSON`, `--auto-start/--no-auto-start` | Admit live video analysis. `POST /api/v1/session/` |
-| `opal look session show` | `<session_id>` | Read session state. `GET /api/v1/session/{session_id}` |
-| `opal look session stop` | `<session_id>` | Request session stop. `POST /api/v1/session/{session_id}/stop` |
-| `opal look session stream` | `<session_id>`, `--last-event-id ID` | Stream session observations over text/event-stream. `GET /api/v1/session/{session_id}/stream` |
-| `opal look session preview` | `<session_id>`, `--classes TEXT`, `--min-confidence FLOAT`, `--show-labels/--no-show-labels`, `--show-boxes/--no-show-boxes`, `--show-confidence/--no-show-confidence`, `--target-fps FLOAT`, `--width INT`, `--height INT`, `--quality INT`, `--presentation-filter TEXT`, `--out PATH` | Live annotated multipart MJPEG preview. `GET /api/v1/session/{session_id}/preview` |
-| `opal look data job list` | `--limit INT`, `--state TEXT`, `--kind TEXT` | List finite processing jobs. `GET /api/v1/job/` |
-| `opal look data job submit` | `--idempotency-key KEY`, `--kind [analyze_video\|export_annotated_video\|extract_clip]`, `--source-id ID`, `--media-id ID`, `--pipeline-id ID`, `--profile-id ID`, `--range JSON`, `--options JSON`, `--retention JSON`, `--output JSON`, `--wait` | Admit finite video analysis or media export. `POST /api/v1/job/` |
-| `opal look data job show` | `<job_id>` | Read job. `GET /api/v1/job/{job_id}` |
-| `opal look data job cancel` | `<job_id>` | Cancel finite job. `POST /api/v1/job/{job_id}/cancel` |
-| `opal look data observation list` | `--limit INT`, `--source-id ID`, `--session-id ID`, `--job-id ID`, `--task TEXT`, `--label TEXT`, `--after ISO`, `--before ISO` | Search immutable observations. `GET /api/v1/observation/` |
-| `opal look data observation show` | `<observation_id>` | Get exact immutable observation by ID. `GET /api/v1/observation/{observation_id}` |
-| `opal look data media list` | `--limit INT` | List uploaded input media. `GET /api/v1/media/` |
-| `opal look data media upload` | `<file>` | Upload finite video or image input. `POST /api/v1/media/` |
-| `opal look data media show` | `<media_id>` | Get media metadata. `GET /api/v1/media/{media_id}` |
-| `opal look data media remove` | `<media_id>` | Delete media metadata and bytes when no active users. `DELETE /api/v1/media/{media_id}` |
-| `opal look source frame` | `<source_id>`, `--pipeline-id ID`, `--target-fps FLOAT`, `--width INT`, `--height INT`, `--quality INT`, `--presentation-filter TEXT`, `--out PATH` | Get current JPEG frame without inference/retention. `GET /api/v1/source/{source_id}/frame` |
-| `opal look source capture` | `<source_id>`, `--retain/--no-retain`, `--annotate/--no-annotate`, `--session-id ID`, `--observation-id ID`, `--out PATH` | Capture current frame, optionally retain. `POST /api/v1/source/{source_id}/capture/` |
-| `opal look data capture list` | `--limit INT` | List retained captures. `GET /api/v1/capture/` |
-| `opal look data capture show` | `<capture_id>` | Get capture metadata. `GET /api/v1/capture/{capture_id}` |
-| `opal look data capture remove` | `<capture_id>` | Delete capture. `DELETE /api/v1/capture/{capture_id}` |
-| `opal look data capture download` | `<capture_id>`, `--out PATH` | Download exact capture. `GET /api/v1/capture/{capture_id}/content` |
-| `opal look data artifact list` | `--limit INT` | List derived videos, clips and snapshots. `GET /api/v1/artifact/` |
-| `opal look data artifact show` | `<artifact_id>` | Get artifact metadata. `GET /api/v1/artifact/{artifact_id}` |
-| `opal look data artifact remove` | `<artifact_id>` | Delete artifact and derived bytes. `DELETE /api/v1/artifact/{artifact_id}` |
-| `opal look data artifact download` | `<artifact_id>`, `--range BYTES`, `--out PATH` | Download complete artifact or one byte range. `GET /api/v1/artifact/{artifact_id}/content` |
+| `opal look engine discover` | — | Trigger engine discovery. `POST /api/v1/engine/discover` |
+| `opal look engine capabilities` | `<engine_id>` | Inspect engine capabilities and accepted options. `GET /api/v1/engine/{engine_id}/capabilities` |
+| `opal look config engine update` | `<engine_id>`, `--if-match ETAG`, `--enabled/--no-enabled`, `--options JSON` | Update engine. `PATCH /api/v1/engine/{engine_id}` |
+| `opal look model list` | `--engine-id ID` | List engine-owned models. `GET /api/v1/model/` |
+| `opal look model show` | `<model_id>` | Get model. `GET /api/v1/model/{model_id}` |
+| `opal look model load` | `<model_id>` | Load a model into its engine. `POST /api/v1/model/{model_id}/load` |
+| `opal look model unload` | `<model_id>` | Unload a model from its engine. `POST /api/v1/model/{model_id}/unload` |
+| `opal look predict image` | `--engine-id ID`, `--model-id ID`, `--source PATH`, `--confidence FLOAT`, `--device-id ID`, `--engine-options JSON`, `--include-native/--no-include-native` | Detect objects in a single image. `POST /api/v1/predict` |
+| `opal look hardware list` | — | List compute devices. `GET /api/v1/hardware/` |
+| `opal look hardware show` | `<device_id>` | Get device details. `GET /api/v1/hardware/{device_id}` |
+| `opal look stream start` | `--source URI`, `--engine-id ID`, `--model-id ID`, `--confidence FLOAT`, `--device-id ID`, `--engine-options JSON`, `--annotate/--no-annotate`, `--buffer-policy [drop_oldest|drop_newest|block]`, `--buffer-size INT`, `--idempotency-key KEY` | Start a video or detection stream (202). `POST /api/v1/stream/` |
+| `opal look stream list` | — | List streams. `GET /api/v1/stream/` |
+| `opal look stream show` | `<stream_id>` | Get stream status with a redacted source. `GET /api/v1/stream/{stream_id}` |
+| `opal look stream stop` | `<stream_id>` | Stop a stream and release its resources. `POST /api/v1/stream/{stream_id}/stop` |
+| `opal look stream watch` | `<stream_id>` | Follow stream metadata and detection events over SSE. `GET /api/v1/stream/{stream_id}/events` |
+| `opal look stream watch-video` | `<stream_id>`, `--annotated/--no-annotated`, `--out PATH` | Watch the live MJPEG feed. `GET /api/v1/stream/{stream_id}/video` |
+| `opal look stream snapshot` | `<stream_id>`, `--annotated/--no-annotated`, `--out PATH` | Capture the current frame as JPEG. `GET /api/v1/stream/{stream_id}/snapshot` |
+| `opal look stream metrics` | `<stream_id>` | Per-stream counters and latency. `GET /api/v1/stream/{stream_id}/metrics` |
 | `opal look config setting list` | — | List settings. `GET /api/v1/setting/` |
-| `opal look config setting update` | `--if-match ETAG`, `--data JSON` | Patch settings (alias: `opal look settings patch`). `PATCH /api/v1/setting/` |
+| `opal look config setting update` | `--if-match ETAG`, `--data JSON` | Patch settings. `PATCH /api/v1/setting/` |
 | `opal look config setting show` | `<key>` | Get setting. `GET /api/v1/setting/{key}` |
 | `opal look config setting set` | `<key>`, `<value>`, `--if-match ETAG` | Set setting. `PUT /api/v1/setting/{key}` |
-| `opal look config setting remove` | `<key>`, `--if-match ETAG` | Delete setting (alias: `opal look settings reset`). `DELETE /api/v1/setting/{key}` |
+| `opal look config setting remove` | `<key>`, `--if-match ETAG` | Delete setting. `DELETE /api/v1/setting/{key}` |
+| `opal look config profile list` | — | List profiles. `GET /api/v1/profile/` |
+| `opal look config profile add` | `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active` | Create profile. `POST /api/v1/profile/` |
+| `opal look config profile show` | `<profile_id>` | Get profile. `GET /api/v1/profile/{profile_id}` |
+| `opal look config profile update` | `<profile_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
+| `opal look config profile remove` | `<profile_id>`, `--if-match ETAG` | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
+| `opal look config profile activate` | `<profile_id>`, `--if-match ETAG` | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
 | `opal look backup list` | — | List backups. `GET /api/v1/backup/list` |
 | `opal look backup create` | — | Create backup. `POST /api/v1/backup/create` |
 | `opal look backup download` | `<filename>`, `--out PATH` | Download backup. `GET /api/v1/backup/download/{filename}` |
@@ -563,27 +475,14 @@ opal look
 | `opal look backup export` | `--out PATH` | Export configuration. `GET /api/v1/backup/export` |
 | `opal look backup import` | `--if-match ETAG`, `--file PATH` | Import configuration. `POST /api/v1/backup/import` |
 | `opal look backup validate` | `--file PATH` | Validate configuration. `POST /api/v1/backup/validate` |
-| `opal look info health` | — | Service health report. `GET /api/v1/health/` |
 | `opal look info version` | — | Service Info. `GET /api/v1/info/` |
 | `opal look info ping` | — | Ping. `GET /api/v1/info/ping` |
+| `opal look info health` | — | Service health report. `GET /api/v1/health/` |
 | `opal look info live` | — | Liveness probe. `GET /api/v1/health/live` |
 | `opal look info ready` | — | Readiness probe. `GET /api/v1/health/ready` |
 | `opal look service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
 | `opal look service stop` | — | Stop service. `POST /api/v1/service/stop` |
 | `opal look service log` | `--lines INT` | Tail service log. `GET /api/v1/service/log` |
-| `opal look info metrics` | — | Operational counters and latency. `GET /api/v1/metrics/` |
-| `opal look info events` | — | Inspect event publication queue and drops. `GET /api/v1/events/status` |
-| `opal look data recording list` | `--limit INT` | List recordings. `GET /api/v1/recording/` |
-| `opal look data recording start` | `--idempotency-key KEY`, `--source-id ID`, `--include-audio/--no-include-audio`, `--max-duration-seconds INT`, `--output JSON` | Start independent recording. `POST /api/v1/recording/` |
-| `opal look data recording show` | `<recording_id>` | Inspect recording. `GET /api/v1/recording/{recording_id}` |
-| `opal look data recording stop` | `<recording_id>` | Stop recording and finalize artifact. `POST /api/v1/recording/{recording_id}/stop` |
-| `opal look source stream` | `<source_id>`, `--annotations/--no-annotations`, `--pipeline-id ID`, `--classes TEXT`, `--min-confidence FLOAT`, `--show-labels/--no-show-labels`, `--show-boxes/--no-show-boxes`, `--show-confidence/--no-show-confidence`, `--target-fps FLOAT`, `--width INT`, `--height INT`, `--quality INT`, `--presentation-filter TEXT`, `--out PATH` | View live source feed without requiring a model or analysis session. `GET /api/v1/source/{source_id}/stream` |
-| `opal look config persona list` | `--enabled/--no-enabled` | List Personas. `GET /api/v1/persona/` |
-| `opal look config persona add` | `--if-match ETAG`, `--persona-id ID`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Create Persona. `POST /api/v1/persona/` |
-| `opal look config persona validate` | `<persona_id>` | Validate Persona. `POST /api/v1/persona/{persona_id}/validate` |
-| `opal look config persona show` | `<persona_id>` | Get Persona. `GET /api/v1/persona/{persona_id}` |
-| `opal look config persona update` | `<persona_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Update Persona. `PATCH /api/v1/persona/{persona_id}` |
-| `opal look config persona remove` | `<persona_id>`, `--if-match ETAG` | Delete Persona. `DELETE /api/v1/persona/{persona_id}` |
 
 ### opal-think
 
@@ -830,188 +729,6 @@ opal event
 † Proposed name; the operation has no `x-opal-cli` annotation yet.
 
 ---
-
-<a id="opal-device"></a>
-
-### opal-device
-
-Optional device registry: identity, inventory, discovery, capabilities, preferred defaults and availability for audio, video and compute hardware. It never operates devices — no capture, playback, reservation, inference or GPU scheduling. Registries can federate: explicit trusted peers share filtered inventory snapshots over the same API.
-
-#### Typer command tree
-
-```text
-opal device
-├── info                  health | live | ready | version | ping
-├── catalog
-├── list | add | show | update | remove
-├── capabilities | status | test
-├── discover
-├── watch
-├── event                 list
-├── default               list | set | remove
-├── label                 list | set | remove
-├── tag                   list | add | remove
-├── group                 list | add | show | update | remove
-│   └── member            list | add | remove
-├── peer                  list | add | show | update | remove | status | sync | discover
-├── sharing               list | add | remove
-├── plugin                list | show | enable | disable | test | discover
-├── federation            inventory | registry
-├── config
-│   ├── setting           list | update | show | set | remove
-│   └── profile           list | add | show | update | remove | activate
-├── backup                list | create | download | restore | remove | export | import | validate-stored | validate
-└── service               start | stop | log
-```
-
-#### REST tree
-
-```text
-/api/v1
-├── /device/                                GET, POST
-│   └── /{device_id}                        GET, PATCH, DELETE
-│       ├── /capabilities                   GET
-│       ├── /status                         GET
-│       ├── /test                           POST
-│       ├── /label                          GET
-│       │   └── /{key}                      PUT, DELETE
-│       └── /tag                            GET, POST
-│           └── /{tag}                      DELETE
-├── /discovery/scan                         POST
-├── /default/                               GET
-│   └── /{scope}/{target}                   PUT, DELETE
-├── /group/                                 GET, POST
-│   └── /{group_id}                         GET, PATCH, DELETE
-│       └── /member                         GET
-│           └── /{device_id}                PUT, DELETE
-├── /peer/                                  GET, POST
-│   ├── /discover                           POST
-│   ├── /sync                               POST
-│   └── /{peer_id}                          GET, PATCH, DELETE
-│       ├── /status                         GET
-│       └── /sync                           POST
-├── /sharing/policy/                        GET, POST
-│   └── /{policy_id}                        DELETE
-├── /plugin/                                GET
-│   └── /{plugin_id}                        GET
-│       ├── /enable                         POST
-│       ├── /disable                        POST
-│       ├── /test                           POST
-│       └── /discover                       POST
-├── /event/                                 GET
-│   └── /stream                             GET (SSE)
-├── /federation
-│   ├── /inventory                          GET
-│   └── /registry                           GET
-├── /catalog                                GET
-├── /profile/                               GET, POST
-│   └── /{profile_id}                       GET, PATCH, DELETE
-│       └── /activate                       POST
-├── /setting/                               GET, PATCH
-│   └── /{key}                              GET, PUT, DELETE
-├── /health/                                GET
-│   ├── /live                               GET
-│   └── /ready                              GET
-├── /backup
-│   ├── /list                               GET
-│   ├── /create                             POST
-│   ├── /download/{filename}                GET
-│   ├── /restore/{filename}                 POST
-│   ├── /{filename}                         DELETE
-│   ├── /export                             GET
-│   ├── /import                             POST
-│   └── /validate                           GET, POST
-├── /info/                                  GET
-│   └── /ping                               GET
-└── /service
-    ├── /start                              POST
-    ├── /stop                               POST
-    └── /log                                GET
-```
-
-#### Commands
-
-| COMMAND | OPTIONS | DESCRIPTION |
-|---|---|---|
-| `opal device backup create` | — | Create backup. `POST /api/v1/backup/create` |
-| `opal device backup download` | — | Download backup. `GET /api/v1/backup/download/{filename}` |
-| `opal device backup export` | — | Export configuration. `GET /api/v1/backup/export` |
-| `opal device backup import` | — | Import configuration. `POST /api/v1/backup/import` |
-| `opal device backup list` | — | List backups. `GET /api/v1/backup/list` |
-| `opal device backup restore` | — | Restore backup. `POST /api/v1/backup/restore/{filename}` |
-| `opal device backup validate` | — | Validate stored configuration. `GET /api/v1/backup/validate` |
-| `opal device backup validate` | — | Validate configuration. `POST /api/v1/backup/validate` |
-| `opal device backup remove` | — | Delete backup. `DELETE /api/v1/backup/{filename}` |
-| `opal device catalog` | — | Discover device types, discovery backends and event names. `GET /api/v1/catalog` |
-| `opal device default list` | — | List preferred defaults. `GET /api/v1/default/` |
-| `opal device default set` | --if-match ETAG | Set preferred defaults for device, type, host or global scope. `PUT /api/v1/default/{scope}/{target}` |
-| `opal device default remove` | — | Remove preferred defaults. `DELETE /api/v1/default/{scope}/{target}` |
-| `opal device list` | — | List and filter local and federated device inventory. `GET /api/v1/device/` |
-| `opal device add` | — | Register user-managed device. `POST /api/v1/device/` |
-| `opal device show` | — | Show device metadata. `GET /api/v1/device/{device_id}` |
-| `opal device update` | --if-match ETAG | Update editable device metadata. `PATCH /api/v1/device/{device_id}` |
-| `opal device remove` | — | Remove registered device. `DELETE /api/v1/device/{device_id}` |
-| `opal device capabilities` | — | Show device capabilities. `GET /api/v1/device/{device_id}/capabilities` |
-| `opal device label list` | — | List device labels. `GET /api/v1/device/{device_id}/label` |
-| `opal device label set` | --if-match ETAG | Set key-value device label. `PUT /api/v1/device/{device_id}/label/{key}` |
-| `opal device label remove` | — | Remove device label. `DELETE /api/v1/device/{device_id}/label/{key}` |
-| `opal device status` | — | Show device availability. `GET /api/v1/device/{device_id}/status` |
-| `opal device tag list` | — | List device tags. `GET /api/v1/device/{device_id}/tag` |
-| `opal device tag add` | — | Add device tag. `POST /api/v1/device/{device_id}/tag` |
-| `opal device tag remove` | — | Remove device tag. `DELETE /api/v1/device/{device_id}/tag/{tag}` |
-| `opal device test` | — | Perform safe non-invasive checks. `POST /api/v1/device/{device_id}/test` |
-| `opal device discover` | — | Discover local devices without operating them. `POST /api/v1/discovery/scan` |
-| `opal device event list` | — | Browse recent device and peer event history. `GET /api/v1/event/` |
-| `opal device watch` | — | Subscribe to native SSE device and peer events. `GET /api/v1/event/stream` |
-| `opal device federation inventory` | — | Read filtered inventory as a trusted peer. `GET /api/v1/federation/inventory` |
-| `opal device federation registry` | — | Read local registry identity and federation metadata. `GET /api/v1/federation/registry` |
-| `opal device group list` | — | List device groups. `GET /api/v1/group/` |
-| `opal device group add` | — | Create static or dynamic group. `POST /api/v1/group/` |
-| `opal device group show` | — | Show group definition. `GET /api/v1/group/{group_id}` |
-| `opal device group update` | --if-match ETAG | Update group definition. `PATCH /api/v1/group/{group_id}` |
-| `opal device group remove` | — | Remove group. `DELETE /api/v1/group/{group_id}` |
-| `opal device group member list` | — | List group members. `GET /api/v1/group/{group_id}/member` |
-| `opal device group member add` | --if-match ETAG | Add device to static group. `PUT /api/v1/group/{group_id}/member/{device_id}` |
-| `opal device group member remove` | — | Remove device from static group. `DELETE /api/v1/group/{group_id}/member/{device_id}` |
-| `opal device info health` | — | Service health report. `GET /api/v1/health/` |
-| `opal device info live` | — | Liveness probe. `GET /api/v1/health/live` |
-| `opal device info ready` | — | Readiness probe. `GET /api/v1/health/ready` |
-| `opal device info version` | — | Service Info. `GET /api/v1/info/` |
-| `opal device info ping` | — | Ping. `GET /api/v1/info/ping` |
-| `opal device peer list` | — | List federation peers. `GET /api/v1/peer/` |
-| `opal device peer add` | — | Register an explicit peer. `POST /api/v1/peer/` |
-| `opal device peer discover` | — | Discover untrusted peer candidates using mDNS when enabled. `POST /api/v1/peer/discover` |
-| `opal device peer sync` | — | Refresh all trusted peer caches now. `POST /api/v1/peer/sync` |
-| `opal device peer show` | — | Show peer. `GET /api/v1/peer/{peer_id}` |
-| `opal device peer update` | --if-match ETAG | Update peer metadata or trust. `PATCH /api/v1/peer/{peer_id}` |
-| `opal device peer remove` | — | Remove peer. `DELETE /api/v1/peer/{peer_id}` |
-| `opal device peer status` | — | Check peer health and synchronization freshness. `GET /api/v1/peer/{peer_id}/status` |
-| `opal device peer sync` | — | Refresh one peer cache now. `POST /api/v1/peer/{peer_id}/sync` |
-| `opal device plugin list` | — | List installed discovery plugins. `GET /api/v1/plugin/` |
-| `opal device plugin show` | — | Show plugin metadata. `GET /api/v1/plugin/{plugin_id}` |
-| `opal device plugin disable` | — | Disable plugin. `POST /api/v1/plugin/{plugin_id}/disable` |
-| `opal device plugin discover` | — | Discover local devices through one plugin. `POST /api/v1/plugin/{plugin_id}/discover` |
-| `opal device plugin enable` | — | Enable an installed plugin. `POST /api/v1/plugin/{plugin_id}/enable` |
-| `opal device plugin test` | — | Test plugin requirements and discovery capability safely. `POST /api/v1/plugin/{plugin_id}/test` |
-| `opal device config profile list` | — | List profiles. `GET /api/v1/profile/` |
-| `opal device config profile add` | — | Create profile. `POST /api/v1/profile/` |
-| `opal device config profile show` | — | Get profile. `GET /api/v1/profile/{profile_id}` |
-| `opal device config profile update` | --if-match ETAG | Update profile. `PATCH /api/v1/profile/{profile_id}` |
-| `opal device config profile remove` | — | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
-| `opal device config profile activate` | — | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
-| `opal device service log` | — | Tail service log. `GET /api/v1/service/log` |
-| `opal device service start` | — | Start service. `POST /api/v1/service/start` |
-| `opal device service stop` | — | Stop service. `POST /api/v1/service/stop` |
-| `opal device config setting list` | — | List settings. `GET /api/v1/setting/` |
-| `opal device config setting update` | — | Patch settings. `PATCH /api/v1/setting/` |
-| `opal device config setting show` | — | Get setting. `GET /api/v1/setting/{key}` |
-| `opal device config setting update` | — | Set setting. `PUT /api/v1/setting/{key}` |
-| `opal device config setting remove` | — | Delete setting. `DELETE /api/v1/setting/{key}` |
-| `opal device sharing list` | — | List metadata visibility policies. `GET /api/v1/sharing/policy/` |
-| `opal device sharing add` | — | Create allow or deny inventory visibility rule (aliases: allow, deny). `POST /api/v1/sharing/policy/` |
-| `opal device sharing remove` | — | Remove sharing policy. `DELETE /api/v1/sharing/policy/{policy_id}` |
-
-Device IDs are UUIDs; human-readable host-qualified names may contain `/` and must be URL-encoded in path parameters. Device configuration mutations require `If-Match` against the registry's strong ETag; the CLI fetches and attaches it automatically unless `--if-match` is given. Federation routes (`federation inventory`, `federation registry`) are what trusted peers call; the local `peer` group administers those trust relationships.
 
 ---
 
@@ -1271,124 +988,95 @@ opal listen config setting set event_publication_enabled true
 
 ### opal-look
 
-**1. Ask the service what it can actually do.**
+**1. See which inference engines the host offers.**
 
 ```bash
-opal look info capabilities
+opal look engine list
+opal look engine discover
 ```
 
-**2. Register a camera, keeping its password out of the locator.**
+**2. Inspect an engine's accepted options.**
 
 ```bash
-opal look source add --id cam-front --kind rtsp --name "Front Yard" --locator rtsp://192.168.1.40:554/stream1 --secret-ref cam-front-credentials
+opal look engine capabilities yolo
 ```
 
-**3. Probe the camera's connectivity without changing anything.**
+**3. List the models an engine owns.**
 
 ```bash
-opal look source probe cam-front
+opal look model list --engine-id yolo
 ```
 
-**4. Grab the current frame as a JPEG.**
+**4. Load a model for inference.**
 
 ```bash
-opal look source frame cam-front --width 1280 --quality 85 --out front.jpg
+opal look model load yolo11n
 ```
 
-**5. Drop in on a camera's live feed; no model required.**
+**5. Detect objects in a photo.**
 
 ```bash
-opal look source stream cam-front --target-fps 10 --out front.mjpeg
+opal look predict image --engine-id yolo --model-id yolo11n --source driveway.jpg
 ```
 
-**6. Register a detection model that is already on the host.**
+**6. Start a plain video stream — no engine needed.**
 
 ```bash
-opal look config model add --id yolo-det --engine-id onnx --resource-ref /opt/models/yolo11n.onnx --tasks '["detection"]'
+opal look stream start --source rtsp://192.168.1.40:554/stream1
 ```
 
-**7. Build a one-stage pipeline around that model.**
+**7. Watch the live feed.**
 
 ```bash
-opal look config pipeline add --id people --name "People detector" --stages '[{"id":"detect","kind":"inference","model_id":"yolo-det","task":"detection"}]'
+opal look stream watch-video str-42 --out front.mjpeg
 ```
 
-**8. Analyze the camera's current frame.**
+**8. Grab the current frame as a JPEG.**
 
 ```bash
-opal look analyze run --source-id cam-front --pipeline-id people
+opal look stream snapshot str-42 --out front.jpg
 ```
 
-**9. Analyze a photo from your laptop.**
+**9. Turn on detection for the same camera.**
 
 ```bash
-opal look analyze image driveway.jpg --pipeline-id people
+opal look stream start --source rtsp://192.168.1.40:554/stream1 --engine-id yolo --model-id yolo11n --annotate
 ```
 
-**10. Start a live analysis session.**
+**10. Follow detection events as they arrive.**
 
 ```bash
-opal look session start --source-id cam-front --pipeline-id people
+opal look stream watch str-43
 ```
 
-**11. Follow the session's observations as they arrive.**
+**11. Watch the annotated feed.**
 
 ```bash
-opal look session stream ses-42
+opal look stream watch-video str-43 --annotated --out detect.mjpeg
 ```
 
-**12. Watch an annotated preview that only draws people and dogs.**
+**12. Check a stream's counters and latency.**
 
 ```bash
-opal look session preview ses-42 --classes person,dog --min-confidence 0.5 --out preview.mjpeg
+opal look stream metrics str-43
 ```
 
-**13. Draw a polygon around the front yard.**
+**13. Stop a stream and release the camera.**
 
 ```bash
-opal look config zone add --id front-yard --source-id cam-front --name "Front Yard" --kind polygon --points '[{"x":0.10,"y":0.40},{"x":0.90,"y":0.40},{"x":0.95,"y":0.98},{"x":0.05,"y":0.98}]'
+opal look stream stop str-43
 ```
 
-**14. Add a rule that matches when a person enters that zone.**
+**14. See what compute the service can use.**
 
 ```bash
-opal look config rule add --id person-in-yard --name "Person in front yard" --source-id cam-front --zone-id front-yard --kind enters_zone --class-filters '["person"]' --cooldown-ms 60000 --capture-on-match
+opal look hardware list
 ```
 
-**15. Keep the camera watched around the clock, restarts included.**
+**15. Make a stream start retry-safe.**
 
 ```bash
-opal look config monitor add --id watch-front --name "Watch the front" --source-id cam-front --pipeline-id people --restart-policy always
-```
-
-**16. Capture and keep an annotated frame.**
-
-```bash
-opal look source capture cam-front --retain --annotate
-```
-
-**17. Record two minutes of video.**
-
-```bash
-opal look data recording start --source-id cam-front --max-duration-seconds 120
-```
-
-**18. Upload a clip for offline analysis.**
-
-```bash
-opal look data media upload doorbell.mp4
-```
-
-**19. Analyze the uploaded clip and wait for the job to finish.**
-
-```bash
-opal look data job submit --kind analyze_video --media-id med-7 --pipeline-id people --wait
-```
-
-**20. Search today's observations for people.**
-
-```bash
-opal look data observation list --label person --after 2026-11-10T00:00:00Z --limit 20
+opal look stream start --source rtsp://192.168.1.40:554/stream1 --idempotency-key front-cam-2026-11-10
 ```
 
 <a id="opal-think-usecases"></a>
@@ -1641,104 +1329,6 @@ opal event backup create
 
 ---
 
-<a id="opal-device-usecases"></a>
-
-### opal-device
-
-**1. See what hardware this host knows about.**
-
-```bash
-opal device list
-```
-
-**2. Find a camera you can actually use.**
-
-```bash
-opal device list --type camera --status available
-```
-
-**3. What can this thing do?**
-
-```bash
-opal device capabilities dev-3fa8-microphone-array
-```
-
-**4. Scan for new hardware without touching it.**
-
-```bash
-opal device discover
-```
-
-**5. Register a device the scanner cannot see.**
-
-```bash
-opal device add --name "lab/gpu-0" --type gpu --host-id workstation-2 --host-name "Workstation 2" --backend cuda --access local
-```
-
-**6. Prefer the studio microphone everywhere.**
-
-```bash
-opal device default set --scope type --target microphone --values '{"device_id":"dev-3fa8-microphone-array"}'
-```
-
-**7. Group the porch cameras.**
-
-```bash
-opal device group add --name porch-cams --mode static
-opal device group member add grp-porch dev-cam-front
-opal device group member add grp-porch dev-cam-side
-```
-
-**8. Tag it for the humans.**
-
-```bash
-opal device tag add dev-cam-front outdoor
-opal device label set dev-cam-front location porch
-```
-
-**9. Meet your neighbor's registry.**
-
-```bash
-opal device peer add --name garage --base-url http://192.168.1.20:8085 --trusted
-opal device peer sync garage
-```
-
-**10. Hide the lab GPU from peers.**
-
-```bash
-opal device sharing deny --device-id dev-lab-gpu
-```
-
-**11. Watch the registry breathe.**
-
-```bash
-opal device watch
-```
-
-**12. What did I miss while I was away?**
-
-```bash
-opal device event list --limit 20
-```
-
-**13. Which discovery backends are installed?**
-
-```bash
-opal device plugin list
-```
-
-**14. Whole fleet at a glance.**
-
-```bash
-opal device federation inventory
-```
-
-**15. Snapshot before renumbering the studio.**
-
-```bash
-opal device backup create
-```
-
 ---
 
 ## Part 3: Combined
@@ -1761,12 +1351,6 @@ opal think config setting set event.base_url '"http://127.0.0.1:8080"'
 opal listen config setting update --data '{"event_publication_enabled":true,"event_transport":"http"}'
 ```
 
-**Check Look's event output**, which is disabled by default and allowlisted. The contracts leave the enabling setting to the implementation, so find its key with `opal look config setting list`, turn it on, and confirm here:
-
-```bash
-opal look info events
-```
-
 **Register a `speak` action.** Say returns audio bytes and plays nothing, so an HTTP action that posts to Say would synthesize speech that nobody hears. The `speak` action runs the CLI on the Event host instead, where `--play` reaches a speaker. Adjust the executable path to wherever `opal` is installed.
 
 ```bash
@@ -1778,12 +1362,12 @@ Things to know before you wire anything:
 - **Rule topics** are an exact topic or a `prefix.*` pattern. Conditions are ANDed. There are no timers, aggregation, or rule chains.
 - **Templates** use `{{data.path}}` or `{{event}}`. A missing path fails the execution with `template_error`.
 - **HTTP action destinations** must be on Event's allowlist.
-- **Referenced resources must exist.** Recipes name cameras, zones, pipelines, intents, and sessions by ID without always creating them. Part 2 shows how to create each kind.
+- **Referenced resources must exist.** Recipes name streams, engines, models, intents, and sessions by ID without always creating them. Part 2 shows how to create each kind.
 - **Speech is a Think decision.** Recipes that tell Think to "use the speak action" depend on the model choosing to call it. Read the task record with `opal think task show` when the house stays silent.
-- **Payload field names are assumed.** The contracts name the topics (`opal.listen.intent.match`, `opal.look.condition.matched`, `opal.look.monitor.failed`) but do not fix the fields under `data`. These recipes assume Listen publishes its recognition result fields (`data.intent_name`, `data.slot_values`, `data.transcript`) and Look publishes `data.rule_id`. Check a real event before trusting a condition:
+- **Payload field names are assumed.** The contracts name the topics (`opal.listen.intent.match`) but do not fix the fields under `data`. These recipes assume Listen publishes its recognition result fields (`data.intent_name`, `data.slot_values`, `data.transcript`) and that republished Look stream events carry the SSE detection payload (`data.detections[0].class_name`). Check a real event before trusting a condition:
 
 ```bash
-opal event data event list --topic opal.look.condition.matched --limit 1
+opal event data event list --topic opal.listen.intent.match --limit 1
 ```
 
 ### Voice lab
@@ -1864,89 +1448,90 @@ opal think ask "Introduce yourself as Amy, the ops assistant, in one friendly se
 
 #### 8. Verbally notify me when someone is in my front yard
 
-*look + event + say.* Look matches a person entering the zone, Event routes the match, and Say announces it.
+*look + event + say.* An inference stream republishes its detections to Event; Event routes a person match to Say. There are no zones in this contract, so aim the camera at the yard.
 
 ```bash
-opal look config zone add --id front-yard --source-id cam-front --name "Front Yard" --kind polygon --points '[{"x":0.10,"y":0.40},{"x":0.90,"y":0.40},{"x":0.95,"y":0.98},{"x":0.05,"y":0.98}]'
-opal look config rule add --id person-in-yard --name "Person in front yard" --source-id cam-front --zone-id front-yard --kind enters_zone --class-filters '["person"]' --cooldown-ms 60000
-opal look config monitor add --id watch-front --name "Watch the front" --source-id cam-front --pipeline-id people --restart-policy always
+opal look stream start --source rtsp://192.168.1.40:554/stream1 --engine-id yolo --model-id yolo11n
+opal look stream watch str-42 | opal event publish --topic yard.detection --source opal-look --data -
 opal event config action add --id announce-front-yard --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Heads up. Someone is in the front yard.","--play"]' --stdin none --description "Announce a visitor in the front yard."
-opal event config rule add --id front-yard-visitor --topic opal.look.condition.matched --conditions '[{"path":"data.rule_id","operator":"eq","value":"person-in-yard"}]' --actions '["announce-front-yard"]'
+opal event config rule add --id front-yard-visitor --topic yard.detection --conditions '[{"path":"data.detections[0].class_name","operator":"eq","value":"person"}]' --actions '["announce-front-yard"]'
 ```
 
 #### 9. What does the camera see?
 
-*look + think + say.* Drop in on a camera and get a spoken one-sentence description.
+*look + think + say.* Snapshot a stream, run detection on the frame, and get a spoken one-sentence description.
 
 ```bash
-opal look analyze run --source-id cam-front --pipeline-id people | opal think ask "Describe what the camera sees in one plain sentence, using only these observations." --context - | opal say generate - --play
+opal look stream snapshot str-front --out front.jpg
+opal look predict image --engine-id yolo --model-id yolo11n --source front.jpg | opal think ask "Describe what the camera sees in one plain sentence, using only these detections." --context - | opal say generate - --play
 ```
 
 #### 10. Package on the porch
 
-*look + event + say.* A package appears; the house says so.
+*look + event + say.* A package appears on the porch stream; the house says so. This assumes a model with a `package` class.
 
 ```bash
-opal look config rule add --id package-arrived --name "Package arrived" --source-id cam-porch --kind object_appears --class-filters '["package"]' --cooldown-ms 300000 --capture-on-match
+opal look stream start --source rtsp://192.168.1.41:554/stream1 --engine-id yolo --model-id yolo11n
+opal look stream watch str-44 | opal event publish --topic porch.detection --source opal-look --data -
 opal event config action add --id announce-package --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","A package has arrived. Act natural.","--play"]' --stdin none --description "Announce a delivered package."
-opal event config rule add --id package-alert --topic opal.look.condition.matched --conditions '[{"path":"data.rule_id","operator":"eq","value":"package-arrived"}]' --actions '["announce-package"]'
+opal event config rule add --id package-alert --topic porch.detection --conditions '[{"path":"data.detections[0].class_name","operator":"eq","value":"package"}]' --actions '["announce-package"]'
 ```
 
-#### 11. The loiterer
+#### 11. The porch visitor
 
-*look + event + say.* Someone lingers at the door for ten seconds: start a recording and let them know, politely.
+*look + event + say.* Someone shows up at the porch: keep a frame and let them know, politely.
 
 ```bash
-opal look config rule add --id porch-linger --name "Lingering at the porch" --source-id cam-porch --zone-id porch-mat --kind dwell_time --class-filters '["person"]' --minimum-duration-ms 10000 --cooldown-ms 120000
-opal event config action add --id record-porch --type http --method POST --url http://127.0.0.1:8082/api/v1/recording/ --body-mode template --body '{"source_id":"cam-porch","max_duration_seconds":90}' --description "Record 90 seconds from the porch camera."
-opal event config action add --id warn-loiterer --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Hello there. You are being recorded. Have a lovely day.","--persona","vox","--play"]' --stdin none --description "Politely warn a lingering visitor."
-opal event config rule add --id porch-linger-response --topic opal.look.condition.matched --conditions '[{"path":"data.rule_id","operator":"eq","value":"porch-linger"}]' --actions '["record-porch","warn-loiterer"]'
+opal look stream watch str-porch | opal event publish --topic porch.detection --source opal-look --data -
+opal event config action add --id snapshot-porch --type shell --mode exec --executable /usr/local/bin/opal --args '["look","stream","snapshot","str-porch","--out","/tmp/porch.jpg"]' --stdin none --description "Keep a frame from the porch camera."
+opal event config action add --id warn-visitor --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Hello there. You are on camera. Have a lovely day.","--persona","vox","--play"]' --stdin none --description "Politely greet a visitor."
+opal event config rule add --id porch-visitor-response --topic porch.detection --conditions '[{"path":"data.detections[0].class_name","operator":"eq","value":"person"}]' --actions '["snapshot-porch","warn-visitor"]'
 ```
 
 #### 12. Driveway is full
 
-*look + event + say.* Three or more cars in the driveway means company.
+*look + think + say.* Three or more cars in the driveway means company. Snapshot, count the detections, and hear the verdict.
 
 ```bash
-opal look config rule add --id driveway-full --name "Driveway full" --source-id cam-driveway --kind count_threshold --class-filters '["car"]' --threshold 3 --cooldown-ms 600000
-opal event config action add --id announce-driveway --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","The driveway is full. Either we have guests or someone is very lost.","--play"]' --stdin none --description "Announce a full driveway."
-opal event config rule add --id driveway-alert --topic opal.look.condition.matched --conditions '[{"path":"data.rule_id","operator":"eq","value":"driveway-full"}]' --actions '["announce-driveway"]'
+opal look stream snapshot str-driveway --out drive.jpg
+opal look predict image --engine-id yolo --model-id yolo11n --source drive.jpg | opal think ask "Using only these detections: if three or more cars appear, reply with one sentence announcing that the driveway is full; otherwise reply with exactly the word clear." --context - | opal say generate - --play
 ```
 
 #### 13. The camera went dark
 
-*look + event + say.* A monitor fails; you hear about it before the burglars do.
+*look + event + say.* A stream fails; you hear about it before the burglars do.
 
 ```bash
-opal event config action add --id announce-camera-down --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","A camera monitor has failed. Please check the cameras.","--play"]' --stdin none --description "Announce a failed camera monitor."
-opal event config rule add --id camera-down --topic opal.look.monitor.failed --conditions '[]' --actions '["announce-camera-down"]'
+opal look stream watch str-front | opal event publish --topic front.stream --source opal-look --data -
+opal event config action add --id announce-camera-down --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","A camera stream has failed. Please check the cameras.","--play"]' --stdin none --description "Announce a failed camera stream."
+opal event config rule add --id camera-down --topic front.stream --conditions '[{"path":"data.status","operator":"eq","value":"failed"}]' --actions '["announce-camera-down"]'
 ```
 
 #### 14. Off the couch, Biscuit
 
-*look + event + think + say.* The dog enters the couch zone. Think writes a fresh scolding every time, so Biscuit never gets used to it, and delivers it through the `speak` action.
+*look + event + think + say.* The dog shows up on the couch camera. Think writes a fresh scolding every time, so Biscuit never gets used to it, and delivers it through the `speak` action.
 
 ```bash
-opal look config rule add --id dog-on-couch --name "Dog on couch" --source-id cam-living-room --zone-id couch --kind enters_zone --class-filters '["dog"]' --cooldown-ms 120000
+opal look stream watch str-living-room | opal event publish --topic couch.detection --source opal-look --data -
 opal event config action add --id scold-dog --type http --method POST --url http://127.0.0.1:8083/api/v1/task/ --body-mode template --body '{"prompt":"A dog named Biscuit just climbed onto the couch. Write one short, firm, funny sentence telling him to get off, then say it aloud with the speak action.","max_steps":4}' --description "Ask Think to scold the dog out loud."
-opal event config rule add --id couch-patrol --topic opal.look.condition.matched --conditions '[{"path":"data.rule_id","operator":"eq","value":"dog-on-couch"}]' --actions '["scold-dog"]'
+opal event config rule add --id couch-patrol --topic couch.detection --conditions '[{"path":"data.detections[0].class_name","operator":"eq","value":"dog"}]' --actions '["scold-dog"]'
 ```
 
 #### 15. The visitor digest
 
-*look + think + say.* Summarize who came by today.
+*look + event + think + say.* Republished detections pile up in Event all day; Think summarizes them at night. This reuses the `yard.detection` republisher from recipe 8.
 
 ```bash
-opal look data observation list --source-id cam-front --label person --after 2026-11-10T00:00:00Z --limit 100 | opal think ask "Summarize today's front-yard visitors in two sentences: roughly how many visits and at what times of day." --context - | opal say generate - --play
+opal event data event list --topic yard.detection --limit 100 | opal think ask "Summarize today's front-yard visitors in two sentences: roughly how many visits and at what times of day." --context - | opal say generate - --play
 ```
 
 #### 16. Say "cheese"
 
-*listen + event + look.* A spoken command captures and keeps a frame.
+*listen + event + look.* A spoken command snapshots the front camera stream. This needs a running stream, `str-front` here.
 
 ```bash
 opal listen config intent add --name camera.snapshot --description "Capture a frame from the front camera" --phrases '["take a picture","snapshot the front yard","say cheese"]'
-opal event config action add --id capture-front --type http --method POST --url http://127.0.0.1:8082/api/v1/source/cam-front/capture/ --body-mode template --body '{"retain":true,"annotate":true}' --description "Capture and retain an annotated frame from the front camera."
+opal event config action add --id capture-front --type shell --mode exec --executable /usr/local/bin/opal --args '["look","stream","snapshot","str-front","--out","/tmp/cheese.jpg"]' --stdin none --description "Snapshot the front camera stream to a file."
 opal event config rule add --id voice-snapshot --topic opal.listen.intent.match --conditions '[{"path":"data.intent_name","operator":"eq","value":"camera.snapshot"}]' --actions '["capture-front"]'
 ```
 
@@ -1955,8 +1540,9 @@ opal event config rule add --id voice-snapshot --topic opal.listen.intent.match 
 *listen + event + think + look + say.* All five services, one question. Listen hears it, Event hands it to Think, Think runs the camera check through a registered action, reads the execution result, and answers with `speak`.
 
 ```bash
+opal look stream start --source rtsp://192.168.1.40:554/stream1 --engine-id yolo --model-id yolo11n
 opal listen config intent add --name door.who --description "Ask who is at the front door" --phrases '["who is at the door","is someone outside","check the front door"]'
-opal event config action add --id look-front-door --type http --method POST --url http://127.0.0.1:8082/api/v1/analyze/ --body-mode template --body '{"pipeline_id":"people","source":{"source_id":"cam-front"}}' --description "Analyze the current front door camera frame and return the observations." --keywords '["camera","door","look"]'
+opal event config action add --id look-front-door --type http --method POST --url http://127.0.0.1:8082/api/v1/predict --body-mode template --body '{"engine_id":"yolo","model_id":"yolo11n","source":"http://127.0.0.1:8082/api/v1/stream/str-front/snapshot"}' --description "Run detection on the current front-door frame and return the detections." --keywords '["camera","door","look"]'
 opal event config action add --id answer-door --type http --method POST --url http://127.0.0.1:8083/api/v1/task/ --body-mode template --body '{"prompt":"Run the look-front-door action, then use the speak action to say in one sentence who or what is at the front door.","max_steps":6}' --description "Ask Think to check the door and answer aloud."
 opal event config rule add --id who-is-there --topic opal.listen.intent.match --conditions '[{"path":"data.intent_name","operator":"eq","value":"door.who"}]' --actions '["answer-door"]'
 ```
@@ -2060,10 +1646,10 @@ opal think ask "Translate into Spanish: Where is the library, and does it have s
 
 #### 28. Read my homework to me
 
-*look + think + say.* Photograph a worksheet, extract the text, and get a hint rather than the answer. This needs a pipeline with an OCR task, which is an optional capability.
+*look + think + say.* Photograph the worksheet, detect what is on the page, and get a hint rather than the answer.
 
 ```bash
-opal look analyze image worksheet.jpg --pipeline-id ocr | opal think ask "These observations are OCR text from a homework problem. Explain how to approach it in three short steps without giving the final answer." --context - | opal say generate - --play
+opal look predict image --engine-id yolo --model-id yolo11n --source worksheet.jpg | opal think ask "These detections are from a homework problem. Describe what is on the page in two short sentences, then offer to explain how to approach it." --context - | opal say generate - --play
 ```
 
 ### Voice assistant
@@ -2116,7 +1702,7 @@ opal listen performance summary --limit 50 | opal think ask "In one sentence, sa
 
 #### 34. Goodnight mode
 
-*say + listen + look.* Three profile switches: a quiet voice, a short list of night-time intents, and a night-vision pipeline.
+*say + listen + look.* Three profile switches: a quiet voice, a short list of night-time intents, and a night-time detection setup.
 
 ```bash
 opal say config profile activate 2
@@ -2138,13 +1724,12 @@ opal event publish --topic home.doorbell.pressed --data '{"door":"front"}'
 
 #### 36. Welcome home
 
-*look + event + say.* A line across the hallway; a greeting when someone crosses it.
+*look + event + say.* A person appears on the hallway camera; the house says hello.
 
 ```bash
-opal look config zone add --id hallway-line --source-id cam-hallway --name "Hallway tripwire" --kind line --points '[{"x":0.20,"y":0.60},{"x":0.80,"y":0.60}]'
-opal look config rule add --id came-home --name "Someone came home" --source-id cam-hallway --zone-id hallway-line --kind line_crosses --class-filters '["person"]' --cooldown-ms 300000
+opal look stream watch str-hallway | opal event publish --topic hallway.detection --source opal-look --data -
 opal event config action add --id welcome-home --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Welcome home. The dog has been told you were gone for years.","--play"]' --stdin none --description "Greet someone arriving home."
-opal event config rule add --id greet-arrival --topic opal.look.condition.matched --conditions '[{"path":"data.rule_id","operator":"eq","value":"came-home"}]' --actions '["welcome-home"]'
+opal event config rule add --id greet-arrival --topic hallway.detection --conditions '[{"path":"data.detections[0].class_name","operator":"eq","value":"person"}]' --actions '["welcome-home"]'
 ```
 
 #### 37. Thirsty tomatoes
@@ -2159,22 +1744,22 @@ opal event publish --topic garden.soil.moisture --source greenhouse-pi --data '{
 
 #### 38. Leak alarm
 
-*event + say + look.* A water sensor trips: announce it and record the basement so you can watch the damage later in high definition.
+*event + say + look.* A water sensor trips: announce it and grab a frame of the basement for the insurance claim. This needs a running `str-basement` stream.
 
 ```bash
 opal event config action add --id announce-leak --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Water detected in the {{data.location}}. This is not the fun kind of indoor pool.","--volume","1.5","--play"]' --stdin none --description "Announce a water leak."
-opal event config action add --id record-basement --type http --method POST --url http://127.0.0.1:8082/api/v1/recording/ --body-mode template --body '{"source_id":"cam-basement","max_duration_seconds":300}' --description "Record five minutes from the basement camera."
-opal event config rule add --id leak-response --topic home.leak.detected --conditions '[]' --actions '["announce-leak","record-basement"]'
+opal event config action add --id snapshot-basement --type shell --mode exec --executable /usr/local/bin/opal --args '["look","stream","snapshot","str-basement","--out","/tmp/leak.jpg"]' --stdin none --description "Snapshot the basement camera to a file."
+opal event config rule add --id leak-response --topic home.leak.detected --conditions '[]' --actions '["announce-leak","snapshot-basement"]'
 ```
 
 #### 39. Workshop safety officer
 
-*look + event + say.* Step into the saw zone and get reminded about your eyes.
+*look + event + say.* A person shows up on the workshop camera and gets reminded about their eyes.
 
 ```bash
-opal look config rule add --id near-the-saw --name "Person near the table saw" --source-id cam-workshop --zone-id saw-zone --kind enters_zone --class-filters '["person"]' --cooldown-ms 900000
+opal look stream watch str-workshop | opal event publish --topic workshop.detection --source opal-look --data -
 opal event config action add --id safety-reminder --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Safety glasses. You only get two eyes, and no, the warranty has expired.","--play"]' --stdin none --description "Remind the woodworker about safety glasses."
-opal event config rule add --id saw-safety --topic opal.look.condition.matched --conditions '[{"path":"data.rule_id","operator":"eq","value":"near-the-saw"}]' --actions '["safety-reminder"]'
+opal event config rule add --id saw-safety --topic workshop.detection --conditions '[{"path":"data.detections[0].class_name","operator":"eq","value":"person"}]' --actions '["safety-reminder"]'
 ```
 
 ### Office and computer
@@ -2198,12 +1783,11 @@ opal look service log --lines 50 | opal think ask "This is a service log tail. N
 
 #### 42. Your laptop left without you
 
-*look + event + say.* The laptop disappears from the desk camera for thirty seconds.
+*look + think + say.* Check whether the laptop is still on the desk, and hear about it if it is not.
 
 ```bash
-opal look config rule add --id laptop-gone --name "Laptop left the desk" --source-id cam-desk --kind object_disappears --class-filters '["laptop"]' --minimum-duration-ms 30000 --capture-on-match
-opal event config action add --id announce-laptop --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Your laptop has left the desk. I hope it was with you.","--play"]' --stdin none --description "Announce a missing laptop."
-opal event config rule add --id laptop-alert --topic opal.look.condition.matched --conditions '[{"path":"data.rule_id","operator":"eq","value":"laptop-gone"}]' --actions '["announce-laptop"]'
+opal look stream snapshot str-desk --out desk.jpg
+opal look predict image --engine-id yolo --model-id yolo11n --source desk.jpg | opal think ask "These detections are of a desk. If no laptop appears, reply with one sentence announcing the laptop has left the desk; otherwise reply with exactly the word still-here." --context - | opal say generate - --play
 ```
 
 #### 43. Stand-up digest
@@ -2214,14 +1798,13 @@ opal event config rule add --id laptop-alert --topic opal.look.condition.matched
 opal event data event list --from 2026-11-09T00:00:00Z --to 2026-11-10T00:00:00Z --limit 200 | opal think ask "Summarize these events in three short sentences for a team stand-up. Group them by topic." --context - | opal say generate - --play
 ```
 
-#### 44. Video review
+#### 44. Dock activity review
 
-*look + think.* Upload a clip, analyze it, and ask for the highlights.
+*look + event + think.* Republish a loading-dock detection stream, then ask for the highlights.
 
 ```bash
-opal look data media upload loading-dock.mp4
-opal look data job submit --kind analyze_video --media-id med-7 --pipeline-id people --retention '{"persist_results":true}' --wait
-opal look data observation list --job-id job-9a3f --limit 200 | opal think ask "Summarize this video analysis in three sentences: what appeared, when, and anything unusual." --context -
+opal look stream watch str-dock | opal event publish --topic dock.detection --source opal-look --data -
+opal event data event list --topic dock.detection --limit 200 | opal think ask "Summarize this loading-dock activity in three sentences: what appeared, when, and anything unusual." --context -
 ```
 
 #### 45. Why didn't that work?
@@ -2267,7 +1850,7 @@ opal say generate "All five configurations are backed up. You may now break thin
 
 ```bash
 opal event backup export | opal think ask "This is an event service configuration export. List any rule that references an action ID that is not defined, or say there are none." --context -
-opal look backup export | opal think ask "This is a vision service configuration export. List any rule or monitor that references a source, zone, or pipeline that is not defined, or say there are none." --context -
+opal look backup export | opal think ask "This is a vision service configuration export. List any profile or setting that references an engine or model that is not defined, or say there are none." --context -
 ```
 
 #### 49. Rehearsal without hardware

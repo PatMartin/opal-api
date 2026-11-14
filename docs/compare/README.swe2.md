@@ -30,8 +30,9 @@ documents as their normative REST interface.
 OPAL is a suite of five loopback-first microservices that see, hear,
 reason, react, and speak on a local machine:
 
-- **OPAL Look** — visual observation: camera/file sources, inference
-  pipelines, sessions, jobs, zones, rules, monitors, media artifacts.
+- **OPAL Look** — visual observation: optional detection engines,
+  engine-owned models, single-image prediction, and ephemeral RTSP
+  streams with SSE metadata, MJPEG video, snapshots, and metrics.
 - **OPAL Listen** — speech pipeline: wakewords, STT, intent recognition,
   slot extraction, regression tests, failed-utterance review.
 - **OPAL Think** — durable reasoning tasks with bounded steps; invokes
@@ -56,7 +57,7 @@ Published single-file artifacts are produced by `npm run bundle` into
 | --- | --- | --- |
 | [`openapi/opal_event.yaml`](openapi/opal_event.yaml) | OPAL Event — event publication, topics, rules, actions, executions, stats | 1.7.1 |
 | [`openapi/opal_listen.yaml`](openapi/opal_listen.yaml) | OPAL Listen — speech recognition, intents, slots, wakewords, regression, performance | 1.7.1 |
-| [`openapi/opal_look.yaml`](openapi/opal_look.yaml) | OPAL Look — vision sources, pipelines, sessions, jobs, observations, media | 1.7.1 |
+| [`openapi/opal_look.yaml`](openapi/opal_look.yaml) | OPAL Look — engines, models, predict, hardware, RTSP streams | 1.7.1 |
 | [`openapi/opal_say.yaml`](openapi/opal_say.yaml) | OPAL Say — TTS engines, voices, personas, generation, streaming | 1.7.1 |
 | [`openapi/opal_think.yaml`](openapi/opal_think.yaml) | OPAL Think — durable reasoning tasks, sessions, model discovery | 1.7.1 |
 | [`openapi/shared/opal_kernel.yaml`](openapi/shared/opal_kernel.yaml) | Shared kernel: headers, parameters, error responses, mounted pathItems, common schemas | 1.7.1 |
@@ -117,7 +118,8 @@ v1.2**:
   `info/` + `info/ping`, `health/` + `health/live` + `health/ready`,
   `setting/` map + per-key, `backup/` (list, create, download, delete,
   export, import, restore, validate), `profile/` CRUD + activate,
-  `persona/` CRUD + validate, `service/start|stop|log`.
+  `service/start|stop|log`. `persona/` CRUD + validate is mounted
+  everywhere except Look, which excludes personas in its MVP Plus scope.
   `engine/` exists on Say and Look only.
 - **Personas** — a portable identity with optional per-service bindings
   (`x-opal-persona`). OPAL Think is the authoritative writer; every
@@ -137,7 +139,7 @@ The designed dataflow is a loop through the bus:
 
 ```
 listen (intent match) ──┐
-look (observations) ────┼──> event (ZeroMQ topics, rules)
+                        ├──> event (ZeroMQ topics, rules)
                         │        │
                         │        v
                         │   actions: shell / http / python
@@ -158,8 +160,9 @@ say (spoken output) <── think (reasoning tasks, execute-only principal)
 - **Listen** publishes `opal.listen.intent.match` when
   `event_publication_enabled` is true; mic matches only — diagnostic
   text/audio sources never publish externally.
-- **Look** publishes `opal.look.*` envelope events (disabled by default,
-  allowlisted, best-effort, never blocking inference).
+- **Look** publishes no bus events; stream metadata and detections are
+  per-stream SSE (`GET /api/v1/stream/{id}/events`) that a client may
+  republish to Event.
 - **Say** supplies voices bound to shared personas; `persona` on a
   generation request resolves voice through the persona.
 
@@ -182,7 +185,7 @@ Shared kernel mounts — identical in all five services:
 ├── profile/  GET/POST · profile/{id}  GET/PATCH/DELETE
 │   └── profile/{id}/activate  POST
 ├── persona/  GET/POST · persona/{id}  GET/PATCH/DELETE
-│   └── persona/{id}/validate  POST
+│   └── persona/{id}/validate  POST      (not on look)
 ├── service/start  POST · service/stop  POST · service/log  GET
 └── setting/  GET/PATCH · setting/{key}  GET/PUT/DELETE
     (engine/ + engine/{id} GET/PATCH — say and look only)
@@ -223,18 +226,12 @@ event
 └── stats/  GET
 
 look
-├── source/  GET/POST · source/{id}  GET/PATCH/DELETE
-│   └── /status GET · /probe POST · /frame GET · /capture/ POST · /stream GET
-├── model/ · pipeline/ · zone/ · rule/ · monitor/   GET/POST + {id} GET/PATCH/DELETE
-│   └── pipeline/validate  POST
-├── session/  POST/GET · session/{id}  GET · /stop POST · /stream GET · /preview GET
-├── job/  POST/GET · job/{id}  GET · job/{id}/cancel  POST
-├── observation/  GET · observation/{id}  GET
-├── media/  POST/GET · media/{id}  GET/DELETE
-├── capture/|artifact/  GET · {id}  GET/DELETE · {id}/content  GET
-├── recording/  POST/GET · recording/{id}  GET · /stop  POST
-├── analyze/  POST · analyze/image  POST
-└── capabilities/ · metrics/ · events/status   GET
+├── engine/discover  POST · engine/{id}/capabilities  GET
+├── model/  GET · model/{id}  GET · model/{id}/load|unload  POST
+├── predict  POST (single-image detection)
+├── hardware/  GET · hardware/{device_id}  GET
+└── stream/  POST/GET · stream/{id}  GET · /stop  POST
+    └── /events GET (SSE) · /video GET (MJPEG) · /snapshot GET · /metrics GET
 
 think
 ├── task/  POST/GET · task/{id}  GET · /cancel  POST · /stream  GET (SSE)
@@ -268,9 +265,8 @@ opal
 │            backup · service · info
 ├── event    config (rule|action|topic|persona|profile|setting)
 │            data (event|execution|stats) · backup · service · info
-├── look     source · session · analyze · engine
-│            config (model|pipeline|zone|rule|monitor|persona|profile|setting)
-│            data (observation|media|capture|artifact|recording|job)
+├── look     engine · model · predict · hardware · stream
+│            config (engine|profile|setting)
 │            backup · service · info
 └── think    task (create with ask/chat aliases) · session · model
              config (persona|profile|setting) · backup · service · info
@@ -361,7 +357,7 @@ validates them structurally instead).
   generate the CLI documentation set.
 - Spec `info.description` blocks — normative per-service prose: event
   templating/execution rules, listen's recognition pipeline guarantees,
-  look's observation/persistence model, think's ratified architecture
+  look's stream/detection invariants, think's ratified architecture
   decisions, say's engine/voice contract.
 - Kernel extensions — `x-opal-authorization`, `x-opal-event-envelope`,
   `x-opal-cli-format`, `x-opal-persona` define suite-wide semantics.

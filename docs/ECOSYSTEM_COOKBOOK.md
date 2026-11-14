@@ -1,8 +1,8 @@
 # The OPAL Ecosystem Cookbook
 
-*One CLI, six services: a registry that knows every microphone and camera, ears that listen, eyes that watch, a brain that reasons, a mouth that speaks, and a switchboard that makes them gossip.*
+*One CLI, five services: ears that listen, eyes that watch, a brain that reasons, a mouth that speaks, and a switchboard that makes them gossip.*
 
-This cookbook describes the unified `opal` [Typer](https://typer.tiangolo.com/) CLI implied by the v1.7.1 OpenAPI contracts in [`openapi/`](../openapi), the shared kernel at [`openapi/shared/opal_kernel.yaml`](../openapi/shared/opal_kernel.yaml), and the devices base at [`openapi/shared/opal_device_kernel.yaml`](../openapi/shared/opal_device_kernel.yaml). Every command maps to exactly one REST operation in those contracts.
+This cookbook describes the unified `opal` [Typer](https://typer.tiangolo.com/) CLI implied by the v1.7.1 OpenAPI contracts in [`openapi/`](../openapi), the shared kernel at [`openapi/shared/opal_kernel.yaml`](../openapi/shared/opal_kernel.yaml). Every command maps to exactly one REST operation in those contracts.
 
 One honest caveat: this repository ships contracts, not an `opal` executable. Treat this as the menu for a restaurant whose kitchen is specified in great detail.
 
@@ -12,7 +12,6 @@ One honest caveat: this repository ships contracts, not an `opal` executable. Tr
 - [CLI Command Tree](#cli-command-tree)
   - [EVENT FLOW](#event-flow)
 - [Recipes](#recipes)
-  - [opal device](#opal-device)
   - [opal say](#opal-say)
   - [opal listen](#opal-listen)
   - [opal look](#opal-look)
@@ -26,14 +25,13 @@ OPAL is a suite of small, single-responsibility HTTP services that cooperate ove
 
 | Service | Faculty | What it does |
 | --- | --- | --- |
-| **Devices** (`opal device`) | Proprioception | Optional registry of device identity, inventory, discovery, capabilities, preferred defaults, groups, labels, and federation peers. It *describes* hardware; it never operates it. |
 | **Listen** (`opal listen`) | Hearing | Wakewords, speech-to-text, intent recognition, and slot extraction. Publishes live intent matches to Event. |
-| **Look** (`opal look`) | Sight | Cameras, models, detection pipelines, live sessions, finite jobs, recordings, and monitor rules that emit events. |
+| **Look** (`opal look`) | Sight | Optional detection engines and engine-owned models, single-image prediction, and ephemeral RTSP streams with SSE metadata, MJPEG video, snapshots, and metrics. |
 | **Think** (`opal think`) | Reasoning | Bounded asynchronous tasks on configured models; can discover and invoke Event actions; owns the authoritative persona registry. |
 | **Say** (`opal say`) | Voice | Text-to-speech over host-installed engines; voices and personas; returns audio bytes — it never plays them. |
 | **Event** (`opal event`) | Nervous system | Event ingress and history, topic rules, registered shell/HTTP/Python actions, and execution records. |
 
-The pieces compose: Devices tells consumers *which* camera or microphone exists and what it can do; Listen and Look observe the world and publish events; Event routes those events through rules to registered actions; an action can kick off a Think task; Think can invoke other actions — including a `speak` action wired to Say.
+The pieces compose: Listen observes the world and publishes events; Look watches cameras through ephemeral streams and answers on demand; Event routes published events through rules to registered actions; an action can kick off a Think task; Think can invoke other actions — including a `speak` action wired to Say.
 
 Cross-cutting conventions come from the shared kernel:
 
@@ -46,27 +44,6 @@ Cross-cutting conventions come from the shared kernel:
 
 ```text
 opal
-├── devices               device registry: identity, inventory, discovery, federation
-│   ├── info                  health | live | ready | version | ping
-│   ├── catalog
-│   ├── list | add | show | update | remove
-│   ├── capabilities | status | test
-│   ├── discover | watch
-│   ├── event                 list
-│   ├── default               list | set | remove
-│   ├── label                 list | set | remove
-│   ├── tag                   list | add | remove
-│   ├── group                 list | add | show | update | remove
-│   │   └── member            list | add | remove
-│   ├── peer                  list | add | show | update | remove | status | sync | discover
-│   ├── sharing               list | add | remove          (aliases: allow, deny)
-│   ├── plugin                list | show | enable | disable | test | discover
-│   ├── federation            inventory | registry
-│   ├── config
-│   │   ├── setting           list | update | show | set | remove
-│   │   └── profile           list | add | show | update | remove | activate
-│   ├── backup                list | create | download | restore | remove | export | import | validate
-│   └── service               start | stop | log
 ├── listen                hearing: wakewords, STT, intents, slots
 │   ├── config
 │   │   ├── wakeword          list | add | show | update | remove
@@ -86,28 +63,17 @@ opal
 │   ├── info                  health | audio-devices | version | ping | live | ready
 │   ├── backup                list | create | download | restore | remove | export | import | validate
 │   └── service               start | stop | log
-├── look                  sight: sources, pipelines, sessions, monitors
-│   ├── info                  capabilities | health | version | ping | live | ready | metrics | events
-│   ├── engine                list | show | update
+├── look                  sight: engines, models, predict, RTSP streams
+│   ├── info                  health | version | ping | live | ready
+│   ├── engine                list | show | discover | capabilities
+│   ├── model                 list | show | load | unload
+│   ├── predict               image
+│   ├── hardware              list | show
+│   ├── stream                start | list | show | stop | watch | watch-video | snapshot | metrics
 │   ├── config
-│   │   ├── model             list | add | show | update | remove
-│   │   ├── pipeline          list | add | show | update | remove | validate
-│   │   ├── zone              list | add | show | update | remove
-│   │   ├── rule              list | add | show | update | remove
-│   │   ├── monitor           list | add | show | update | remove
+│   │   ├── engine            update
 │   │   ├── profile           list | add | show | update | remove | activate
-│   │   ├── persona           list | add | validate | show | update | remove
 │   │   └── setting           list | update | show | set | remove
-│   ├── source                list | add | show | update | remove | status | probe | frame | capture | stream
-│   ├── analyze               run | image
-│   ├── session               list | start | show | stop | stream | preview
-│   ├── data
-│   │   ├── job               list | submit | show | cancel
-│   │   ├── observation       list | show
-│   │   ├── media             list | upload | show | remove
-│   │   ├── capture           list | show | remove | download
-│   │   ├── artifact          list | show | remove | download
-│   │   └── recording         list | start | show | stop
 │   ├── backup                list | create | download | restore | remove | export | import | validate
 │   └── service               start | stop | log
 ├── think                 reasoning: tasks, sessions, models
@@ -153,156 +119,26 @@ opal
 
 ### EVENT FLOW
 
-Events travel on topics over the event bus; actions are invoked over REST. Event publication is **best effort** and **disabled by default** on Listen, Look, and Devices — flip the corresponding setting to opt in.
+Events travel on topics over the event bus; actions are invoked over REST. Event publication is **best effort** and **disabled by default** on Listen — flip the corresponding setting to opt in. Look publishes no bus events in this contract: its stream events are per-stream SSE (`GET /api/v1/stream/{id}/events`), which a CLI can republish to Event if wanted.
 
 ```text
                      publishes (opt-in)                    routes
- LISTEN  ── opal.listen.intent.match ──────┐
-                                           │
- LOOK    ── opal.look.observation ─────────┤            ┌──▶ shell/HTTP/Python ACTION
-         ── opal.look.condition.matched ───┼──▶ EVENT ──┤       e.g. POST /api/v1/task/ ──▶ THINK
-         ── opal.look.monitor.failed ──────┤   rules    │
-                                           │            └──▶ shell action `speak` ──▶ opal say generate --play
- DEVICES ── opal.devices.* (opt-in,        │
-            disabled by default) ──────────┘
+ LISTEN  ── opal.listen.intent.match ─────────▶ EVENT ──┬──▶ shell/HTTP/Python ACTION
+                                                rules   │       e.g. POST /api/v1/task/ ──▶ THINK
+                                                        └──▶ shell action `speak` ──▶ opal say generate --play
+
+ LOOK    ── (no bus topics) ── per-stream SSE: GET /api/v1/stream/{stream_id}/events
+         ── republish if wanted: opal look stream watch <id> | opal event publish --topic <t> --data -
 
  THINK   ── (no topics) ── discovers & invokes Event actions over REST:
              GET /api/v1/action/  →  POST /api/v1/action/{id}/execute
-
- DEVICES ── (peer federation over REST, not topics):
-             GET /api/v1/federation/inventory ◀── trusted peer registries
 ```
 
-Fixed by contract: the Listen and Look topic names above. Device event topics are implementation-chosen (`events.publish_enabled=false` until you opt in); `opal device catalog` reports the event names a registry uses.
+Fixed by contract: the Listen topic name above. Look's SSE event shapes are contract-fixed, but any republished bus topic is yours to choose.
 
 ## Recipes
 
-Assumed ports in the examples: Event `8080`, Say `8081`, Look `8082`, Think `8083`, Devices `8084`, Listen `8000`. IDs like `dev-cam-front` or `tsk-42` are placeholders — use what your services return.
-
-### opal device
-
-**1. See every device this host knows about.**
-
-```bash
-opal device list
-```
-
-**2. Find an available camera.**
-
-```bash
-opal device list --type camera --status available
-```
-
-**3. Inventory across the whole federation.**
-
-```bash
-opal device federation inventory
-```
-
-**4. What is this registry, anyway?**
-
-```bash
-opal device federation registry
-```
-
-**5. Discover hardware without touching it.**
-
-```bash
-opal device discover
-```
-
-**6. Register the device the scanner missed.**
-
-```bash
-opal device add --name "lab/gpu-0" --type gpu --host-id workstation-2 --host-name "Workstation 2" --backend cuda --access local
-```
-
-**7. Read one device's full dossier.**
-
-```bash
-opal device show dev-cam-front
-```
-
-**8. What can it actually do?**
-
-```bash
-opal device capabilities dev-cam-front
-```
-
-**9. Is it alive right now?**
-
-```bash
-opal device status dev-cam-front
-```
-
-**10. Run a safe self-check.**
-
-```bash
-opal device test dev-cam-front
-```
-
-**11. Make the studio mic the default for everything.**
-
-```bash
-opal device default set --scope type --target microphone --values '{"device_id":"dev-3fa8-mic-array"}'
-```
-
-**12. Label it so humans can find it.**
-
-```bash
-opal device label set dev-cam-front location porch
-```
-
-**13. Tag it so filters can find it.**
-
-```bash
-opal device tag add dev-cam-front outdoor
-```
-
-**14. Group the cameras that matter.**
-
-```bash
-opal device group add --name porch-cams --mode static --description "Front and side porch cameras"
-opal device group member add grp-porch dev-cam-front
-opal device group member add grp-porch dev-cam-side
-```
-
-**15. Meet the garage registry.**
-
-```bash
-opal device peer add --name garage --base-url http://192.168.1.20:8084 --trusted
-opal device peer sync garage
-```
-
-**16. Hide the lab GPU from peers.**
-
-```bash
-opal device sharing deny --device-id dev-lab-gpu
-```
-
-**17. See which discovery backends are installed.**
-
-```bash
-opal device plugin list
-```
-
-**18. Watch the registry breathe in real time.**
-
-```bash
-opal device watch
-```
-
-**19. Catch up on what changed while you were out.**
-
-```bash
-opal device event list --limit 20
-```
-
-**20. Snapshot the registry before a reorg.**
-
-```bash
-opal device backup create
-```
+Assumed ports in the examples: Event `8080`, Say `8081`, Look `8082`, Think `8083`, Listen `8000`. IDs like `str-42` or `tsk-42` are placeholders — use what your services return.
 
 ### opal say
 
@@ -553,124 +389,124 @@ opal listen backup create
 
 ### opal look
 
-**1. List every camera source it knows.**
+**1. Which inference engines are installed?**
 
 ```bash
-opal look source list
+opal look engine list
 ```
 
-**2. Register a new camera.**
+**2. Nudge the host to re-scan for engines.**
 
 ```bash
-opal look source add --id cam-front --uri rtsp://192.168.1.30:554/stream --kind rtsp
+opal look engine discover
 ```
 
-**3. Is the camera actually reachable?**
+**3. What options does this engine accept?**
 
 ```bash
-opal look source probe cam-front
+opal look engine capabilities yolo
 ```
 
-**4. Grab a single frame.**
+**4. What models does it offer?**
 
 ```bash
-opal look source frame cam-front --out porch.jpg
+opal look model list --engine-id yolo
 ```
 
-**5. Take a snapshot capture.**
+**5. Read one model's card.**
 
 ```bash
-opal look source capture cam-front
+opal look model show yolo11n
 ```
 
-**6. What models are installed?**
+**6. Load the model for inference.**
 
 ```bash
-opal look config model list
+opal look model load yolo11n
 ```
 
-**7. Register the person detector.**
+**7. Unload it when the GPU is needed elsewhere.**
 
 ```bash
-opal look config model add --id yolov8n-person --kind detector --path /models/yolov8n.onnx --labels person
+opal look model unload yolo11n
 ```
 
-**8. Build a detection pipeline.**
+**8. Detect objects in a single photo.**
 
 ```bash
-opal look config pipeline add --id porch-people --source cam-front --model yolov8n-person --interval 500
+opal look predict image --engine-id yolo --model-id yolo11n --source porch.jpg
 ```
 
-**9. Sanity-check the pipeline before enabling it.**
+**9. What compute is available?**
 
 ```bash
-opal look config pipeline validate porch-people
+opal look hardware list
 ```
 
-**10. Define the porch zone polygon.**
+**10. Start a plain video stream — zero engines required.**
 
 ```bash
-opal look config zone add --id zone-porch --source cam-front --polygon "[[0.1,0.3],[0.9,0.3],[0.9,0.9],[0.1,0.9]]"
+opal look stream start --source rtsp://192.168.1.30:554/stream
 ```
 
-**11. Alert when a person enters the zone.**
+**11. Start a detection stream on the same camera.**
 
 ```bash
-opal look config rule add --id person-on-porch --pipeline porch-people --zone zone-porch --label person --event opal.look.condition.matched
+opal look stream start --source rtsp://192.168.1.30:554/stream --engine-id yolo --model-id yolo11n --annotate
 ```
 
-**12. Monitor camera uptime.**
+**12. What is running right now?**
 
 ```bash
-opal look config monitor add --id cam-front-health --source cam-front --type offline --event opal.look.monitor.failed
+opal look stream list
 ```
 
-**13. Start a live session.**
+**13. Check a stream — credentials stay redacted.**
 
 ```bash
-opal look session start --source cam-front --pipeline porch-people
+opal look stream show str-42
 ```
 
-**14. Watch the session's event stream.**
+**14. Follow its metadata and detection events.**
 
 ```bash
-opal look session stream ses-42
+opal look stream watch str-42
 ```
 
-**15. Peek at the live preview.**
+**15. Watch the live feed, annotations included.**
 
 ```bash
-opal look session preview ses-42 --out preview.jpg
+opal look stream watch-video str-42 --annotated --out porch.mjpeg
 ```
 
-**16. Submit a finite batch job over yesterday's captures.**
+**16. Grab the current frame.**
 
 ```bash
-opal look data job submit --pipeline porch-people --media-set overnight --notify
+opal look stream snapshot str-42 --out porch.jpg
 ```
 
-**17. What did it see?**
+**17. Is it keeping up?**
 
 ```bash
-opal look data observation list --source cam-front --label person --limit 10
+opal look stream metrics str-42
 ```
 
-**18. Download the capture that triggered the alert.**
+**18. Stop the stream and release the camera.**
 
 ```bash
-opal look data capture download cap-808 --out alert.jpg
+opal look stream stop str-42
 ```
 
-**19. Which optional features does this build have?**
+**19. Health check before the demo.**
 
 ```bash
-opal look info capabilities
+opal look info health
 ```
 
-**20. Event wiring check — is Look publishing?**
+**20. Snapshot the configuration before retuning.**
 
 ```bash
-opal look info events
+opal look backup create
 ```
 
 ### opal think
@@ -920,25 +756,25 @@ opal event service log
 
 ### combined
 
-*Fifty recipes that use two or more services. Plumbing assumed: Think's `event.base_url` is set, Listen/Look event publication is enabled, and the `speak` action from recipe 5 above is registered.*
+*Fifty recipes that use two or more services. Plumbing assumed: Think's `event.base_url` is set, Listen's event publication is enabled, Look's detection streams are republished with `opal look stream watch <id> | opal event publish --topic <t> --source opal-look --data -`, and the `speak` action from recipe 5 above is registered.*
 
 **1. Voice-announce every person on the porch.**
 
 ```bash
-opal event config rule add --id porch-announce --topic opal.look.condition.matched --action speak --condition 'data.label == "person"'
+opal event config rule add --id porch-announce --topic porch.detection --action speak --condition 'data.detections[0].class_name == "person"'
 ```
 
 **2. Ask Think to narrate what the camera sees.**
 
 ```bash
 opal event config action add --id describe-scene --type http --method POST --url http://127.0.0.1:8083/api/v1/task/ --body-mode template --body '{"prompt":"A look event fired: {{event}}. Describe what likely happened and use speak to report it.","max_steps":4}'
-opal event config rule add --id narrate-porch --topic opal.look.condition.matched --action describe-scene
+opal event config rule add --id narrate-porch --topic porch.detection --action describe-scene
 ```
 
-**3. Spoken doorbell: wakeword "front door" triggers a capture, then a task summarizes it.**
+**3. Spoken doorbell: wakeword "front door" snapshots the stream, then a task summarizes it.**
 
 ```bash
-opal event config action add --id snap-front --type shell --mode exec --executable /usr/local/bin/opal --args '["look","source","capture","cam-front"]'
+opal event config action add --id snap-front --type shell --mode exec --executable /usr/local/bin/opal --args '["look","stream","snapshot","str-front","--out","/tmp/door.jpg"]'
 opal event config rule add --id doorbell-snap --topic opal.listen.intent.match --action snap-front --condition 'data.intent_name == "doorbell"'
 ```
 
@@ -949,45 +785,45 @@ opal event config action add --id qa-loop --type http --method POST --url http:/
 opal event config rule add --id voice-qa --topic opal.listen.intent.match --action qa-loop --condition 'data.intent_name == "ask-question"'
 ```
 
-**5. Resolve the front door camera through the registry, then point Look at it.**
+**5. Check the front-door stream before promising it works.**
 
 ```bash
-opal device list --type camera --label location=front-door --status available
-opal look source show cam-front
+opal look stream show str-front
+opal look stream metrics str-front
 ```
 
-**6. Say a warning only when the porch camera is healthy.**
+**6. Say a warning only when the porch stream is running.**
 
 ```bash
-opal device status dev-cam-front
+opal look stream show str-porch
 opal say generate "Someone is on the porch." --play
 ```
 
-**7. Log monitor failures as Think-reviewable tasks.**
+**7. Log stream failures as Think-reviewable tasks.**
 
 ```bash
-opal event config action add --id triage-camera --type http --method POST --url http://127.0.0.1:8083/api/v1/task/ --body-mode template --body '{"prompt":"Camera monitor failed: {{event}}. Suggest one remediation step.","max_steps":2}'
-opal event config rule add --id camera-triage --topic opal.look.monitor.failed --action triage-camera
+opal event config action add --id triage-camera --type http --method POST --url http://127.0.0.1:8083/api/v1/task/ --body-mode template --body '{"prompt":"A camera stream reported a failure: {{event}}. Suggest one remediation step.","max_steps":2}'
+opal event config rule add --id camera-triage --topic front.stream --action triage-camera --condition 'data.status == "failed"'
 ```
 
-**8. Announce a device's arrival over the speakers.**
+**8. Announce a stream's first detection over the speakers.**
 
 ```bash
-opal event config rule add --id new-device-hello --topic 'opal.devices.*' --action speak
-opal device config setting set events.publish_enabled true
+opal look stream watch str-front | opal event publish --topic front.stream --source opal-look --data -
+opal event config rule add --id first-detection-hello --topic front.stream --action speak --condition 'data.type == "detection"'
 ```
 
-**9. Morning briefing: read the night's observations aloud.**
+**9. Morning briefing: read the night's republished detections aloud.**
 
 ```bash
-opal look data observation list --label person --limit 5
+opal event data event list --topic front.stream --limit 5
 opal say generate "Three visitors last night, all before midnight." --play
 ```
 
 **10. Verify the whole chain end-to-end with a synthetic event.**
 
 ```bash
-opal event publish --topic opal.look.condition.matched --data '{"label":"person","zone_id":"zone-porch","rule_id":"person-on-porch"}'
+opal event publish --topic porch.detection --data '{"type":"detection","detections":[{"class_name":"person","confidence":0.87}]}'
 opal event data execution list --limit 3
 ```
 
@@ -1005,22 +841,22 @@ opal event config action add --id grade-answer --type http --method POST --url h
 opal event config rule add --id quiz-grader --topic opal.listen.intent.match --action grade-answer --condition 'data.intent_name == "quiz-answer"'
 ```
 
-**13. Backup all six services in one pass.**
+**13. Back up all five services in one pass.**
 
 ```bash
-for s in devices listen look think say event; do opal $s backup create; done
+for s in listen look think say event; do opal $s backup create; done
 ```
 
 **14. Health-check the fleet in one pass.**
 
 ```bash
-for s in devices listen look think say event; do opal $s info health; done
+for s in listen look think say event; do opal $s info health; done
 ```
 
 **15. Give every service the same quiet-hours profile.**
 
 ```bash
-for s in listen look think say devices; do opal $s config profile add --id night --name "Night" --settings '{"quiet":true}'; done
+for s in listen look think say; do opal $s config profile add --id night --name "Night" --settings '{"quiet":true}'; done
 ```
 
 **16. Persona flows from Think's registry to Say's voice.**
@@ -1037,11 +873,11 @@ opal event data execution show exec-99
 opal think task show tsk-42
 ```
 
-**18. The registry remembers what Look forgot.**
+**18. Repoint a stream at the camera's new address.**
 
 ```bash
-opal device show dev-cam-front
-opal look source update cam-front --uri rtsp://192.168.1.31:554/stream
+opal look stream stop str-front
+opal look stream start --source rtsp://192.168.1.31:554/stream --engine-id yolo --model-id yolo11n
 ```
 
 **19. Speak every failed utterance so you can hear what went wrong.**
@@ -1054,34 +890,34 @@ opal say generate "I did not understand: lights please." --play
 **20. Stop the world politely.**
 
 ```bash
-for s in say think look listen devices; do opal $s service stop; done
+for s in say think look listen; do opal $s service stop; done
 opal event service stop
 ```
 
 **21. Start it again in dependency order.**
 
 ```bash
-opal event service start; opal device service start; opal look service start; opal listen service start; opal think service start; opal say service start
+opal event service start; opal look service start; opal listen service start; opal think service start; opal say service start
 ```
 
-**22. Find which peer advertises a GPU, then schedule a Look job on it.**
+**22. Find a GPU, then pin a detection to it.**
 
 ```bash
-opal device federation inventory --type gpu
-opal look data job submit --pipeline heavy-detector
+opal look hardware list
+opal look predict image --engine-id yolo --model-id yolo11n --device-id cuda:0 --source crowd.jpg
 ```
 
-**23. Guard the group, not the device.**
+**23. Confirm the stream's buffer policy before trusting the announce rule.**
 
 ```bash
-opal device group member list grp-porch
-opal look config rule update person-on-porch --source cam-front
+opal look stream show str-porch
+opal event config rule show porch-announce
 ```
 
 **24. Silence the speaker when nobody's home.**
 
 ```bash
-opal look config rule show occupancy-rule
+opal look stream show str-front
 opal say config profile activate night
 ```
 
@@ -1092,24 +928,24 @@ opal listen regression run reg-suite-1
 opal say generate "Accuracy dropped two points. Check the regression report." --play
 ```
 
-**26. Peer down, stop trusting it.**
+**26. Engine misbehaving? Fall back to video-only.**
 
 ```bash
-opal device peer status garage
-opal device peer update garage --no-trusted
+opal look engine show yolo
+opal look stream start --source rtsp://192.168.1.40:554/stream1
 ```
 
-**27. Route stale-device events to cleanup.**
+**27. Route stream failures to cleanup.**
 
 ```bash
-opal event config rule add --id stale-cleaner --topic 'opal.devices.*' --action triage-camera --condition 'data.availability == "stale"'
+opal event config rule add --id stale-cleaner --topic front.stream --action triage-camera --condition 'data.status == "failed"'
 ```
 
-**28. Confirm a peer sees only what policy allows.**
+**28. Confirm a stream keeps its credentials out of view.**
 
 ```bash
-opal device sharing list
-opal device federation inventory --peer garage
+opal look stream show str-front
+opal look stream metrics str-front
 ```
 
 **29. Voice-check every registered voice, spoken in its own voice.**
@@ -1121,20 +957,22 @@ opal say config voice test en-gb-alan-low --play
 
 **30. The camera died mid-demo: announce it gracefully.**
 
+*Assumes the republisher from recipe 8 is running on `str-front`.*
+
 ```bash
-opal event config rule add --id dead-cam-say --topic opal.look.monitor.failed --action speak
+opal event config rule add --id dead-cam-say --topic front.stream --action speak --condition 'data.status == "failed"'
 ```
 
 **31. Snapshot everything before the big rewiring.**
 
 ```bash
-for s in devices listen look think say event; do opal $s backup export --out $s-config.yaml; done
+for s in listen look think say event; do opal $s backup export --out $s-config.yaml; done
 ```
 
 **32. Prove the snapshot is loadable everywhere.**
 
 ```bash
-for s in devices listen look think say event; do opal $s backup validate; done
+for s in listen look think say event; do opal $s backup validate; done
 ```
 
 **33. Spoken audit of the bus.**
@@ -1144,31 +982,31 @@ opal event info stats
 opal say generate "Two thousand four hundred events today. Mostly squirrels." --play
 ```
 
-**34. Discover hardware, then register it with Look in one breath.**
+**34. Discover engines, then put one to work on a new camera.**
 
 ```bash
-opal device discover
-opal look source add --id cam-new --uri rtsp://192.168.1.40:554/main --kind rtsp
+opal look engine discover
+opal look stream start --source rtsp://192.168.1.40:554/main --engine-id yolo --model-id yolo11n
 ```
 
-**35. Route observations to the notebook.**
+**35. Route republished detections to the notebook.**
 
 ```bash
 opal event config action add --id log-obs --type python --code 'print("seen:", data)'
-opal event config rule add --id obs-notebook --topic opal.look.observation --action log-obs
+opal event config rule add --id obs-notebook --topic front.stream --action log-obs --condition 'data.type == "detection"'
 ```
 
-**36. Ask Think which devices it thinks are underused.**
+**36. Ask Think which of Look's engines suits the task.**
 
 ```bash
-opal think task create --prompt "Fetch the devices inventory via the Event action and suggest which registered devices are underused." --max-steps 6
+opal look engine list
+opal think task create --prompt "Between yolo, rfdetr, rtdetr, and dfine, which engine should run person detection on a 10 fps porch stream, and why? One paragraph." --max-steps 3
 ```
 
-**37. Announce when the garage peer comes back online.**
+**37. Announce when a failed stream recovers.**
 
 ```bash
-opal device peer status garage
-opal say generate "The garage registry is back." --play
+opal event config rule add --id stream-back --topic front.stream --action speak --condition 'data.status == "running"'
 ```
 
 **38. Test the whole intent pipeline without speaking.**
@@ -1185,11 +1023,12 @@ opal think session add --id ses-butler
 opal think task create --session-id ses-butler --prompt "Remember: the user prefers early warnings about porch visitors."
 ```
 
-**40. Nightly report job, spoken edition.**
+**40. Nightly report, spoken edition.**
 
 ```bash
-opal look data job submit --pipeline porch-people --media-set today --notify
-opal event config rule add --id nightly-summary --topic 'opal.look.job.finished' --action describe-scene
+opal event config action add --id nightly-summary --type http --method POST --url http://127.0.0.1:8083/api/v1/task/ --body-mode template --body '{"prompt":"Summarize today's porch detections from the context and speak a one-paragraph report.","context":"{{event}}","max_steps":4}'
+opal event publish --topic house.nightly.report --data '{"trigger":"cron"}'
+opal event config rule add --id nightly-report --topic house.nightly.report --action nightly-summary
 ```
 
 **41. Verify event topics before writing rules.**
@@ -1199,24 +1038,24 @@ opal event data topic list
 opal listen config setting show event_transport
 ```
 
-**42. A device goes stale; Think decides what to say about it.**
+**42. A stream goes quiet; Think decides what to say about it.**
 
 ```bash
-opal event config rule add --id stale-commentary --topic 'opal.devices.*' --action describe-scene --condition 'data.availability == "stale"'
+opal event config rule add --id stream-commentary --topic front.stream --action describe-scene --condition 'data.status == "failed"'
 ```
 
-**43. Cross-check capabilities before promising a demo.**
+**43. Cross-check engine capabilities before promising a demo.**
 
 ```bash
-opal device capabilities dev-cam-front
-opal look info capabilities
+opal look engine capabilities yolo
+opal look model list --engine-id yolo
 ```
 
-**44. Mute the mic, warn via camera flash detection instead.**
+**44. Mute the mic, warn via camera detection instead.**
 
 ```bash
 opal listen recognition stop
-opal look session start --source cam-front --pipeline porch-people
+opal look stream start --source rtsp://192.168.1.40:554/stream1 --engine-id yolo --model-id yolo11n
 ```
 
 **45. The persona swap drill: same announcement, three voices.**
@@ -1226,18 +1065,18 @@ opal think config persona list
 opal say generate "Shift change. Vox is off duty." --persona vox --play
 ```
 
-**46. Confirm peer inventory hides the denied GPU.**
+**46. Confirm the frame queue stays bounded under load.**
 
 ```bash
-opal device sharing deny --device-id dev-lab-gpu
-opal device federation inventory
+opal look stream metrics str-front
+opal look stream show str-front
 ```
 
-**47. Watch the registry while Look's scanner runs.**
+**47. Discover engines, then list what turned up.**
 
 ```bash
-opal device watch &
-opal look source probe cam-new
+opal look engine discover
+opal look engine list
 ```
 
 **48. Rebuild the intent library from backup, then re-test.**
@@ -1258,12 +1097,11 @@ opal say generate "Ninety-seven percent accuracy this week. Acceptable." --play
 
 ```bash
 opal event config rule list
-opal device list --status available
-opal look session list
+opal look stream list
 opal say generate "All systems nominal. Goodnight." --play
-for s in say think look listen devices event; do opal $s service stop; done
+for s in say think look listen event; do opal $s service stop; done
 ```
 
 ---
 
-*Every recipe maps to an operation in the v1.7.1 contracts. Where a command name is marked proposed elsewhere, it names the operation a conforming CLI should expose — check `docs/COOKBOOK.md` for per-operation REST mappings and `docs/OPAL_DEVICES_CLI.md` for the devices matrix.*
+*Every recipe maps to an operation in the v1.7.1 contracts. Where a command name is marked proposed elsewhere, it names the operation a conforming CLI should expose — check `docs/COOKBOOK.md` for per-operation REST mappings.*
