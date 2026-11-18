@@ -273,11 +273,11 @@ components:
       name: profile_id
       in: path
       required: true
-      description: Numeric profile identifier.
+      description: Profile identifier.
       schema:
-        type: integer
-        minimum: 1
-      example: 1
+        type: string
+        minLength: 1
+      example: home
     EngineId:
       name: engine_id
       in: path
@@ -588,8 +588,8 @@ components:
           example: 1.0.0
         active_profile_id:
           anyOf:
-          - type: integer
-            minimum: 1
+          - type: string
+            minLength: 1
           - type: 'null'
         engines:
           type: array

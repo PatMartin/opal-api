@@ -1219,9 +1219,9 @@ components:
     ResolvedProfileId:
       description: Profile used to supply defaults, when a profile participated in resolution.
       schema:
-        type: integer
-        minimum: 1
-      example: 1
+        type: string
+        minLength: 1
+      example: home
   responses:
     AudioResponse:
       description: 'Completed generated audio. The media type corresponds to the resolved
@@ -1661,8 +1661,8 @@ components:
             '
         profile_id:
           anyOf:
-          - type: integer
-            minimum: 1
+          - type: string
+            minLength: 1
           - type: 'null'
           description: Explicit profile to use. If omitted/null, the active profile may supply defaults.
         voice_id:
@@ -1757,7 +1757,7 @@ components:
       - $ref: '#/components/schemas/GenerateRequestBase'
       example:
         text: Stream this sentence as raw PCM audio.
-        profile_id: 1
+        profile_id: home
         speed: 1.0
         volume: 1.0
         sample_rate: 22050

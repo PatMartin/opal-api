@@ -150,8 +150,8 @@ opal say
 | `opal say persona show` † | `<persona_id>` | Get Persona. `GET /api/v1/persona/{persona_id}` |
 | `opal say persona update` † | `<persona_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Update Persona. `PATCH /api/v1/persona/{persona_id}` |
 | `opal say persona remove` † | `<persona_id>`, `--if-match ETAG` | Delete Persona. `DELETE /api/v1/persona/{persona_id}` |
-| `opal say generate` † | `<text>`, `--profile-id INT`, `--voice-id ID`, `--persona ID`, `--engine-id ID`, `--speed FLOAT`, `--volume FLOAT`, `--sample-rate INT`, `--engine-options JSON`, `--output-format [wav\|pcm]`, `--out PATH`, `--play` | Synthesize completed WAV or raw PCM audio from text. `POST /api/v1/generate` |
-| `opal say stream` † | `<text>`, `--profile-id INT`, `--voice-id ID`, `--persona ID`, `--engine-id ID`, `--speed FLOAT`, `--volume FLOAT`, `--sample-rate INT`, `--engine-options JSON`, `--out PATH`, `--play` | Synthesize progressive raw `s16le` mono PCM from text. `POST /api/v1/generate/stream` |
+| `opal say generate` † | `<text>`, `--profile-id ID`, `--voice-id ID`, `--persona ID`, `--engine-id ID`, `--speed FLOAT`, `--volume FLOAT`, `--sample-rate INT`, `--engine-options JSON`, `--output-format [wav\|pcm]`, `--out PATH`, `--play` | Synthesize completed WAV or raw PCM audio from text. `POST /api/v1/generate` |
+| `opal say stream` † | `<text>`, `--profile-id ID`, `--voice-id ID`, `--persona ID`, `--engine-id ID`, `--speed FLOAT`, `--volume FLOAT`, `--sample-rate INT`, `--engine-options JSON`, `--out PATH`, `--play` | Synthesize progressive raw `s16le` mono PCM from text. `POST /api/v1/generate/stream` |
 | `opal say config save` | `--out FILE` | Save snapshot to managed store or file. `POST /api/v1/config/save` |
 | `opal say config load` | `--in FILE` | Load managed or file snapshot atomically. `POST /api/v1/config/load` |
 | `opal say config validate` | `--in FILE` | Validate live config or a file snapshot. `POST /api/v1/config/validate` |
@@ -305,7 +305,7 @@ opal listen
 | `opal listen recognition status` † | — | Show live pipeline state and metrics. `GET /api/v1/recognition/status` |
 | `opal listen recognition stream` † | `--debug/--no-debug` | Stream live recognition results (SSE, live-only). `GET /api/v1/recognition/stream` |
 | `opal listen data failed-utterance list` † | `--reviewed/--no-reviewed`, `--promoted/--no-promoted`, `--limit INT`, `--offset INT` | List Failed Utterances. `GET /api/v1/failed_utterance/` |
-| `opal listen data failed-utterance add` † | `--transcript TEXT`, `--expected-intent TEXT`, `--notes TEXT`, `--recognition-log-id INT` | Create Failed Utterance. `POST /api/v1/failed_utterance/` |
+| `opal listen data failed-utterance add` † | `--transcript TEXT`, `--expected-intent TEXT`, `--notes TEXT`, `--recognition-log-id ID` | Create Failed Utterance. `POST /api/v1/failed_utterance/` |
 | `opal listen data failed-utterance show` † | `<fu_id>` | Get Failed Utterance. `GET /api/v1/failed_utterance/{fu_id}` |
 | `opal listen data failed-utterance update` † | `<fu_id>`, `--expected-intent TEXT`, `--notes TEXT`, `--reviewed/--no-reviewed`, `--promoted-to-phrase/--no-promoted-to-phrase` | Update Failed Utterance. `PATCH /api/v1/failed_utterance/{fu_id}` |
 | `opal listen data failed-utterance remove` † | `<fu_id>` | Delete Failed Utterance. `DELETE /api/v1/failed_utterance/{fu_id}` |

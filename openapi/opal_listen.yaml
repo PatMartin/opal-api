@@ -553,7 +553,8 @@ paths:
       in: path
       required: true
       schema:
-        type: integer
+        type: string
+        minLength: 1
         title: Phrase Id
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
@@ -1022,7 +1023,8 @@ paths:
       in: path
       required: true
       schema:
-        type: integer
+        type: string
+        minLength: 1
         title: Alias Id
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
@@ -1566,9 +1568,9 @@ paths:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/failed_utterance/{fu_id}:
+  /api/v1/failed_utterance/{failed_utterance_id}:
     parameters:
-    - $ref: '#/components/parameters/FuId'
+    - $ref: '#/components/parameters/FailedUtteranceId'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
@@ -1662,9 +1664,9 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/failed_utterance/{fu_id}/promote:
+  /api/v1/failed_utterance/{failed_utterance_id}/promote:
     parameters:
-    - $ref: '#/components/parameters/FuId'
+    - $ref: '#/components/parameters/FailedUtteranceId'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
@@ -2412,42 +2414,48 @@ components:
       in: path
       required: true
       schema:
-        type: integer
+        type: string
+        minLength: 1
         title: Wakeword Id
     IntentId:
       name: intent_id
       in: path
       required: true
       schema:
-        type: integer
+        type: string
+        minLength: 1
         title: Intent Id
     SlotId:
       name: slot_id
       in: path
       required: true
       schema:
-        type: integer
+        type: string
+        minLength: 1
         title: Slot Id
     ValueId:
       name: value_id
       in: path
       required: true
       schema:
-        type: integer
+        type: string
+        minLength: 1
         title: Value Id
-    FuId:
-      name: fu_id
+    FailedUtteranceId:
+      name: failed_utterance_id
       in: path
       required: true
       schema:
-        type: integer
-        title: Fu Id
+        type: string
+        minLength: 1
+        title: Failed Utterance Id
     TestId:
       name: test_id
       in: path
       required: true
       schema:
-        type: integer
+        type: string
+        minLength: 1
         title: Test Id
   securitySchemes:
     BearerAuth: {$ref: './shared/opal_kernel.yaml#/components/securitySchemes/BearerAuth'}
@@ -2548,7 +2556,7 @@ components:
           title: Notes
         recognition_log_id:
           anyOf:
-          - type: integer
+          - type: string
           - type: 'null'
           title: Recognition Log Id
       type: object
@@ -2574,11 +2582,11 @@ components:
           - type: 'null'
           title: Notes
         id:
-          type: integer
+          type: string
           title: Id
         recognition_log_id:
           anyOf:
-          - type: integer
+          - type: string
           - type: 'null'
           title: Recognition Log Id
         reviewed:
@@ -2691,10 +2699,10 @@ components:
           maxLength: 500
           title: Phrase
         id:
-          type: integer
+          type: string
           title: Id
         intent_id:
-          type: integer
+          type: string
           title: Intent Id
         created_at:
           type: string
@@ -2730,7 +2738,7 @@ components:
           title: Confidence Threshold
           default: 0.7
         id:
-          type: integer
+          type: string
           title: Id
         created_at:
           type: string
@@ -2770,7 +2778,7 @@ components:
           title: Confidence Threshold
           default: 0.7
         id:
-          type: integer
+          type: string
           title: Id
         created_at:
           type: string
@@ -2857,11 +2865,11 @@ components:
     PerformanceResultRead:
       properties:
         id:
-          type: integer
+          type: string
           title: Id
         recognition_log_id:
           anyOf:
-          - type: integer
+          - type: string
           - type: 'null'
           title: Recognition Log Id
         wakeword_latency_ms:
@@ -3187,7 +3195,7 @@ components:
           title: Refinement Error
         recognition_log_id:
           anyOf:
-          - type: integer
+          - type: string
           - type: 'null'
           title: Recognition Log Id
         created_at:
@@ -3204,7 +3212,7 @@ components:
     RegressionCaseResult:
       properties:
         test_id:
-          type: integer
+          type: string
           title: Test Id
         name:
           type: string
@@ -3326,7 +3334,7 @@ components:
           title: Enabled
           default: true
         id:
-          type: integer
+          type: string
           title: Id
         expected_slots:
           additionalProperties: true
@@ -3406,10 +3414,10 @@ components:
           maxLength: 200
           title: Alias
         id:
-          type: integer
+          type: string
           title: Id
         slot_value_id:
-          type: integer
+          type: string
           title: Slot Value Id
         created_at:
           type: string
@@ -3461,7 +3469,7 @@ components:
           - type: 'null'
           title: Description
         id:
-          type: integer
+          type: string
           title: Id
         created_at:
           type: string
@@ -3496,7 +3504,7 @@ components:
           - type: 'null'
           title: Description
         id:
-          type: integer
+          type: string
           title: Id
         created_at:
           type: string
@@ -3556,10 +3564,10 @@ components:
           maxLength: 200
           title: Value
         id:
-          type: integer
+          type: string
           title: Id
         slot_id:
-          type: integer
+          type: string
           title: Slot Id
         created_at:
           type: string
@@ -3579,10 +3587,10 @@ components:
           maxLength: 200
           title: Value
         id:
-          type: integer
+          type: string
           title: Id
         slot_id:
-          type: integer
+          type: string
           title: Slot Id
         created_at:
           type: string
@@ -3648,7 +3656,7 @@ components:
           title: Confidence Threshold
           default: 0.8
         id:
-          type: integer
+          type: string
           title: Id
         created_at:
           type: string
