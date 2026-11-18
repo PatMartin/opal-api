@@ -2981,6 +2981,12 @@ components:
           title: Running
         state:
           type: string
+          enum:
+          - stopped
+          - starting
+          - running
+          - stopping
+          - error
           title: State
         provider:
           type: string

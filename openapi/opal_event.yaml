@@ -28,7 +28,7 @@ info:
 
 
     Execution: four worker slots default, bounded queue, overflow drops with execution record and metrics.
-    Independent concurrent actions; no retry, no ordering guarantees. Execution terminal states: succeeded,
+    Independent concurrent actions; no retry, no ordering guarantees. Execution terminal states: completed,
     failed, timed_out, dropped. Subprocess groups are terminated on timeout as OS supports. Output capture
     is truncated/redacted; event payloads are untrusted; logging must redact configured secrets.
 
@@ -2139,10 +2139,13 @@ components:
           type: string
         status:
           type: string
+          description: 'Shared lifecycle states (OpalLifecycleStatus); cancelled is unused
+            because executions cannot be cancelled, and dropped is EVENT-specific: the record
+            exists but the action was lost to queue saturation or rejected before dispatch.'
           enum:
           - queued
           - running
-          - succeeded
+          - completed
           - failed
           - timed_out
           - dropped
@@ -2296,7 +2299,7 @@ components:
         matched_events:
           type: integer
           minimum: 0
-        executions_succeeded:
+        executions_completed:
           type: integer
           minimum: 0
         executions_failed:
@@ -2328,7 +2331,7 @@ components:
       - observed_events
       - invalid_events
       - matched_events
-      - executions_succeeded
+      - executions_completed
       - executions_failed
       - executions_dropped
       - queue_depth

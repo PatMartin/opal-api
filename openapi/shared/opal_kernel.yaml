@@ -931,6 +931,20 @@ components:
       additionalProperties: true
       description: 'Non-mutating configuration validation result. Load performs equivalent checks
         internally; a prior successful validate call never bypasses load checks.'
+    OpalLifecycleStatus:
+      type: string
+      description: 'Shared lifecycle vocabulary for asynchronous work (tasks, executions,
+        steps). Terminal states are completed, failed, cancelled, and timed_out. A service may
+        document additional terminal states for its own semantics — for example EVENT adds
+        dropped for executions lost to queue saturation — but it must use these names for
+        these concepts.'
+      enum:
+      - queued
+      - running
+      - completed
+      - failed
+      - cancelled
+      - timed_out
     OpalProfile:
       type: object
       properties:

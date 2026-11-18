@@ -16,7 +16,7 @@ info:
     - Tools are invoked only through EVENT. THINK must never execute arbitrary model-generated shell code, URLs, or Python directly.
     - Constrain all tasks with server-enforced step/time/concurrency ceilings and forbid model-issued privilege changes. Allow all enabled registered EVENT actions within EVENT's permissions; do not add a second approval system.
     - Prevent recursive EVENT→THINK→EVENT feedback by bounding causation depth and rejecting repeated triggering chains; apply these controls across tasks, not only within a task's max_steps. Required infrastructure behavior can be implemented by EVENT and THINK using existing OPAL correlation metadata.
-    - EVENT is authoritative for action execution status: 202 means admission; queued/running/dropped/failed/timed_out/succeeded must be interpreted. No automatic retries, ordering, exactly-once delivery, or rollback of side effects are promised.
+    - EVENT is authoritative for action execution status: 202 means admission; queued/running/dropped/failed/timed_out/completed must be interpreted. No automatic retries, ordering, exactly-once delivery, or rollback of side effects are promised.
     - The assistant's readable decisions are short summaries and action references, never hidden chain-of-thought or secrets.
     - Evaluation readiness: optional caller metadata is preserved on Task records; action steps report sanitized action_input. No evalset management API is introduced.
 
@@ -1071,15 +1071,7 @@ components:
       description: Module-constrained configuration snapshot; validates `module` identity and the
         declared resource sections for this module.
     TaskStatus:
-      type: string
-      description: Terminal states are completed, failed, cancelled and timed_out.
-      enum:
-      - queued
-      - running
-      - completed
-      - failed
-      - cancelled
-      - timed_out
+      $ref: './shared/opal_kernel.yaml#/components/schemas/OpalLifecycleStatus'
     TaskCreate:
       type: object
       additionalProperties: false
@@ -1175,9 +1167,12 @@ components:
             expose secrets, credentials, or hidden reasoning; diagnostic only.
         status:
           type: string
+          description: 'Shared lifecycle states (OpalLifecycleStatus). queued is unused —
+            a recorded step is already underway — and dropped mirrors EVENT dispatch loss
+            for action steps.'
           enum:
-          - started
-          - succeeded
+          - running
+          - completed
           - failed
           - timed_out
           - dropped

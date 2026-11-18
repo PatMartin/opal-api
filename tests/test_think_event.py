@@ -70,9 +70,9 @@ def main():
 
     # Terminal vs non-terminal execution statuses are distinct.
     statuses = set(event["components"]["schemas"]["Execution"]["properties"]["status"]["enum"])
-    check(statuses == {"queued", "running", "succeeded", "failed", "timed_out", "dropped"},
+    check(statuses == {"queued", "running", "completed", "failed", "timed_out", "dropped"},
           "Execution.status has all six distinct outcomes")
-    terminal = {"succeeded", "failed", "timed_out", "dropped"}
+    terminal = {"completed", "failed", "timed_out", "dropped"}
     check(terminal <= statuses and not (terminal & {"queued", "running"}),
           "terminal statuses distinct from in-flight")
 
