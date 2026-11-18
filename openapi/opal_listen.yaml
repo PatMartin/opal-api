@@ -3,7 +3,7 @@ info:
   title: Voice Intent API
   version: 1.7.1
   description: "Wakeword, STT, intent recognition, and slot extraction engine\n\n\
-    OPAL SUITE STANDARD v1.2 (normative; follows the shared kernel version)\nX-Opal-Session-Id is an optional logical\
+    OPAL SUITE STANDARD v1.7.1 (normative; follows the shared kernel version)\nX-Opal-Session-Id is an optional logical\
     \ context identifier; it does not create a server-managed session or grant authorization.\
     \ Entry-point services generate one when absent where a workflow requires it,\
     \ and propagate it unchanged. A preexisting service-local session resource has\
@@ -62,7 +62,7 @@ paths:
       tags:
       - wakewords
       summary: List Wakewords
-      operationId: list_wakewords_api_v1_wakewords__get
+      operationId: list_wakewords
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -97,7 +97,7 @@ paths:
       tags:
       - wakewords
       summary: Create Wakeword
-      operationId: create_wakeword_api_v1_wakewords__post
+      operationId: create_wakeword
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -149,7 +149,7 @@ paths:
       tags:
       - wakewords
       summary: Get Wakeword
-      operationId: get_wakeword_api_v1_wakewords__wakeword_id__get
+      operationId: show_wakeword
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -183,7 +183,7 @@ paths:
       tags:
       - wakewords
       summary: Update Wakeword
-      operationId: update_wakeword_api_v1_wakewords__wakeword_id__patch
+      operationId: update_wakeword
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -226,7 +226,7 @@ paths:
       tags:
       - wakewords
       summary: Delete Wakeword
-      operationId: delete_wakeword_api_v1_wakewords__wakeword_id__delete
+      operationId: remove_wakeword
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
@@ -263,7 +263,7 @@ paths:
       tags:
       - intents
       summary: List Intents
-      operationId: list_intents_api_v1_intents__get
+      operationId: list_intents
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -298,7 +298,7 @@ paths:
       tags:
       - intents
       summary: Create Intent
-      operationId: create_intent_api_v1_intents__post
+      operationId: create_intent
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -350,7 +350,7 @@ paths:
       tags:
       - intents
       summary: Get Intent
-      operationId: get_intent_api_v1_intents__intent_id__get
+      operationId: show_intent
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -384,7 +384,7 @@ paths:
       tags:
       - intents
       summary: Update Intent
-      operationId: update_intent_api_v1_intents__intent_id__patch
+      operationId: update_intent
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -427,7 +427,7 @@ paths:
       tags:
       - intents
       summary: Delete Intent
-      operationId: delete_intent_api_v1_intents__intent_id__delete
+      operationId: remove_intent
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
@@ -465,7 +465,7 @@ paths:
       tags:
       - intents
       summary: List Phrases
-      operationId: list_phrases_api_v1_intents__intent_id__phrases_get
+      operationId: list_phrases
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -502,7 +502,7 @@ paths:
       tags:
       - intents
       summary: Add Phrase
-      operationId: add_phrase_api_v1_intents__intent_id__phrases_post
+      operationId: add_phrase
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -562,7 +562,7 @@ paths:
       tags:
       - intents
       summary: Delete Phrase
-      operationId: delete_phrase_api_v1_intents__intent_id__phrases__phrase_id__delete
+      operationId: remove_phrase
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
@@ -599,7 +599,7 @@ paths:
       tags:
       - slots
       summary: List Slots
-      operationId: list_slots_api_v1_slots__get
+      operationId: list_slots
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -634,7 +634,7 @@ paths:
       tags:
       - slots
       summary: Create Slot
-      operationId: create_slot_api_v1_slots__post
+      operationId: create_slot
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -686,7 +686,7 @@ paths:
       tags:
       - slots
       summary: Get Slot
-      operationId: get_slot_api_v1_slots__slot_id__get
+      operationId: show_slot
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -720,7 +720,7 @@ paths:
       tags:
       - slots
       summary: Update Slot
-      operationId: update_slot_api_v1_slots__slot_id__patch
+      operationId: update_slot
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -763,7 +763,7 @@ paths:
       tags:
       - slots
       summary: Delete Slot
-      operationId: delete_slot_api_v1_slots__slot_id__delete
+      operationId: remove_slot
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
@@ -801,7 +801,7 @@ paths:
       tags:
       - slots
       summary: List Slot Values
-      operationId: list_slot_values_api_v1_slots__slot_id__values_get
+      operationId: list_slot_values
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -838,7 +838,7 @@ paths:
       tags:
       - slots
       summary: Add Slot Value
-      operationId: add_slot_value_api_v1_slots__slot_id__values_post
+      operationId: add_slot_value
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -893,7 +893,7 @@ paths:
       tags:
       - slots
       summary: Delete Slot Value
-      operationId: delete_slot_value_api_v1_slots__slot_id__values__value_id__delete
+      operationId: remove_slot_value
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
@@ -932,7 +932,7 @@ paths:
       tags:
       - slots
       summary: List Aliases
-      operationId: list_aliases_api_v1_slots__slot_id__values__value_id__aliases_get
+      operationId: list_aliases
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -970,7 +970,7 @@ paths:
       tags:
       - slots
       summary: Add Alias
-      operationId: add_alias_api_v1_slots__slot_id__values__value_id__aliases_post
+      operationId: add_alias
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -1031,7 +1031,7 @@ paths:
       tags:
       - slots
       summary: Delete Alias
-      operationId: delete_alias_api_v1_slots__slot_id__values__value_id__aliases__alias_id__delete
+      operationId: remove_alias
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
@@ -1077,9 +1077,6 @@ paths:
         parent: config
         group: setting
         command: update
-
-        aliases:
-        - config setting patch
   /api/v1/setting/{key}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_key'
     x-opal-cli:
@@ -1113,7 +1110,7 @@ paths:
       tags:
       - recognition
       summary: Test Text
-      operationId: test_text_api_v1_recognition_test_text_post
+      operationId: test_recognition_text
       parameters:
       - name: save_log
         in: query
@@ -1163,7 +1160,7 @@ paths:
       - recognition
       summary: Test Audio
       description: Test a .wav file through the full STT + intent pipeline.
-      operationId: test_audio_api_v1_recognition_test_audio_post
+      operationId: test_recognition_audio
       parameters:
       - name: save_log
         in: query
@@ -1221,7 +1218,7 @@ paths:
       tags:
       - recognition
       summary: Start Pipeline
-      operationId: start_pipeline_api_v1_recognition_start_post
+      operationId: start_recognition
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1257,7 +1254,7 @@ paths:
       tags:
       - recognition
       summary: Stop Pipeline
-      operationId: stop_pipeline_api_v1_recognition_stop_post
+      operationId: stop_recognition
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1293,7 +1290,7 @@ paths:
       tags:
       - recognition
       summary: Get Status
-      operationId: get_status_api_v1_recognition_status_get
+      operationId: show_recognition_status
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1376,7 +1373,7 @@ paths:
         `Last-Event-ID` is not honored, and missed events are never replayed. A
         reconnecting client receives a fresh `status` snapshot followed only by new
         events.'
-      operationId: stream_results_api_v1_recognition_stream_get
+      operationId: stream_recognition
       parameters:
       - name: debug
         in: query
@@ -1420,7 +1417,7 @@ paths:
       tags:
       - failed_utterances
       summary: List Failed Utterances
-      operationId: list_failed_utterances_api_v1_failed_utterances__get
+      operationId: list_failed_utterances
       parameters:
       - name: reviewed
         in: query
@@ -1483,7 +1480,7 @@ paths:
       tags:
       - failed_utterances
       summary: Create Failed Utterance
-      operationId: create_failed_utterance_api_v1_failed_utterances__post
+      operationId: create_failed_utterance
       requestBody:
         required: true
         content:
@@ -1527,7 +1524,7 @@ paths:
       tags:
       - failed_utterances
       summary: Get Failed Utterance
-      operationId: get_failed_utterance_api_v1_failed_utterances__fu_id__get
+      operationId: show_failed_utterance
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1556,7 +1553,7 @@ paths:
       tags:
       - failed_utterances
       summary: Update Failed Utterance
-      operationId: update_failed_utterance_api_v1_failed_utterances__fu_id__patch
+      operationId: update_failed_utterance
       requestBody:
         required: true
         content:
@@ -1591,7 +1588,7 @@ paths:
       tags:
       - failed_utterances
       summary: Delete Failed Utterance
-      operationId: delete_failed_utterance_api_v1_failed_utterances__fu_id__delete
+      operationId: remove_failed_utterance
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1624,7 +1621,7 @@ paths:
       - failed_utterances
       summary: Promote To Phrase
       description: Promote a failed utterance as a training phrase for the given intent.
-      operationId: promote_to_phrase_api_v1_failed_utterances__fu_id__promote_post
+      operationId: promote_failed_utterance
       parameters:
       - name: intent_name
         in: query
@@ -1680,7 +1677,7 @@ paths:
       tags:
       - regression
       summary: List Regression Tests
-      operationId: list_regression_tests_api_v1_regression__get
+      operationId: list_regression_tests
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1710,7 +1707,7 @@ paths:
       tags:
       - regression
       summary: Create Regression Test
-      operationId: create_regression_test_api_v1_regression__post
+      operationId: create_regression_test
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -1760,7 +1757,7 @@ paths:
       - regression
       summary: Run Regression Tests
       description: Run all (enabled) regression tests against the current intent model.
-      operationId: run_regression_tests_api_v1_regression_run_post
+      operationId: run_regression_tests
       parameters:
       - name: enabled_only
         in: query
@@ -1802,7 +1799,7 @@ paths:
       tags:
       - regression
       summary: Get Regression Test
-      operationId: get_regression_test_api_v1_regression__test_id__get
+      operationId: show_regression_test
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1831,7 +1828,7 @@ paths:
       tags:
       - regression
       summary: Update Regression Test
-      operationId: update_regression_test_api_v1_regression__test_id__patch
+      operationId: update_regression_test
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -1872,7 +1869,7 @@ paths:
       tags:
       - regression
       summary: Delete Regression Test
-      operationId: delete_regression_test_api_v1_regression__test_id__delete
+      operationId: remove_regression_test
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
@@ -1910,7 +1907,7 @@ paths:
       - performance
       summary: Get Last Performance
       description: Return the most recent performance result.
-      operationId: get_last_performance_api_v1_performance_last_get
+      operationId: get_performance_last
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1947,7 +1944,7 @@ paths:
       - performance
       summary: Get Performance Summary
       description: Aggregate stats over the last N results.
-      operationId: get_performance_summary_api_v1_performance_summary_get
+      operationId: get_performance_summary
       parameters:
       - name: limit
         in: query
@@ -1990,7 +1987,7 @@ paths:
       - performance
       summary: Get Performance History
       description: Bounded list in stable descending time-plus-ID order; `limit` caps the returned items.
-      operationId: get_performance_history_api_v1_performance_history_get
+      operationId: get_performance_history
       parameters:
       - name: limit
         in: query
@@ -2037,7 +2034,7 @@ paths:
       tags:
       - health
       summary: Get Audio Devices
-      operationId: get_audio_devices_api_v1_health_audio_devices_get
+      operationId: list_audio_devices
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -2548,6 +2545,7 @@ components:
           - type: 'null'
           title: Promoted To Phrase
       type: object
+      minProperties: 1
       title: FailedUtteranceUpdate
     IntentAlternative:
       properties:
@@ -2742,6 +2740,7 @@ components:
           - type: 'null'
           title: Confidence Threshold
       type: object
+      minProperties: 1
       title: IntentUpdate
     LatencyStats:
       properties:
@@ -3310,6 +3309,7 @@ components:
           - type: 'null'
           title: Enabled
       type: object
+      minProperties: 1
       title: RegressionTestUpdate
     SlotAliasCreate:
       properties:
@@ -3459,6 +3459,7 @@ components:
           - type: 'null'
           title: Description
       type: object
+      minProperties: 1
       title: SlotUpdate
     SlotValueCreate:
       properties:
@@ -3606,6 +3607,7 @@ components:
           - type: 'null'
           title: Confidence Threshold
       type: object
+      minProperties: 1
       title: WakewordUpdate
     PersonaCreate:
       $ref: './shared/opal_kernel.yaml#/components/schemas/OpalPersonaCreate'
@@ -3627,9 +3629,9 @@ tags:
 - name: info
 - name: service
 servers:
-- url: http://localhost:8000
+- url: http://127.0.0.1:8000
 x-opal-context-standard:
-  version: '1.3'
+  version: '1.7.1'
   headers:
   - X-Opal-Session-Id
   - X-Opal-Transaction-Id
@@ -3639,7 +3641,8 @@ x-opal-context-standard:
   id_format: opaque-printable-ascii-1-to-128
   transaction_atomicity: false
   events:
-    $ref: './shared/opal_kernel.yaml#/x-opal-event-envelope'
+    envelope:
+      $ref: './shared/opal_kernel.yaml#/x-opal-event-envelope'
     metadata_schema_version: '2.0'
   pagination:
     history: none
@@ -3657,3 +3660,10 @@ x-opal-context-standard:
 security:
 - BearerAuth: []
 x-opal-authorization: {$ref: './shared/opal_kernel.yaml#/x-opal-authorization'}
+x-opal-profile-fields:
+- wakeword_names
+- confidence_thresholds
+- vad_settings
+- enabled_intents
+- enabled_slots
+- model_paths

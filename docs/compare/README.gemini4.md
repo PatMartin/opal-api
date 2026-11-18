@@ -203,7 +203,7 @@ Routes mounted from [`openapi/shared/opal_kernel.yaml`](openapi/shared/opal_kern
 ├── backup/{filename}                DELETE          (204)
 ├── backup/export                    GET             (OpalConfigExport, excludes secrets/history)
 ├── backup/import                    POST            (OpalImportResult, requires If-Match)
-├── backup/validate                  POST · GET      (OpalValidationReport; GET on event/listen/say)
+├── backup/validate                  POST · GET      (OpalValidationReport)
 ├── service/start                    POST            (OpalServiceStatus; logs/opal_<service>.log)
 ├── service/stop                     POST            (OpalServiceStatus)
 └── service/log                      GET             (OpalServiceLogTail; ?lines=10)
@@ -319,8 +319,6 @@ x-opal-cli:
     parent: config
     group: setting
     command: update
-    aliases:
-      - config setting patch
 ```
 
 Resulting unified `opal` command tree:
@@ -331,7 +329,7 @@ opal
 │   ├── recognition   start | stop | status | stream | test-text | test-audio
 │   ├── config        intent | slot | wakeword | regression | persona | profile | setting
 │   ├── data          failed-utterance | performance
-│   ├── backup        create | list | download | remove | export | import | validate | restore
+│   ├── backup        create | list | download | remove | export | import | validate-stored | validate | restore
 │   ├── service       start | stop | log
 │   └── info          version | ping | health | live | ready | audio-devices
 ├── say
@@ -339,13 +337,13 @@ opal
 │   ├── stream        (text -> progressive s16le PCM stream)
 │   ├── engine        list | show | update | validate
 │   ├── config        voice | persona | profile | setting
-│   ├── backup        create | list | download | remove | export | import | validate | restore
+│   ├── backup        create | list | download | remove | export | import | validate-stored | validate | restore
 │   ├── service       start | stop | log
 │   └── info          version | ping | health | live | ready
 ├── event
 │   ├── config        rule | action | topic | persona | profile | setting
 │   ├── data          event | execution | stats
-│   ├── backup        create | list | download | remove | export | import | validate | restore
+│   ├── backup        create | list | download | remove | export | import | validate-stored | validate | restore
 │   ├── service       start | stop | log
 │   └── info          version | ping | health | live | ready
 ├── look
@@ -355,7 +353,7 @@ opal
 │   ├── hardware      list | show
 │   ├── stream        start | list | show | stop | watch | watch-video | snapshot | metrics
 │   ├── config        engine | profile | setting
-│   ├── backup        create | list | download | remove | export | import | validate | restore
+│   ├── backup        create | list | download | remove | export | import | validate-stored | validate | restore
 │   ├── service       start | stop | log
 │   └── info          version | ping | health | live | ready
 └── think
@@ -363,7 +361,7 @@ opal
     ├── session       add | list | show | remove
     ├── model         list | show
     ├── config        persona | profile | setting
-    ├── backup        create | list | download | remove | export | import | validate | restore
+    ├── backup        create | list | download | remove | export | import | validate-stored | validate | restore
     ├── service       start | stop | log
     └── info          version | ping | health | live | ready
 ```
@@ -540,4 +538,4 @@ Spectral fails the build on `error` severity; `warn` findings are reported witho
 
 ## License
 
-The repository tooling in [`package.json`](package.json) is licensed under the **ISC** license; individual OpenAPI specifications declare `Internal use` in `info.license`.
+The repository tooling in [`package.json`](package.json) is licensed under the **ISC** license; the OpenAPI specifications omit the `info.license` field.

@@ -224,8 +224,9 @@ For example, Think's task creation operation declares:
 ```yaml
 x-opal-cli:
   group: task
-  command: create
+  command: add
   aliases:
+  - create
   - ask
   - chat
 ```
@@ -369,4 +370,4 @@ The security test also scans `openapi/proposals/*.yaml`, but most validation scr
 
 ## License
 
-[`package.json`](package.json) declares **ISC**. The Event and Think specifications separately label their `info.license` as **Internal use**; the remaining specifications omit that field. The repository does not include a standalone license file.
+[`package.json`](package.json) declares **ISC**. All specifications omit the `info.license` field; the repository does not include a standalone license file.

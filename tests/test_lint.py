@@ -187,7 +187,7 @@ CASES = [
     ("missing correlation header", "look", m_corr, "opal", "opal-correlation-headers", 0),
     ("413 missing correlation headers", "look", m_corr_413, "opal", "opal-correlation-headers", 0),
     ("nonstandard error envelope", "look", m_error_env, "opal", "opal-standard-error-body", 0),
-    ("If-Match op missing 412/428", "look", m_precond, "opal", "opal-ifmatch-precondition-responses", 1),
+    ("If-Match op missing 412/428", "look", m_precond, "opal", "opal-ifmatch-precondition-responses", 0),
     ("201 without Location", "look", m_location, "opal", "opal-201-location-header", 0),
     ("duplicate operationId", "look", m_dup_opid, "generic", "operation-operationId-unique", 0),
     ("broken $ref", "look", m_broken_ref, "generic", "invalid-ref", 0),

@@ -13,6 +13,8 @@ rules:
   # OAS 3.1 and are validated structurally by redocly lint
   # (npm run validate), which stays enabled.
   oas3-schema: off
+  # Suite convention: all specs intentionally omit info.license.
+  info-license: off
 
   opal-correlation-headers:
     description: Every response must declare the four OPAL correlation headers (Request/Transaction required; Session/Causation conditionally present).
@@ -68,7 +70,7 @@ rules:
   opal-zeromq-frame-count:
     description: The shared ZeroMQ wire protocol is exactly two frames (topic + JSON envelope).
     severity: error
-    given: $.x-opal-context-standard.events
+    given: $.x-opal-context-standard.events.envelope
     then:
       field: zero_mq_frames
       function: truthy
@@ -76,14 +78,14 @@ rules:
   opal-context-events-compatibility:
     description: The events block must document cross-version metadata compatibility.
     severity: warn
-    given: $.x-opal-context-standard.events
+    given: $.x-opal-context-standard.events.envelope
     then:
       field: compatibility
       function: truthy
 
   opal-ifmatch-precondition-responses:
-    description: Operations requiring If-Match should declare 412 (stale revision) and 428 (missing precondition) per the suite concurrency convention.
-    severity: warn
+    description: Operations requiring If-Match must declare 412 (stale revision), 422 (malformed or unsupported conditional value), and 428 (missing precondition) per the suite concurrency convention.
+    severity: error
     given:
       - $.paths[*][*]
       - $.components.pathItems[*][*]
@@ -108,7 +110,35 @@ rules:
                 responses:
                   required:
                     - '412'
+                    - '422'
                     - '428'
+
+  opal-202-idempotency-key:
+    description: POST operations admitting work with a 202 response must accept the suite Idempotency-Key header so retries can be deduplicated.
+    severity: error
+    given:
+      - $.paths[*].post
+      - $.components.pathItems[*].post
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          anyOf:
+            - properties:
+                responses:
+                  not:
+                    required:
+                      - '202'
+            - properties:
+                parameters:
+                  type: array
+                  contains:
+                    type: object
+                    required:
+                      - name
+                    properties:
+                      name:
+                        const: Idempotency-Key
 
   opal-item-op-404:
     description: Operations under parameterized paths must declare a 404 (missing item or parent resource).

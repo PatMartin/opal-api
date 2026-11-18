@@ -35,7 +35,7 @@ Look and Think annotate every operation with `x-opal-cli`, so their command name
 - Query parameters and JSON body fields become kebab-case options: `engine_voice_ref` becomes `--engine-voice-ref`.
 - Booleans become flag pairs: `--enabled/--no-enabled`.
 - Objects and arrays are passed as JSON: `--stages '[...]'`.
-- A request's primary payload is positional: `<prompt>` on `task create` (and its `ask`/`chat` aliases), `<text>` on `say generate` and `say stream`.
+- A request's primary payload is positional: `<prompt>` on `task add` (and its `create`/`ask`/`chat` aliases), `<text>` on `say generate` and `say stream`.
 - Request headers become options: `--if-match`, `--idempotency-key`, `--last-event-id`, `--range`.
 
 ### Client-side conveniences
@@ -50,7 +50,7 @@ These live in the CLI, not in the contracts. The recipes lean on them, so here t
 | `--wait` | After a `202 Accepted`, poll the resource until it reaches a terminal state, then print it. |
 | `-` as a value | Read the value from standard input, for example `opal say generate -` or `--context -`. |
 | `@path` as a value | Read the value from a file, for example `opal say generate @chapter-one.txt`. |
-| `opal think ask` and `chat` | Aliases of `task create` that wait for the task and print only the final `answer`, which makes them easy to pipe. `chat` is `ask` bound to a session via `--session-id`. |
+| `opal think ask` and `chat` | Aliases of `task add` that wait for the task and print only the final `answer`, which makes them easy to pipe. `chat` is `ask` bound to a session via `--session-id`. |
 | Output | Commands print JSON on standard output unless the response is binary. |
 
 ### Assumptions in the examples
@@ -158,7 +158,7 @@ opal say
 | `opal say generate` † | `<text>`, `--profile-id INT`, `--voice-id ID`, `--persona ID`, `--engine-id ID`, `--speed FLOAT`, `--volume FLOAT`, `--sample-rate INT`, `--engine-options JSON`, `--output-format [wav\|pcm]`, `--out PATH`, `--play` | Synthesize completed WAV or raw PCM audio from text. `POST /api/v1/generate` |
 | `opal say stream` † | `<text>`, `--profile-id INT`, `--voice-id ID`, `--persona ID`, `--engine-id ID`, `--speed FLOAT`, `--volume FLOAT`, `--sample-rate INT`, `--engine-options JSON`, `--out PATH`, `--play` | Synthesize progressive raw `s16le` mono PCM from text. `POST /api/v1/generate/stream` |
 | `opal say config setting list` | — | List settings. `GET /api/v1/setting/` |
-| `opal say config setting update` | `--if-match ETAG`, `--data JSON` | Patch settings (alias: `opal say config setting patch`). `PATCH /api/v1/setting/` |
+| `opal say config setting update` | `--if-match ETAG`, `--data JSON` | Patch settings. `PATCH /api/v1/setting/` |
 | `opal say config setting show` | `<key>` | Get setting (alias: `opal say setting get`). `GET /api/v1/setting/{key}` |
 | `opal say config setting set` | `<key>`, `<value>`, `--if-match ETAG` | Set setting. `PUT /api/v1/setting/{key}` |
 | `opal say config setting remove` | `<key>`, `--if-match ETAG` | Delete setting (alias: `opal say setting delete`). `DELETE /api/v1/setting/{key}` |
@@ -309,7 +309,7 @@ opal listen
 | `opal listen config profile remove` † | `<profile_id>`, `--if-match ETAG` | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
 | `opal listen config profile activate` † | `<profile_id>`, `--if-match ETAG` | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
 | `opal listen config setting list` | — | List settings. `GET /api/v1/setting/` |
-| `opal listen config setting update` | `--if-match ETAG`, `--data JSON` | Patch settings (alias: `opal listen config setting patch`). `PATCH /api/v1/setting/` |
+| `opal listen config setting update` | `--if-match ETAG`, `--data JSON` | Patch settings. `PATCH /api/v1/setting/` |
 | `opal listen config setting show` | `<key>` | Get setting (alias: `opal listen setting get`). `GET /api/v1/setting/{key}` |
 | `opal listen config setting set` | `<key>`, `<value>`, `--if-match ETAG` | Set setting. `PUT /api/v1/setting/{key}` |
 | `opal listen config setting remove` | `<key>`, `--if-match ETAG` | Delete setting (alias: `opal listen setting unset`). `DELETE /api/v1/setting/{key}` |
@@ -379,7 +379,7 @@ opal look
 │   ├── engine            update
 │   ├── profile           list | add | show | update | remove | activate
 │   └── setting           list | update | show | set | remove
-├── backup                list | create | download | restore | remove | export | import | validate
+├── backup                list | create | download | restore | remove | export | import | validate-stored | validate
 └── service               start | stop | log
 ```
 
@@ -474,6 +474,7 @@ opal look
 | `opal look backup remove` | `<filename>` | Delete backup. `DELETE /api/v1/backup/{filename}` |
 | `opal look backup export` | `--out PATH` | Export configuration. `GET /api/v1/backup/export` |
 | `opal look backup import` | `--if-match ETAG`, `--file PATH` | Import configuration. `POST /api/v1/backup/import` |
+| `opal look backup validate-stored` | — | Validate stored configuration. `GET /api/v1/backup/validate` |
 | `opal look backup validate` | `--file PATH` | Validate configuration. `POST /api/v1/backup/validate` |
 | `opal look info version` | — | Service Info. `GET /api/v1/info/` |
 | `opal look info ping` | — | Ping. `GET /api/v1/info/ping` |
@@ -492,9 +493,9 @@ Bounded reasoning tasks over configured models. Think can discover and execute a
 
 ```text
 opal think
-├── ask                   alias of `task create`
-├── chat                  alias of `task create`
-├── task                  list | create | show | watch | cancel
+├── ask                   alias of `task add`
+├── chat                  alias of `task add`
+├── task                  list | add | show | watch | cancel
 ├── session               list | add | show | remove
 ├── model                 list | show
 ├── config
@@ -502,7 +503,7 @@ opal think
 │   ├── setting           list | update | show | set | remove
 │   └── persona           list | add | validate | show | update | remove
 ├── info                  health | version | ping | live | ready
-├── backup                list | create | download | restore | remove | export | import | validate
+├── backup                list | create | download | restore | remove | export | import | validate-stored | validate
 └── service               start | stop | log
 ```
 
@@ -553,7 +554,7 @@ opal think
 | COMMAND | OPTIONS | DESCRIPTION |
 |---|---|---|
 | `opal think task list` | `--status [queued\|running\|completed\|failed\|cancelled\|timed_out]`, `--session-id ID`, `--limit INT` | List retained tasks. `GET /api/v1/task/` |
-| `opal think task create` | `<prompt>`, `--idempotency-key KEY`, `--session-id ID`, `--model-id ID`, `--context JSON`, `--max-steps INT`, `--timeout-seconds INT`, `--metadata JSON`, `--wait` | Create task (alias: `opal think ask`, `opal think chat`). `POST /api/v1/task/` |
+| `opal think task add` | `<prompt>`, `--idempotency-key KEY`, `--session-id ID`, `--model-id ID`, `--context JSON`, `--max-steps INT`, `--timeout-seconds INT`, `--metadata JSON`, `--wait` | Create task (aliases: `create`, `ask`, `chat`). `POST /api/v1/task/` |
 | `opal think task show` | `<task_id>` | Show task. `GET /api/v1/task/{task_id}` |
 | `opal think task watch` | `<task_id>` | Watch task output and progress. `GET /api/v1/task/{task_id}/stream` |
 | `opal think task cancel` | `<task_id>` | Request task cancellation. `POST /api/v1/task/{task_id}/cancel` |
@@ -570,7 +571,7 @@ opal think
 | `opal think config profile remove` | `<profile_id>`, `--if-match ETAG` | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
 | `opal think config profile activate` | `<profile_id>`, `--if-match ETAG` | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
 | `opal think config setting list` | — | List settings. `GET /api/v1/setting/` |
-| `opal think config setting update` | `--if-match ETAG`, `--data JSON` | Patch settings (alias: `opal think setting patch`). `PATCH /api/v1/setting/` |
+| `opal think config setting update` | `--if-match ETAG`, `--data JSON` | Patch settings. `PATCH /api/v1/setting/` |
 | `opal think config setting show` | `<key>` | Get setting. `GET /api/v1/setting/{key}` |
 | `opal think config setting set` | `<key>`, `<value>`, `--if-match ETAG` | Set setting. `PUT /api/v1/setting/{key}` |
 | `opal think config setting remove` | `<key>`, `--if-match ETAG` | Delete setting. `DELETE /api/v1/setting/{key}` |
@@ -586,6 +587,7 @@ opal think
 | `opal think backup remove` | `<filename>` | Delete backup. `DELETE /api/v1/backup/{filename}` |
 | `opal think backup export` | `--out PATH` | Export configuration. `GET /api/v1/backup/export` |
 | `opal think backup import` | `--if-match ETAG`, `--file PATH` | Import configuration. `POST /api/v1/backup/import` |
+| `opal think backup validate-stored` | — | Validate stored configuration. `GET /api/v1/backup/validate` |
 | `opal think backup validate` | `--file PATH` | Validate configuration. `POST /api/v1/backup/validate` |
 | `opal think service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
 | `opal think service stop` | — | Stop service. `POST /api/v1/service/stop` |
@@ -617,7 +619,7 @@ opal event
 │   ├── setting           list | update | show | set | remove
 │   └── persona           list | add | validate | show | update | remove
 ├── info                  health | stats | version | ping | live | ready
-├── backup                list | create | download | restore | remove | export | import | validate
+├── backup                list | create | download | restore | remove | export | import | validate-stored | validate
 └── service               start | stop | log
 ```
 
@@ -700,7 +702,7 @@ opal event
 | `opal event config profile remove` † | `<profile_id>`, `--if-match ETAG` | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
 | `opal event config profile activate` † | `<profile_id>`, `--if-match ETAG` | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
 | `opal event config setting list` | — | List settings (alias: `opal event setting get`). `GET /api/v1/setting/` |
-| `opal event config setting update` | `--if-match ETAG`, `--data JSON` | Patch settings (alias: `opal event config setting patch`). `PATCH /api/v1/setting/` |
+| `opal event config setting update` | `--if-match ETAG`, `--data JSON` | Patch settings. `PATCH /api/v1/setting/` |
 | `opal event config setting show` | `<key>` | Get setting (alias: `opal event setting get-key`). `GET /api/v1/setting/{key}` |
 | `opal event config setting set` | `<key>`, `<value>`, `--if-match ETAG` | Set setting (alias: `opal event setting set-key`). `PUT /api/v1/setting/{key}` |
 | `opal event config setting remove` | `<key>`, `--if-match ETAG` | Delete setting (alias: `opal event setting reset-key`). `DELETE /api/v1/setting/{key}` |
@@ -715,6 +717,7 @@ opal event
 | `opal event backup remove` † | `<filename>` | Delete backup. `DELETE /api/v1/backup/{filename}` |
 | `opal event backup export` † | `--out PATH` | Export configuration. `GET /api/v1/backup/export` |
 | `opal event backup import` † | `--if-match ETAG`, `--file PATH` | Import configuration. `POST /api/v1/backup/import` |
+| `opal event backup validate-stored` † | — | Validate stored configuration. `GET /api/v1/backup/validate` |
 | `opal event backup validate` † | `--file PATH` | Validate configuration. `POST /api/v1/backup/validate` |
 | `opal event service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
 | `opal event service stop` | — | Stop service. `POST /api/v1/service/stop` |
@@ -1104,7 +1107,7 @@ opal think ask "Explain ETags to a golden retriever." --model-id ollama:llama3.2
 **4. Submit a task with a leash: five steps, two minutes.**
 
 ```bash
-opal think task create "Summarize the trade-offs between RTSP and MJPEG for home cameras." --max-steps 5 --timeout-seconds 120
+opal think task add "Summarize the trade-offs between RTSP and MJPEG for home cameras." --max-steps 5 --timeout-seconds 120
 ```
 
 **5. Watch a task's progress live.**
@@ -1170,13 +1173,13 @@ opal think ask "Which of these temperature readings looks wrong, and why?" --con
 **15. Tag a task with evaluation metadata.**
 
 ```bash
-opal think task create "What is 17 times 23?" --metadata '{"evalset":"arithmetic","case_id":"mul-017"}' --wait
+opal think task add "What is 17 times 23?" --metadata '{"evalset":"arithmetic","case_id":"mul-017"}' --wait
 ```
 
 **16. Make a retry-safe submission with an idempotency key.**
 
 ```bash
-opal think task create "Draft the nightly status report." --idempotency-key nightly-report-2026-11-10
+opal think task add "Draft the nightly status report." --idempotency-key nightly-report-2026-11-10
 ```
 
 **17. Set the default model.**

@@ -34,8 +34,6 @@ info:
     Recommended initial setting keys (registered keys are discoverable through GET settings):
     `models.default_id`, `providers.<id>.type`, `providers.<id>.base_url`, `providers.<id>.enabled`, `providers.<id>.credential_ref`, `event.base_url`, `event.credential_ref`, `task.default_max_steps`, `task.max_steps_limit`, `task.default_timeout_seconds`, `task.timeout_limit_seconds`, `task.max_concurrent`, `task.retention_days`, `session.retention_days`.
     Provider adapters can extend settings without changing the core REST schema. Input schema and natural-language descriptions for EVENT actions are recommended EVENT-side enhancements and not new THINK APIs.
-  license:
-    name: Internal use
 servers:
 - url: http://127.0.0.1:8080
   description: Illustrative local endpoint; actual bind address and port are configurable.
@@ -118,8 +116,9 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/ServiceUnavailable'
       x-opal-cli:
         group: task
-        command: create
+        command: add
         aliases:
+        - create
         - ask
         - chat
     get:
@@ -274,6 +273,8 @@ paths:
         EVENT action already running may still complete, and its side effects are not undone. Repeated cancellation
         of an in-progress task is idempotent. Terminal task returns 409. Cancellation takes effect asynchronously;
         poll/show or watch for cancelled or another terminal status.
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IdempotencyKey'
       responses:
         '202':
           description: Cancellation requested, not guaranteed instantaneous.
@@ -588,8 +589,6 @@ paths:
         parent: config
         group: setting
         command: update
-        aliases:
-        - setting patch
   /api/v1/setting/{key}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_key'
     x-opal-cli:
@@ -678,8 +677,11 @@ paths:
         group: backup
         command: import
   /api/v1/backup/validate:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_validate_post'
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_validate'
     x-opal-cli:
+      get:
+        group: backup
+        command: validate-stored
       post:
         group: backup
         command: validate
@@ -1447,6 +1449,7 @@ x-opal-cli-commands:
   - remove
   - export
   - import
+  - validate-stored
   - validate
   service:
   - start
@@ -1480,8 +1483,9 @@ x-opal-event-integration:
     receipt stays retrievable. THINK-side action permission additionally
     requires the action id to appear in `event.action_allowlist`.
 x-opal-authorization: {$ref: './shared/opal_kernel.yaml#/x-opal-authorization'}
+x-opal-profile-fields: []
 x-opal-context-standard:
-  version: '1.4'
+  version: '1.7.1'
   headers:
   - X-Opal-Session-Id
   - X-Opal-Transaction-Id
@@ -1491,7 +1495,8 @@ x-opal-context-standard:
   id_format: opaque-printable-ascii-1-to-128
   transaction_atomicity: false
   events:
-    $ref: './shared/opal_kernel.yaml#/x-opal-event-envelope'
+    envelope:
+      $ref: './shared/opal_kernel.yaml#/x-opal-event-envelope'
     metadata_schema_version: '1.0'
   pagination:
     history: none

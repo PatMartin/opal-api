@@ -12,3 +12,5 @@ rules:
   # OAS 3.1 and are validated structurally by redocly lint
   # (npm run validate), which stays enabled.
   oas3-schema: off
+  # Suite convention: all specs intentionally omit info.license.
+  info-license: off

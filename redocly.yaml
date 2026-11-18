@@ -12,3 +12,5 @@ rules:
   # Real metadata gaps, reported separately; kept visible but non-blocking.
   operation-summary: warn
   no-empty-servers: warn
+  # Suite convention: all specs intentionally omit info.license.
+  info-license: off

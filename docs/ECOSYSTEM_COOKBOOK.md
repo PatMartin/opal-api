@@ -61,7 +61,7 @@ opal
 │   ├── regression            list | add | run | show | update | remove
 │   ├── performance           last | summary | history
 │   ├── info                  health | audio-devices | version | ping | live | ready
-│   ├── backup                list | create | download | restore | remove | export | import | validate
+│   ├── backup                list | create | download | restore | remove | export | import | validate-stored | validate
 │   └── service               start | stop | log
 ├── look                  sight: engines, models, predict, RTSP streams
 │   ├── info                  health | version | ping | live | ready
@@ -74,12 +74,12 @@ opal
 │   │   ├── engine            update
 │   │   ├── profile           list | add | show | update | remove | activate
 │   │   └── setting           list | update | show | set | remove
-│   ├── backup                list | create | download | restore | remove | export | import | validate
+│   ├── backup                list | create | download | restore | remove | export | import | validate-stored | validate
 │   └── service               start | stop | log
 ├── think                 reasoning: tasks, sessions, models
-│   ├── ask                   alias of `task create`
-│   ├── chat                  alias of `task create`
-│   ├── task                  list | create | show | watch | cancel
+│   ├── ask                   alias of `task add`
+│   ├── chat                  alias of `task add`
+│   ├── task                  list | add | show | watch | cancel
 │   ├── session               list | add | show | remove
 │   ├── model                 list | show
 │   ├── config
@@ -87,7 +87,7 @@ opal
 │   │   ├── persona           list | add | validate | show | update | remove
 │   │   └── setting           list | update | show | set | remove
 │   ├── info                  health | version | ping | live | ready
-│   ├── backup                list | create | download | restore | remove | export | import | validate
+│   ├── backup                list | create | download | restore | remove | export | import | validate-stored | validate
 │   └── service               start | stop | log
 ├── say                   voice: TTS over host-installed engines
 │   ├── generate | stream
@@ -98,7 +98,7 @@ opal
 │   │   ├── persona           list | add | validate | show | update | remove
 │   │   └── setting           list | update | show | set | remove
 │   ├── info                  health | version | ping | live | ready
-│   ├── backup                list | create | download | restore | remove | export | import | validate
+│   ├── backup                list | create | download | restore | remove | export | import | validate-stored | validate
 │   └── service               start | stop | log
 └── event                 nervous system: publish, rules, actions, executions
     ├── publish
@@ -113,7 +113,7 @@ opal
     │   ├── persona           list | add | validate | show | update | remove
     │   └── setting           list | update | show | set | remove
     ├── info                  health | stats | version | ping | live | ready
-    ├── backup                list | create | download | restore | remove | export | import | validate
+    ├── backup                list | create | download | restore | remove | export | import | validate-stored | validate
     └── service               start | stop | log
 ```
 
@@ -514,7 +514,7 @@ opal look backup create
 **1. Ask it a question, fire and forget.**
 
 ```bash
-opal think task create --prompt "Summarize today's commits in one sentence."
+opal think task add --prompt "Summarize today's commits in one sentence."
 ```
 
 **2. Or just ask.**
@@ -527,7 +527,7 @@ opal think ask "Explain the difference between a task and a session."
 
 ```bash
 opal think session add --id ses-standup
-opal think task create --session-id ses-standup --prompt "What did we decide about the release?"
+opal think task add --session-id ses-standup --prompt "What did we decide about the release?"
 ```
 
 **4. See what models it can use.**
@@ -539,19 +539,19 @@ opal think model list
 **5. Pin the task to a specific model.**
 
 ```bash
-opal think task create --model ollama:llama3.2 --prompt "Write a haiku about firmware."
+opal think task add --model ollama:llama3.2 --prompt "Write a haiku about firmware."
 ```
 
 **6. Give it a leash.**
 
 ```bash
-opal think task create --prompt "Triage the failing tests." --max-steps 5 --timeout 120
+opal think task add --prompt "Triage the failing tests." --max-steps 5 --timeout 120
 ```
 
 **7. Speak as a persona.**
 
 ```bash
-opal think task create --persona critic --prompt "Review this changelog like a skeptic."
+opal think task add --persona critic --prompt "Review this changelog like a skeptic."
 ```
 
 **8. Watch the task unfold.**
@@ -1000,7 +1000,7 @@ opal event config rule add --id obs-notebook --topic front.stream --action log-o
 
 ```bash
 opal look engine list
-opal think task create --prompt "Between yolo, rfdetr, rtdetr, and dfine, which engine should run person detection on a 10 fps porch stream, and why? One paragraph." --max-steps 3
+opal think task add --prompt "Between yolo, rfdetr, rtdetr, and dfine, which engine should run person detection on a 10 fps porch stream, and why? One paragraph." --max-steps 3
 ```
 
 **37. Announce when a failed stream recovers.**
@@ -1020,7 +1020,7 @@ opal event data execution list --limit 1
 
 ```bash
 opal think session add --id ses-butler
-opal think task create --session-id ses-butler --prompt "Remember: the user prefers early warnings about porch visitors."
+opal think task add --session-id ses-butler --prompt "Remember: the user prefers early warnings about porch visitors."
 ```
 
 **40. Nightly report, spoken edition.**

@@ -377,5 +377,5 @@ validates them structurally instead).
 
 ## License
 
-Spec `info.license` fields declare "Internal use". The npm manifest
+The OpenAPI specifications omit the `info.license` field. The npm manifest
 declares ISC for this repository's tooling.

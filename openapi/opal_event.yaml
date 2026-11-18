@@ -63,7 +63,7 @@ info:
 
 
 
-    OPAL SUITE STANDARD v1.2 (normative)
+    OPAL SUITE STANDARD v1.7.1 (normative)
 
     X-Opal-Session-Id is an optional logical context identifier; it does not create a server-managed session
     or grant authorization. Entry-point services generate one when absent where a workflow requires it, and
@@ -93,8 +93,6 @@ info:
     the remaining fields are untrusted discovery hints, never authorization or instructions.
 
     '
-  license:
-    name: Internal use
 servers:
 - url: http://127.0.0.1:8080
 tags:
@@ -121,7 +119,7 @@ paths:
     post:
       tags:
       - Events
-      operationId: post_api_v1_events
+      operationId: publish_event
       summary: Publish event
       description: Normalizes missing metadata, checks 1 MiB serialized wire payload, then routes matching
         rules through the bounded admission path and persists the event with its match disposition
@@ -165,6 +163,8 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
         '413':
           $ref: './shared/opal_kernel.yaml#/components/responses/PayloadTooLarge'
+        '409':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Conflict'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
         '503':
@@ -185,10 +185,11 @@ paths:
         schema:
           type: integer
           minimum: 0
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IdempotencyKey'
     get:
       tags:
       - Events
-      operationId: get_api_v1_events
+      operationId: list_events
       summary: List stored events
       description: ''
       responses:
@@ -250,7 +251,7 @@ paths:
     delete:
       tags:
       - Events
-      operationId: delete_api_v1_events
+      operationId: clear_events
       summary: Clear all stored events
       description: Clear all events from all topics.
       responses:
@@ -288,7 +289,7 @@ paths:
     get:
       tags:
       - Events
-      operationId: get_api_v1_events_id
+      operationId: show_event
       summary: Get stored event
       description: ''
       responses:
@@ -331,7 +332,7 @@ paths:
     delete:
       tags:
       - Events
-      operationId: delete_api_v1_events_id
+      operationId: remove_event
       summary: Delete stored event
       description: Delete an individual event given its ID.
       responses:
@@ -376,7 +377,7 @@ paths:
     get:
       tags:
       - Topics
-      operationId: get_api_v1_topics
+      operationId: list_topics
       summary: List observed topics
       description: '
 
@@ -428,7 +429,7 @@ paths:
     get:
       tags:
       - Rules
-      operationId: get_api_v1_rules
+      operationId: list_rules
       summary: List rules
       description: '
 
@@ -474,7 +475,7 @@ paths:
     post:
       tags:
       - Rules
-      operationId: post_api_v1_rules
+      operationId: create_rule
       summary: Create rule
       description: ''
       responses:
@@ -532,7 +533,7 @@ paths:
     get:
       tags:
       - Rules
-      operationId: get_api_v1_rules_id
+      operationId: show_rule
       summary: Get rule
       description: ''
       responses:
@@ -579,7 +580,7 @@ paths:
     delete:
       tags:
       - Rules
-      operationId: delete_api_v1_rules_id
+      operationId: remove_rule
       summary: Delete rule
       description: ''
       responses:
@@ -623,7 +624,7 @@ paths:
     patch:
       tags:
       - Rules
-      operationId: patch_api_v1_rules_rule_id
+      operationId: update_rule
       summary: Partially update rule
       description: Atomically update the selected fields of a registered resource and persist to YAML. Omitted
         fields are unchanged. Nested objects and arrays are replaced, not merged. ID and action type cannot
@@ -685,7 +686,7 @@ paths:
     post:
       tags:
       - Rules
-      operationId: post_api_v1_rules_id_test
+      operationId: test_rule
       summary: Evaluate rule without execution
       description: ''
       responses:
@@ -740,7 +741,7 @@ paths:
     get:
       tags:
       - Actions
-      operationId: get_api_v1_actions
+      operationId: list_actions
       summary: List actions
       description: '
 
@@ -786,7 +787,7 @@ paths:
     post:
       tags:
       - Actions
-      operationId: post_api_v1_actions
+      operationId: create_action
       summary: Create action
       description: ''
       responses:
@@ -844,7 +845,7 @@ paths:
     get:
       tags:
       - Actions
-      operationId: get_api_v1_actions_id
+      operationId: show_action
       summary: Get action
       description: ''
       responses:
@@ -891,7 +892,7 @@ paths:
     delete:
       tags:
       - Actions
-      operationId: delete_api_v1_actions_id
+      operationId: remove_action
       summary: Delete unused action
       description: 409 if referenced by a rule; delete or update referencing rules first.
       responses:
@@ -935,7 +936,7 @@ paths:
     patch:
       tags:
       - Actions
-      operationId: patch_api_v1_actions_action_id
+      operationId: update_action
       summary: Partially update action
       description: Atomically update the selected fields of a registered resource and persist to YAML. Omitted
         fields are unchanged. Nested objects and arrays are replaced, not merged. ID and action type cannot
@@ -997,7 +998,7 @@ paths:
     post:
       tags:
       - Actions
-      operationId: post_api_v1_actions_id_execute
+      operationId: execute_action
       summary: Execute registered action manually
       description: Enqueue one independent execution. Queue-full yields execution record status=dropped and
         HTTP 202, never an automatic retry. Registered and enabled action only. When the action declares
@@ -1079,7 +1080,7 @@ paths:
     get:
       tags:
       - Executions
-      operationId: get_api_v1_executions
+      operationId: list_executions
       summary: List executions
       description: '
 
@@ -1151,7 +1152,7 @@ paths:
     get:
       tags:
       - Executions
-      operationId: get_api_v1_executions_id
+      operationId: show_execution
       summary: Get execution result
       description: ''
       responses:
@@ -1202,7 +1203,7 @@ paths:
     get:
       tags:
       - Operations
-      operationId: get_api_v1_stats
+      operationId: show_stats
       summary: Get event and execution counters
       description: ''
       responses:
@@ -1260,9 +1261,6 @@ paths:
         parent: config
         group: setting
         command: update
-
-        aliases:
-        - config setting patch
   /api/v1/setting/{key}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_key'
     x-opal-cli:
@@ -1310,7 +1308,7 @@ paths:
   /api/v1/backup/import:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_import'
   /api/v1/backup/validate:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_validate_post'
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_validate'
   /api/v1/service/start:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/service_start'
     x-opal-cli:
@@ -2514,7 +2512,7 @@ components:
     PersonaRead:
       $ref: './shared/opal_kernel.yaml#/components/schemas/OpalPersonaRead'
 x-opal-context-standard:
-  version: '1.2'
+  version: '1.7.1'
   headers:
   - X-Opal-Session-Id
   - X-Opal-Transaction-Id
@@ -2524,7 +2522,8 @@ x-opal-context-standard:
   id_format: opaque-printable-ascii-1-to-128
   transaction_atomicity: false
   events:
-    $ref: './shared/opal_kernel.yaml#/x-opal-event-envelope'
+    envelope:
+      $ref: './shared/opal_kernel.yaml#/x-opal-event-envelope'
     metadata_schema_version: '1.0'
   pagination:
     history: none
@@ -2604,3 +2603,4 @@ x-opal-authorization:
       actions:read, actions:execute, executions:read cannot create/edit/delete actions,
       manage rules, change settings or credentials, escalate its own permissions, or
       bypass endpoint/destination restrictions.
+x-opal-profile-fields: []

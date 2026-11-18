@@ -21,7 +21,7 @@ info:
     \ generated audio contract.\n* Audio playback, audio-device control, synthesis history, request logging,\n\
     \  performance history, and asynchronous job management are intentionally outside\n  this API.\n* Configuration\
     \ backup/import/export follows the same operational model as the\n  sister OPAL Listen service.\n\n\nOPAL\
-    \ SUITE STANDARD v1.2 (normative)\nX-Opal-Session-Id is an optional logical context identifier; it does\
+    \ SUITE STANDARD v1.7.1 (normative)\nX-Opal-Session-Id is an optional logical context identifier; it does\
     \ not create a server-managed session or grant authorization. Entry-point services generate one when absent\
     \ where a workflow requires it, and propagate it unchanged. A preexisting service-local session resource\
     \ has a separate lifecycle. X-Opal-Transaction-Id is a single logical end-to-end operation and is not an\
@@ -118,7 +118,7 @@ paths:
         diagnostic messages because the validation operation itself completed normally.
 
         '
-      operationId: opal_engine_validate
+      operationId: validate_engine
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -157,7 +157,7 @@ paths:
         may reject catalog sizes over an advertised deployment cap, rather than silently truncate.
 
         '
-      operationId: opal_voice_list
+      operationId: list_voices
       parameters:
       - name: engine_id
         in: query
@@ -231,7 +231,7 @@ paths:
         resolved before accepting the registration.
 
         '
-      operationId: opal_voice_create
+      operationId: create_voice
       requestBody:
         required: true
         content:
@@ -317,7 +317,7 @@ paths:
       - voice
       summary: Get Voice
       description: Return one registered voice.
-      operationId: opal_voice_get
+      operationId: show_voice
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -357,7 +357,7 @@ paths:
         never modified by this API.
 
         '
-      operationId: opal_voice_patch
+      operationId: update_voice
       requestBody:
         required: true
         content:
@@ -425,7 +425,7 @@ paths:
         is changed or removed.
 
         '
-      operationId: opal_voice_delete
+      operationId: remove_voice
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -485,7 +485,7 @@ paths:
         lightweight engine-specific load check but does not return generated speech.
 
         '
-      operationId: opal_voice_validate
+      operationId: validate_voice
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -531,7 +531,7 @@ paths:
         returns completed WAV or PCM audio.
 
         '
-      operationId: opal_voice_test
+      operationId: test_voice
       requestBody:
         required: false
         content:
@@ -881,7 +881,7 @@ paths:
         \ the service either returns audio\n  at that rate or rejects the request; it must not silently return\
         \ another rate.\n* Plain text only is accepted. SSML markup has no special meaning and is not a\n \
         \ supported input mode.\n"
-      operationId: opal_generate
+      operationId: generate_speech
       requestBody:
         required: true
         content:
@@ -955,7 +955,7 @@ paths:
         \ 200 response has begun, the service terminates the\n  stream. Clients MUST treat premature termination\
         \ as a failed generation; the\n  protocol does not inject an error object into the audio byte stream.\n\
         * Service-side text chunking MUST NOT reset sample format or sample rate between\n  internal chunks.\n"
-      operationId: opal_generate_stream
+      operationId: stream_speech
       requestBody:
         required: true
         content:
@@ -1008,7 +1008,7 @@ paths:
         The response is identical to `/api/v1/generate/stream`: headerless s16le mono PCM at\n\
         `X-Opal-Sample-Rate`. A failure before the first audio block returns a normal JSON error; a\n\
         failure after 200 truncates the stream, which clients MUST treat as a failed generation."
-      operationId: opal_generate_stream_incremental
+      operationId: stream_speech_incremental
       requestBody:
         required: true
         content:
@@ -1053,9 +1053,6 @@ paths:
         parent: config
         group: setting
         command: update
-
-        aliases:
-        - config setting patch
   /api/v1/setting/{key}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_key'
     x-opal-cli:
@@ -1735,7 +1732,7 @@ components:
         engine_options:
           $ref: '#/components/schemas/EngineOptions'
 x-opal-context-standard:
-  version: '1.2'
+  version: '1.7.1'
   headers:
     metadata_schema_version: '1.0'
   pagination:
@@ -1752,3 +1749,10 @@ x-opal-context-standard:
 security:
 - BearerAuth: []
 x-opal-authorization: {$ref: './shared/opal_kernel.yaml#/x-opal-authorization'}
+x-opal-profile-fields:
+- voice_id
+- speed
+- volume
+- output_format
+- sample_rate
+- engine_options

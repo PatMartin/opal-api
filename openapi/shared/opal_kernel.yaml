@@ -5,7 +5,7 @@ openapi: 3.1.0
 info:
   title: OPAL Suite Kernel
   version: 1.7.1
-  description: 'Shared contract kernel for the OPAL suite (SUITE STANDARD v1.2).
+  description: 'Shared contract kernel for the OPAL suite (SUITE STANDARD v1.7.1).
 
 
     This document is never served directly. Service specs under `openapi/` mount its reusable Path Items and reference
@@ -15,7 +15,10 @@ info:
     Conventions encoded here: the four X-Opal-* correlation headers on every request and response; strong ETag +
     mandatory If-Match on mutable configuration (428 missing, 412 stale); 204 for empty deletion; 201 + Location
     for creation; the OpalError envelope for all 4xx/5xx JSON bodies; and the standard health/settings/backup/profiles/engines
-    route families.
+    route families. If-Match concurrency covers portable logical configuration only; runtime-data deletes (events,
+    executions, failed utterances, sessions, backup archives) are exempt by design. Collections return bounded arrays;
+    list endpoints that can grow unboundedly declare the `limit` query parameter (server caps apply); opaque cursors
+    are used only where bounded arrays cannot bound a dataset.
 
 
     Kernel schemas are deliberately open (`additionalProperties: true`) on union types: suite-standard required
@@ -50,7 +53,7 @@ x-opal-cli-format:
   version: '1.0'
   description: Canonical CLI binding for OPAL operations. Every annotated operation maps to one canonical
     command `opal <service> [parent] [group] <command>`; `aliases` names alternate complete spellings that dispatch
-    to the same operation (e.g. Think's `ask`/`chat` invoke `task create`). Readers hoist a path-level per-method
+    to the same operation (e.g. Think's `ask`/`chat`/`create` invoke `task add`). Readers hoist a path-level per-method
     map onto each operation; both forms carry the same descriptor shape.
   descriptor:
     command: required — canonical verb, kebab-case (`list`, `add`, `show`, `update`, `remove`, `validate`, ...)
@@ -769,31 +772,7 @@ components:
             type: object
             additionalProperties: true
             description: Service-defined section.
-        sources:
-          type: array
-          items:
-            type: object
-            additionalProperties: true
-            description: Service-defined section.
-        pipelines:
-          type: array
-          items:
-            type: object
-            additionalProperties: true
-            description: Service-defined section.
-        zones:
-          type: array
-          items:
-            type: object
-            additionalProperties: true
-            description: Service-defined section.
         rules:
-          type: array
-          items:
-            type: object
-            additionalProperties: true
-            description: Service-defined section.
-        monitors:
           type: array
           items:
             type: object
@@ -874,7 +853,8 @@ components:
           type: string
         pending_restart:
           type: boolean
-      required: []
+      required:
+      - success
       additionalProperties: true
       description: Result of a configuration import/restore. Outcome fields are service-defined (`success`, `status`
         and `revision` variants exist); no field is suite-standard.
@@ -902,12 +882,6 @@ components:
           type: object
           additionalProperties: true
           description: Optional implementation-specific validation details.
-        sources:
-          additionalProperties:
-            type: boolean
-          type: object
-          title: Sources
-          default: {}
         issues:
           type: array
           items:
@@ -930,7 +904,9 @@ components:
       type: object
       properties:
         id:
-          description: Opaque profile identifier; string or integer per service.
+          type: string
+          minLength: 1
+          description: Opaque profile identifier.
         name:
           type: string
         description:
@@ -1010,7 +986,8 @@ components:
       - name
       additionalProperties: true
       description: A reusable named generation/processing profile. `id`, `name` and `is_active` are suite-standard;
-        all other fields are service-defined. Exactly one profile may be active at a time.
+        all other fields are service-defined; each service declares the fields it honors via its top-level
+        `x-opal-profile-fields` extension. Exactly one profile may be active at a time.
     OpalProfileCreate:
       type: object
       properties:
@@ -1099,7 +1076,9 @@ components:
           title: Model Paths
           default: {}
         id:
-          description: Client-supplied profile identifier where supported; string or integer per service.
+          type: string
+          minLength: 1
+          description: Client-supplied profile identifier where supported.
         pipeline_id:
           type: string
           minLength: 1
@@ -1119,6 +1098,7 @@ components:
         deactivates all others.'
     OpalProfilePatch:
       type: object
+      minProperties: 1
       properties:
         name:
           type: string
@@ -1286,6 +1266,7 @@ components:
         `available` reports live usability. Engines are not created or deleted through this API.
     OpalEnginePatch:
       type: object
+      minProperties: 1
       properties:
         enabled:
           type: boolean
@@ -1392,7 +1373,7 @@ components:
           type: string
           minLength: 1
           maxLength: 200
-          pattern: ^[A-Za-z0-9][A-Za-z0-9._-]*
+          pattern: ^[A-Za-z0-9][A-Za-z0-9._-]*$
           description: Globally unique OPAL persona identifier.
           example: amy
         name:
@@ -1686,7 +1667,10 @@ components:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OpalSettingsMap'
+                allOf:
+                - $ref: '#/components/schemas/OpalSettingsMap'
+                - type: object
+                  minProperties: 1
         responses:
           '200':
             description: Updated settings map.
@@ -1828,6 +1812,8 @@ components:
             $ref: '#/components/responses/Conflict'
           '412':
             $ref: '#/components/responses/PreconditionFailed'
+          '422':
+            $ref: '#/components/responses/UnprocessableEntity'
           '428':
             $ref: '#/components/responses/PreconditionRequired'
     backup_create:
@@ -2118,46 +2104,6 @@ components:
             $ref: '#/components/responses/PreconditionRequired'
           '500':
             $ref: '#/components/responses/OperationFailed'
-    backup_validate_post:
-      parameters:
-      - $ref: '#/components/parameters/OpalSessionIdParameter'
-      - $ref: '#/components/parameters/OpalTransactionIdParameter'
-      - $ref: '#/components/parameters/OpalRequestIdParameter'
-      - $ref: '#/components/parameters/OpalCausationIdParameter'
-      post:
-        tags:
-        - backup
-        summary: Validate configuration
-        operationId: opal_backup_validate_post
-        description: Validate a configuration bundle without applying it.
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalConfigExport'
-        responses:
-          '200':
-            description: Validation report.
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/OpalValidationReport'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
     backup_validate:
       parameters:
       - $ref: '#/components/parameters/OpalSessionIdParameter'
@@ -2428,6 +2374,8 @@ components:
             $ref: '#/components/responses/Conflict'
           '412':
             $ref: '#/components/responses/PreconditionFailed'
+          '422':
+            $ref: '#/components/responses/UnprocessableEntity'
           '428':
             $ref: '#/components/responses/PreconditionRequired'
     profile_activate:

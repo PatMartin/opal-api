@@ -30,8 +30,6 @@ info:
     - Credentials are configured as references; RTSP source URIs are never
       echoed back with userinfo in responses, events, or error details.
       Non-loopback bindings require REST authentication.
-  license:
-    name: Internal use
 servers:
 - url: http://127.0.0.1:8082
   description: Illustrative local endpoint; actual bind address and port are configurable.
@@ -579,6 +577,8 @@ paths:
       description: 'List active ephemeral streams, video-only and inference. The
         collection is bounded by stream admission limits and returned in full.'
       operationId: list_streams
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/Limit'
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -902,8 +902,6 @@ paths:
         parent: config
         group: setting
         command: update
-        aliases:
-        - config setting patch
   /api/v1/setting/{key}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_key'
     x-opal-cli:
@@ -999,8 +997,11 @@ paths:
         group: backup
         command: import
   /api/v1/backup/validate:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_validate_post'
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_validate'
     x-opal-cli:
+      get:
+        group: backup
+        command: validate-stored
       post:
         group: backup
         command: validate
@@ -1479,8 +1480,9 @@ components:
           format: date-time
 x-opal-authorization:
   $ref: './shared/opal_kernel.yaml#/x-opal-authorization'
+x-opal-profile-fields: []
 x-opal-context-standard:
-  version: '1.4'
+  version: '1.7.1'
   headers:
   - X-Opal-Session-Id
   - X-Opal-Transaction-Id
@@ -1557,6 +1559,7 @@ x-opal-cli-commands:
   - remove
   - export
   - import
+  - validate-stored
   - validate
   service:
   - start
