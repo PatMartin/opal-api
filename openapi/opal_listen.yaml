@@ -1490,22 +1490,7 @@ paths:
           - type: boolean
           - type: 'null'
           title: Promoted
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 500
-          default: 50
-          title: Limit
-      - name: offset
-        in: query
-        required: false
-        schema:
-          type: integer
-          minimum: 0
-          default: 0
-          title: Offset
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/Limit'
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -2001,14 +1986,7 @@ paths:
       description: Aggregate stats over the last N results.
       operationId: get_performance_summary
       parameters:
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 1000
-          default: 100
-          title: Limit
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/Limit'
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -2044,17 +2022,7 @@ paths:
       description: Bounded list in stable descending time-plus-ID order; `limit` caps the returned items.
       operationId: get_performance_history
       parameters:
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 500
-          minimum: 1
-          description: Maximum items to return.
-          default: 100
-          title: Limit
-        description: Maximum items to return.
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/Limit'
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'

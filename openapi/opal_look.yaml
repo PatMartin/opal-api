@@ -574,8 +574,6 @@ paths:
       description: 'List active ephemeral streams, video-only and inference. The
         collection is bounded by stream admission limits and returned in full.'
       operationId: list_streams
-      parameters:
-      - $ref: './shared/opal_kernel.yaml#/components/parameters/Limit'
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'

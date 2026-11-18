@@ -260,7 +260,11 @@ components:
       schema:
         type: integer
         minimum: 1
-      description: Maximum items to return; server caps apply.
+        maximum: 500
+        default: 100
+      description: Maximum items to return. Suite cap is 500; callers needing more must
+        narrow with filters. Applies only to growing collections; bounded catalogs return
+        everything.
     SettingKey:
       name: key
       in: path

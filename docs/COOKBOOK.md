@@ -304,7 +304,7 @@ opal listen
 | `opal listen recognition stop` † | — | Stop the live microphone pipeline. `POST /api/v1/recognition/stop` |
 | `opal listen recognition status` † | — | Show live pipeline state and metrics. `GET /api/v1/recognition/status` |
 | `opal listen recognition stream` † | `--debug/--no-debug` | Stream live recognition results (SSE, live-only). `GET /api/v1/recognition/stream` |
-| `opal listen data failed-utterance list` † | `--reviewed/--no-reviewed`, `--promoted/--no-promoted`, `--limit INT`, `--offset INT` | List Failed Utterances. `GET /api/v1/failed_utterance/` |
+| `opal listen data failed-utterance list` † | `--reviewed/--no-reviewed`, `--promoted/--no-promoted`, `--limit INT` | List Failed Utterances. `GET /api/v1/failed_utterance/` |
 | `opal listen data failed-utterance add` † | `--transcript TEXT`, `--expected-intent TEXT`, `--notes TEXT`, `--recognition-log-id ID` | Create Failed Utterance. `POST /api/v1/failed_utterance/` |
 | `opal listen data failed-utterance show` † | `<fu_id>` | Get Failed Utterance. `GET /api/v1/failed_utterance/{fu_id}` |
 | `opal listen data failed-utterance update` † | `<fu_id>`, `--expected-intent TEXT`, `--notes TEXT`, `--reviewed/--no-reviewed`, `--promoted-to-phrase/--no-promoted-to-phrase` | Update Failed Utterance. `PATCH /api/v1/failed_utterance/{fu_id}` |
