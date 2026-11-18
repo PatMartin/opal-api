@@ -126,3 +126,16 @@ def load(path):
             for name, val in entries.items():
                 target.setdefault(name, copy.deepcopy(val))
     return _internalize(resolved)
+
+
+def module_specs():
+    """All published module contracts: recursive glob under openapi/ minus the
+    shared kernel directory and other non-module support files."""
+    import glob as _glob
+    out = []
+    for p in _glob.glob(os.path.join(ROOT, "openapi", "**", "*.yaml"), recursive=True):
+        norm = os.path.normpath(p)
+        if os.sep + "shared" + os.sep in norm:
+            continue
+        out.append(norm)
+    return sorted(out)

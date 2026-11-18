@@ -12,8 +12,7 @@ import yaml
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import spec_util  # noqa: E402
-FILES = sorted(glob.glob(os.path.join(ROOT, "openapi", "opal_*.yaml"))
-               + glob.glob(os.path.join(ROOT, "openapi", "proposals", "*.yaml")))
+FILES = spec_util.module_specs()
 
 failures = 0
 

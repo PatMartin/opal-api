@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OPAL Look — MVP Plus Visual Observation API
-  version: 1.7.1
+  version: 2.0.0
   description: |
     Clean-cut replacement contract for OPAL Look. Video-only RTSP streams work
     with no AI engine installed; YOLO, RF-DETR, RT-DETR and D-FINE are optional
@@ -44,12 +44,10 @@ tags:
   description: Engine-local compute devices (cpu, gpu, accelerator).
 - name: streams
   description: Ephemeral RTSP video-only or inference sessions with SSE metadata, MJPEG viewing, snapshots and metrics.
-- name: settings
-  description: Service settings with per-key management.
 - name: profiles
   description: Reusable configuration profiles; exactly one may be active.
-- name: backup
-  description: Backup, restore, import, export, and validate service configuration.
+- name: config
+  description: Save, load, validate, and inspect portable module configuration.
 - name: info
   description: Service identity, version and liveness probes.
 - name: health
@@ -72,7 +70,6 @@ paths:
         group: engine
         command: show
       patch:
-        parent: config
         group: engine
         command: update
   /api/v1/engine/discover:
@@ -898,10 +895,6 @@ paths:
         parent: config
         group: setting
         command: list
-      patch:
-        parent: config
-        group: setting
-        command: update
   /api/v1/setting/{key}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_key'
     x-opal-cli:
@@ -909,102 +902,107 @@ paths:
         parent: config
         group: setting
         command: show
-        aliases:
-        - setting get
+        options:
+        - flag: --name
+          value: NAME
+          required: true
+          binds:
+            kind: path
+            target: key
       put:
         parent: config
         group: setting
         command: set
+        options:
+        - flag: --name
+          value: NAME
+          required: true
+          binds:
+            kind: path
+            target: key
+        - flag: --value
+          value: VALUE
+          required: true
+          binds:
+            kind: body
+            target: value
+            parse: json_or_string
       delete:
         parent: config
         group: setting
         command: remove
-        aliases:
-        - setting delete
+        options:
+        - flag: --name
+          value: NAME
+          required: true
+          binds:
+            kind: path
+            target: key
+  /api/v1/config/save:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/config_save'
+    x-opal-cli:
+      post:
+        group: config
+        command: save
+        options:
+        - flag: --out
+          value: FILE
+          binds:
+            kind: local_out
+            target: snapshot
+  /api/v1/config/load:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/config_load'
+    x-opal-cli:
+      post:
+        group: config
+        command: load
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: snapshot
+            parse: yaml_or_json_file
+  /api/v1/config/validate:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/config_validate'
+    x-opal-cli:
+      post:
+        group: config
+        command: validate
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: snapshot
+            parse: yaml_or_json_file
   /api/v1/profile/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profiles_collection'
     x-opal-cli:
       get:
-        parent: config
         group: profile
         command: list
       post:
-        parent: config
         group: profile
         command: add
   /api/v1/profile/{profile_id}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_item'
     x-opal-cli:
       get:
-        parent: config
         group: profile
         command: show
       patch:
-        parent: config
         group: profile
         command: update
       delete:
-        parent: config
         group: profile
         command: remove
   /api/v1/profile/{profile_id}/activate:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_activate'
     x-opal-cli:
       post:
-        parent: config
         group: profile
         command: activate
-  /api/v1/backup/list:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_list'
-    x-opal-cli:
-      get:
-        group: backup
-        command: list
-  /api/v1/backup/create:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_create'
-    x-opal-cli:
-      post:
-        group: backup
-        command: create
-  /api/v1/backup/download/{filename}:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_download'
-    x-opal-cli:
-      get:
-        group: backup
-        command: download
-  /api/v1/backup/restore/{filename}:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_restore'
-    x-opal-cli:
-      post:
-        group: backup
-        command: restore
-  /api/v1/backup/{filename}:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_delete'
-    x-opal-cli:
-      delete:
-        group: backup
-        command: remove
-  /api/v1/backup/export:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_export'
-    x-opal-cli:
-      get:
-        group: backup
-        command: export
-  /api/v1/backup/import:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_import'
-    x-opal-cli:
-      post:
-        group: backup
-        command: import
-  /api/v1/backup/validate:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_validate'
-    x-opal-cli:
-      get:
-        group: backup
-        command: validate-stored
-      post:
-        group: backup
-        command: validate
   /api/v1/health/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health'
     x-opal-cli:
@@ -1083,6 +1081,35 @@ components:
         type: string
         minLength: 1
   schemas:
+    ConfigSnapshotResources:
+      type: object
+      additionalProperties: false
+      description: 'Declarative configuration resource sections carried in `resources` of this
+        module''s snapshots. Unknown sections are rejected explicitly; empty collections are valid.'
+      properties:
+        profiles:
+          type: array
+          items:
+            $ref: './shared/opal_kernel.yaml#/components/schemas/OpalProfile'
+        engines:
+          type: array
+          items:
+            $ref: './shared/opal_kernel.yaml#/components/schemas/OpalEngine'
+        models:
+          type: array
+          items:
+            $ref: '#/components/schemas/Model'
+    ConfigSnapshot:
+      allOf:
+      - $ref: './shared/opal_kernel.yaml#/components/schemas/OpalConfigSnapshot'
+      - type: object
+        properties:
+          module:
+            const: opal-look
+          resources:
+            $ref: '#/components/schemas/ConfigSnapshotResources'
+      description: Module-constrained configuration snapshot; validates `module` identity and the
+        declared resource sections for this module.
     EngineDiscovery:
       type: object
       required:
@@ -1482,7 +1509,7 @@ x-opal-authorization:
   $ref: './shared/opal_kernel.yaml#/x-opal-authorization'
 x-opal-profile-fields: []
 x-opal-context-standard:
-  version: '1.7.1'
+  version: '2.0.0'
   headers:
   - X-Opal-Session-Id
   - X-Opal-Transaction-Id
@@ -1508,6 +1535,7 @@ x-opal-cli-commands:
   engine:
   - list
   - show
+  - update
   - discover
   - capabilities
   model:
@@ -1529,38 +1557,28 @@ x-opal-cli-commands:
   - watch-video
   - snapshot
   - metrics
+  profile:
+  - list
+  - add
+  - show
+  - update
+  - remove
+  - activate
   config:
-    engine:
-    - update
-    profile:
-    - list
-    - add
-    - show
-    - update
-    - remove
-    - activate
-    setting:
-    - list
-    - update
-    - show
-    - set
-    - remove
+  - save
+  - load
+  - validate
+  config setting:
+  - list
+  - show
+  - set
+  - remove
   info:
   - version
   - ping
   - health
   - live
   - ready
-  backup:
-  - list
-  - create
-  - download
-  - restore
-  - remove
-  - export
-  - import
-  - validate-stored
-  - validate
   service:
   - start
   - stop
@@ -1574,3 +1592,18 @@ x-opal-mvp-rules:
   decoding: Decode a source once per stream and fan frames out to consumers; viewing must not establish a new RTSP connection.
   bounded_resources: Bound frame queues and stream admission; stopping releases resources; stale replays fail explicitly.
   scope: No opal-devices, recording, pipelines, tracking, jobs, personas, event bus, training, or model downloads in MVP Plus.
+x-opal-snapshot:
+  version: '1.0'
+  module: opal-look
+  format_versions:
+  - '1.0.0'
+  resources:
+  - profiles
+  - engines
+  - models
+  description: >-
+    Declares the canonical module identity and resource sections carried in this module's
+    configuration snapshots. `config load`/`config validate` validate `snapshot` against
+    `ConfigSnapshot` (shared `OpalConfigSnapshot` envelope plus module const and
+    `ConfigSnapshotResources`). Snapshots carry persistent desired configuration only:
+    profiles, engines, models; never runtime history, sessions, streams, binaries, or secrets.

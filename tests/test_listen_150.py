@@ -1,8 +1,8 @@
 """Contract regression tests for the unified opal_listen.yaml (settings management).
 
-Verifies the published 1.7.1 spec:
+Verifies the published 2.0.0 spec:
 - native JSON settings values, required If-Match, declared precondition codes;
-- backup/import reconciled with the same strong-revision preconditions.
+- config/load carries the same strong-revision preconditions.
 """
 import os
 import sys
@@ -31,7 +31,7 @@ def param_names(op):
 def main():
     spec = spec_util.load(SPEC)
 
-    check(spec["info"]["version"] == "1.7.1", "info.version is 1.7.1")
+    check(spec["info"]["version"] == "2.0.0", "info.version is 2.0.0")
 
     sk = spec["paths"]["/api/v1/setting/{key}"]
     check(set(sk) & {"get", "put", "delete"} == {"get", "put", "delete"},
@@ -54,15 +54,16 @@ def main():
     su = spec["components"]["schemas"]["SettingUpdate"]
     check(su["required"] == ["value"], "SettingUpdate requires only value")
 
-    imp = spec["paths"]["/api/v1/backup/import"]["post"]
-    check("If-Match" in param_names(imp), "backup/import requires If-Match")
+    imp = spec["paths"]["/api/v1/config/load"]["post"]
+    check("If-Match" in param_names(imp), "config/load requires If-Match")
     check("412" in imp["responses"] and "428" in imp["responses"],
-          "backup/import declares 412 + 428")
+          "config/load declares 412 + 428")
 
     # collection ops preserved
     coll = spec["paths"]["/api/v1/setting/"]
-    check("get" in coll and "patch" in coll, "settings collection GET/PATCH retained")
-    check("If-Match" in param_names(coll["patch"]), "settings PATCH keeps required If-Match")
+    check("get" in coll and "patch" not in coll, "settings collection is GET-only under the new standard")
+    check("If-Match" in param_names(spec["paths"]["/api/v1/setting/{key}"]["put"]),
+          "setting PUT keeps required If-Match")
 
     sys.exit(1 if failures else 0)
 

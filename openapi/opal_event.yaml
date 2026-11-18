@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Opal Event API
-  version: 1.7.1
+  version: 2.0.0
   description: 'REST management and HTTP event ingress for opal-event-svc. API-first contract, release v1.
 
 
@@ -52,8 +52,8 @@ info:
 
 
     OPAL shared conventions: /api/v1 prefix; trailing slash on collection roots; 201+Location for resource
-    creation; 204 for deletion; PATCH for partial updates; portable settings and backup endpoints. Full config
-    PUT remains for complete YAML replacement. Event publication and manual execution retain 202 for best-effort
+    creation; 204 for deletion; PATCH for partial updates; portable settings and configuration snapshot
+    endpoints. `config load` replaces the complete configuration atomically. Event publication and manual execution retain 202 for best-effort
     admission. This revision introduces breaking path changes from /v1.
 
 
@@ -63,7 +63,7 @@ info:
 
 
 
-    OPAL SUITE STANDARD v1.7.1 (normative)
+    OPAL SUITE STANDARD v2.0.0 (normative)
 
     X-Opal-Session-Id is an optional logical context identifier; it does not create a server-managed session
     or grant authorization. Entry-point services generate one when absent where a workflow requires it, and
@@ -77,13 +77,14 @@ info:
     are opaque 1..128-character printable ASCII tokens with no control/whitespace characters; client-supplied
     invalid values yield 422.
 
-    Standard health routes: /api/v1/health/, /api/v1/health/live, /api/v1/health/ready. Settings: GET and PATCH
-    /api/v1/settings/ exclusively; PATCH is atomic. Mutable configuration uses strong ETags and mandatory If-Match
+    Standard health routes: /api/v1/health/, /api/v1/health/live, /api/v1/health/ready. Settings: GET
+    /api/v1/setting/ for the flat map plus GET, PUT and DELETE /api/v1/setting/{key} for individual
+    overrides; configuration snapshots via POST /api/v1/config/save, /config/load and /config/validate. Mutable configuration uses strong ETags and mandatory If-Match
     with 428 missing, 412 stale. For bounded configuration catalogs return full arrays (subject to explicit
     deployment caps); growing histories return bounded arrays in stable deterministic order and `limit`
     caps the returned items. Standard HTTP creation 201 Location, async admission 202, empty deletion
     204. Streaming keeps media-specific transports but exposes correlation headers, defined failure behavior,
-    and no unsupported replay guarantee. Configuration export/import/validation excludes secrets and history.
+    and no unsupported replay guarantee. Configuration save/load/validate excludes secrets and history.
 
 
     v1.4.1 revision: registered actions (shell/http/python) gain optional self-description
@@ -102,16 +103,18 @@ tags:
 - name: Actions
 - name: Executions
 - name: Operations
-- name: settings
-  description: Portable settings shared across OPAL services.
-- name: backup
-  description: Validate, import, and export portable configuration.
+- name: config
+  description: Save, load, validate, and inspect portable module configuration.
 - name: persona
   description: Manage named persona identities adopting the shared OPAL persona identifiers introduced by OPAL Say v1.6.0.
 - name: info
   description: Service identity, version and liveness probes.
 - name: service
   description: Service process lifecycle (start, stop, log tail).
+- name: health
+  description: Service readiness and health information.
+- name: profiles
+  description: Reusable configuration profiles.
 security:
 - BearerAuth: []
 paths:
@@ -1254,13 +1257,6 @@ paths:
         parent: config
         group: setting
         command: list
-
-        aliases:
-        - setting get
-      patch:
-        parent: config
-        group: setting
-        command: update
   /api/v1/setting/{key}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_key'
     x-opal-cli:
@@ -1268,23 +1264,80 @@ paths:
         parent: config
         group: setting
         command: show
-
-        aliases:
-        - setting get-key
+        options:
+        - flag: --name
+          value: NAME
+          required: true
+          binds:
+            kind: path
+            target: key
       put:
         parent: config
         group: setting
         command: set
-
-        aliases:
-        - setting set-key
+        options:
+        - flag: --name
+          value: NAME
+          required: true
+          binds:
+            kind: path
+            target: key
+        - flag: --value
+          value: VALUE
+          required: true
+          binds:
+            kind: body
+            target: value
+            parse: json_or_string
       delete:
         parent: config
         group: setting
         command: remove
-
-        aliases:
-        - setting reset-key
+        options:
+        - flag: --name
+          value: NAME
+          required: true
+          binds:
+            kind: path
+            target: key
+  /api/v1/config/save:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/config_save'
+    x-opal-cli:
+      post:
+        group: config
+        command: save
+        options:
+        - flag: --out
+          value: FILE
+          binds:
+            kind: local_out
+            target: snapshot
+  /api/v1/config/load:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/config_load'
+    x-opal-cli:
+      post:
+        group: config
+        command: load
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: snapshot
+            parse: yaml_or_json_file
+  /api/v1/config/validate:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/config_validate'
+    x-opal-cli:
+      post:
+        group: config
+        command: validate
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: snapshot
+            parse: yaml_or_json_file
   /api/v1/info/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/info'
   /api/v1/info/ping:
@@ -1293,22 +1346,6 @@ paths:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health_live'
   /api/v1/health/ready:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health_ready'
-  /api/v1/backup/list:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_list'
-  /api/v1/backup/create:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_create'
-  /api/v1/backup/download/{filename}:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_download'
-  /api/v1/backup/restore/{filename}:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_restore'
-  /api/v1/backup/{filename}:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_delete'
-  /api/v1/backup/export:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_export'
-  /api/v1/backup/import:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_import'
-  /api/v1/backup/validate:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_validate'
   /api/v1/service/start:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/service_start'
     x-opal-cli:
@@ -1598,6 +1635,39 @@ components:
   securitySchemes:
     BearerAuth: {$ref: './shared/opal_kernel.yaml#/components/securitySchemes/BearerAuth'}
   schemas:
+    ConfigSnapshotResources:
+      type: object
+      additionalProperties: false
+      description: 'Declarative configuration resource sections carried in `resources` of this
+        module''s snapshots. Unknown sections are rejected explicitly; empty collections are valid.'
+      properties:
+        profiles:
+          type: array
+          items:
+            $ref: './shared/opal_kernel.yaml#/components/schemas/OpalProfile'
+        personas:
+          type: array
+          items:
+            $ref: './shared/opal_kernel.yaml#/components/schemas/OpalPersonaRead'
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rule'
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Action'
+    ConfigSnapshot:
+      allOf:
+      - $ref: './shared/opal_kernel.yaml#/components/schemas/OpalConfigSnapshot'
+      - type: object
+        properties:
+          module:
+            const: opal-event
+          resources:
+            $ref: '#/components/schemas/ConfigSnapshotResources'
+      description: Module-constrained configuration snapshot; validates `module` identity and the
+        declared resource sections for this module.
     EventInput:
       type: object
       description: Minimal event envelope. id/source/timestamp filled for REST ingress if missing; direct ZeroMQ
@@ -2512,7 +2582,7 @@ components:
     PersonaRead:
       $ref: './shared/opal_kernel.yaml#/components/schemas/OpalPersonaRead'
 x-opal-context-standard:
-  version: '1.7.1'
+  version: '2.0.0'
   headers:
   - X-Opal-Session-Id
   - X-Opal-Transaction-Id
@@ -2541,7 +2611,7 @@ x-opal-authorization:
   description: Least-privilege scope model for EVENT access. BearerAuth authenticates;
     scopes authorize. 401 means missing or invalid credentials; 403 means authenticated
     but insufficient scope. Credentials are supplied via token_env and never appear in
-    configuration export, import, backup bundles, or log output.
+    configuration snapshots or log output.
   scopes:
     actions:read:
       description: Discover registered actions and topics.
@@ -2572,10 +2642,11 @@ x-opal-authorization:
       - DELETE /api/v1/rule/{rule_id}
       - POST /api/v1/rule/{rule_id}/test
     settings:write:
-      description: Change settings, credentials, or configuration backups.
+      description: Change settings or load configuration snapshots.
       permits:
-      - PATCH /api/v1/setting/
-      - POST /api/v1/backup/import
+      - PUT /api/v1/setting/{key}
+      - DELETE /api/v1/setting/{key}
+      - POST /api/v1/config/load
   principals:
     think:
       description: OPAL Think's least-privilege principal. Discovers enabled actions,
@@ -2595,7 +2666,7 @@ x-opal-authorization:
       scope enforcement is intended for non-loopback clients. Loopback access is
       administrative and is not a permission-escalation vector.
     credential_handling: Tokens are configured via token_env; no credential material is
-      exposed through configuration export/import, backup bundles, or log output.
+      exposed through configuration snapshots or log output.
     authenticated_but_not_permitted: '403'
     credentials: correlation headers are transport context, never authorization credentials
     secrets: secret values must not appear in responses, exports, or error details
@@ -2604,3 +2675,19 @@ x-opal-authorization:
       manage rules, change settings or credentials, escalate its own permissions, or
       bypass endpoint/destination restrictions.
 x-opal-profile-fields: []
+x-opal-snapshot:
+  version: '1.0'
+  module: opal-event
+  format_versions:
+  - '1.0.0'
+  resources:
+  - profiles
+  - personas
+  - rules
+  - actions
+  description: >-
+    Declares the canonical module identity and resource sections carried in this module's
+    configuration snapshots. `config load`/`config validate` validate `snapshot` against
+    `ConfigSnapshot` (shared `OpalConfigSnapshot` envelope plus module const and
+    `ConfigSnapshotResources`). Snapshots carry persistent desired configuration only:
+    profiles, personas, rules, actions; never runtime history, sessions, streams, binaries, or secrets.

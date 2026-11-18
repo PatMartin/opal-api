@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OPAL Think API
-  version: 1.7.1
+  version: 2.0.0
   description: |
     OPAL-THINK is a model-neutral, guarded reasoning service. The OpenAPI contract is authoritative; CLI and SPA only call REST.
 
@@ -38,14 +38,14 @@ servers:
 - url: http://127.0.0.1:8080
   description: Illustrative local endpoint; actual bind address and port are configurable.
 tags:
+- name: config
+  description: Save, load, validate, and inspect portable module configuration.
 - name: tasks
   description: Universal reasoning and autonomous work unit.
 - name: sessions
   description: Optional persistent conversational context.
 - name: models
   description: Read-only model discovery.
-- name: settings
-  description: Service settings with per-key management.
 - name: health
   description: Health, liveness, and readiness.
 - name: persona
@@ -54,6 +54,8 @@ tags:
   description: Service identity, version and liveness probes.
 - name: service
   description: Service process lifecycle (start, stop, log tail).
+- name: profiles
+  description: Reusable configuration profiles.
 security:
 - BearerAuth: []
 paths:
@@ -549,33 +551,27 @@ paths:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profiles_collection'
     x-opal-cli:
       get:
-        parent: config
         group: profile
         command: list
       post:
-        parent: config
         group: profile
         command: add
   /api/v1/profile/{profile_id}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_item'
     x-opal-cli:
       get:
-        parent: config
         group: profile
         command: show
       patch:
-        parent: config
         group: profile
         command: update
       delete:
-        parent: config
         group: profile
         command: remove
   /api/v1/profile/{profile_id}/activate:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_activate'
     x-opal-cli:
       post:
-        parent: config
         group: profile
         command: activate
   /api/v1/setting/:
@@ -585,10 +581,6 @@ paths:
         parent: config
         group: setting
         command: list
-      patch:
-        parent: config
-        group: setting
-        command: update
   /api/v1/setting/{key}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_key'
     x-opal-cli:
@@ -596,14 +588,80 @@ paths:
         parent: config
         group: setting
         command: show
+        options:
+        - flag: --name
+          value: NAME
+          required: true
+          binds:
+            kind: path
+            target: key
       put:
         parent: config
         group: setting
         command: set
+        options:
+        - flag: --name
+          value: NAME
+          required: true
+          binds:
+            kind: path
+            target: key
+        - flag: --value
+          value: VALUE
+          required: true
+          binds:
+            kind: body
+            target: value
+            parse: json_or_string
       delete:
         parent: config
         group: setting
         command: remove
+        options:
+        - flag: --name
+          value: NAME
+          required: true
+          binds:
+            kind: path
+            target: key
+  /api/v1/config/save:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/config_save'
+    x-opal-cli:
+      post:
+        group: config
+        command: save
+        options:
+        - flag: --out
+          value: FILE
+          binds:
+            kind: local_out
+            target: snapshot
+  /api/v1/config/load:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/config_load'
+    x-opal-cli:
+      post:
+        group: config
+        command: load
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: snapshot
+            parse: yaml_or_json_file
+  /api/v1/config/validate:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/config_validate'
+    x-opal-cli:
+      post:
+        group: config
+        command: validate
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: snapshot
+            parse: yaml_or_json_file
   /api/v1/health/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health'
     x-opal-cli:
@@ -634,57 +692,6 @@ paths:
       get:
         group: info
         command: ready
-  /api/v1/backup/list:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_list'
-    x-opal-cli:
-      get:
-        group: backup
-        command: list
-  /api/v1/backup/create:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_create'
-    x-opal-cli:
-      post:
-        group: backup
-        command: create
-  /api/v1/backup/download/{filename}:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_download'
-    x-opal-cli:
-      get:
-        group: backup
-        command: download
-  /api/v1/backup/restore/{filename}:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_restore'
-    x-opal-cli:
-      post:
-        group: backup
-        command: restore
-  /api/v1/backup/{filename}:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_delete'
-    x-opal-cli:
-      delete:
-        group: backup
-        command: remove
-  /api/v1/backup/export:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_export'
-    x-opal-cli:
-      get:
-        group: backup
-        command: export
-  /api/v1/backup/import:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_import'
-    x-opal-cli:
-      post:
-        group: backup
-        command: import
-  /api/v1/backup/validate:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_validate'
-    x-opal-cli:
-      get:
-        group: backup
-        command: validate-stored
-      post:
-        group: backup
-        command: validate
   /api/v1/service/start:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/service_start'
     x-opal-cli:
@@ -747,7 +754,6 @@ paths:
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
       x-opal-cli:
-        parent: config
         group: persona
         command: list
     post:
@@ -811,7 +817,6 @@ paths:
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       x-opal-cli:
-        parent: config
         group: persona
         command: add
     parameters:
@@ -852,7 +857,6 @@ paths:
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
       x-opal-cli:
-        parent: config
         group: persona
         command: validate
     parameters:
@@ -904,7 +908,6 @@ paths:
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
       x-opal-cli:
-        parent: config
         group: persona
         command: show
     patch:
@@ -951,7 +954,6 @@ paths:
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       x-opal-cli:
-        parent: config
         group: persona
         command: update
     delete:
@@ -988,7 +990,6 @@ paths:
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       x-opal-cli:
-        parent: config
         group: persona
         command: remove
 components:
@@ -1036,6 +1037,39 @@ components:
         type: string
         minLength: 1
   schemas:
+    ConfigSnapshotResources:
+      type: object
+      additionalProperties: false
+      description: 'Declarative configuration resource sections carried in `resources` of this
+        module''s snapshots. Unknown sections are rejected explicitly; empty collections are valid.'
+      properties:
+        profiles:
+          type: array
+          items:
+            $ref: './shared/opal_kernel.yaml#/components/schemas/OpalProfile'
+        personas:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonaRead'
+        models:
+          type: array
+          items:
+            $ref: '#/components/schemas/Model'
+        engines:
+          type: array
+          items:
+            $ref: './shared/opal_kernel.yaml#/components/schemas/OpalEngine'
+    ConfigSnapshot:
+      allOf:
+      - $ref: './shared/opal_kernel.yaml#/components/schemas/OpalConfigSnapshot'
+      - type: object
+        properties:
+          module:
+            const: opal-think
+          resources:
+            $ref: '#/components/schemas/ConfigSnapshotResources'
+      description: Module-constrained configuration snapshot; validates `module` identity and the
+        declared resource sections for this module.
     TaskStatus:
       type: string
       description: Terminal states are completed, failed, cancelled and timed_out.
@@ -1397,11 +1431,11 @@ components:
     PersonaRead:
       $ref: './shared/opal_kernel.yaml#/components/schemas/OpalPersonaRead'
 x-opal-cli-commands:
-  ask: alias of `task create` (POST /api/v1/task/ + watch/show)
-  chat: alias of `task create` bound to a session (session add, optional initial, + POST /api/v1/task/
+  ask: alias of `task add` (POST /api/v1/task/ + watch/show)
+  chat: alias of `task add` bound to a session (session add, optional initial, + POST /api/v1/task/
     per turn)
   task:
-  - create
+  - add
   - list
   - show
   - watch
@@ -1414,43 +1448,35 @@ x-opal-cli-commands:
   model:
   - list
   - show
+  profile:
+  - list
+  - add
+  - show
+  - update
+  - remove
+  - activate
   config:
-    profile:
-    - list
-    - add
-    - show
-    - update
-    - remove
-    - activate
-    setting:
-    - list
-    - patch
-    - show
-    - set
-    - remove
-    persona:
-    - list
-    - add
-    - show
-    - update
-    - remove
-    - validate
+  - save
+  - load
+  - validate
+  config setting:
+  - list
+  - show
+  - set
+  - remove
+  persona:
+  - list
+  - add
+  - show
+  - update
+  - remove
+  - validate
   info:
   - version
   - ping
   - health
   - live
   - ready
-  backup:
-  - list
-  - create
-  - download
-  - restore
-  - remove
-  - export
-  - import
-  - validate-stored
-  - validate
   service:
   - start
   - stop
@@ -1470,11 +1496,11 @@ x-opal-event-integration:
   - rules:write
   - settings:write
   note: >-
-    Verified live against EVENT 1.7.1, where these scopes exist as an
+    Verified live against EVENT 2.0.0, where these scopes exist as an
     `execute`-scoped named principal — optionally narrowed with `actions` and
     `own_receipts_only` (`security.rest_auth.principals`). THINK submits every
     execute with a stable caller-scoped `Idempotency-Key` (`task:call`), making
-    admission retry-safe (EVENT 1.7.1 dedups to the original receipt; a reused
+    admission retry-safe (EVENT 2.0.0 dedups to the original receipt; a reused
     key with different work is 409), and declares the derived hop via
     `X-Opal-Chain-Depth` (task depth + 1). On EVENT versions without keyed
     dedup an ambiguous submission produces at most one duplicate — never a
@@ -1485,7 +1511,7 @@ x-opal-event-integration:
 x-opal-authorization: {$ref: './shared/opal_kernel.yaml#/x-opal-authorization'}
 x-opal-profile-fields: []
 x-opal-context-standard:
-  version: '1.7.1'
+  version: '2.0.0'
   headers:
   - X-Opal-Session-Id
   - X-Opal-Transaction-Id
@@ -1509,3 +1535,19 @@ x-opal-context-standard:
     stale_status: 412
   streaming: Include HTTP context headers before bytes; after headers are sent, failures are represented
     by transport-specific terminal events or stream termination; no invented resumability.
+x-opal-snapshot:
+  version: '1.0'
+  module: opal-think
+  format_versions:
+  - '1.0.0'
+  resources:
+  - profiles
+  - personas
+  - models
+  - engines
+  description: >-
+    Declares the canonical module identity and resource sections carried in this module's
+    configuration snapshots. `config load`/`config validate` validate `snapshot` against
+    `ConfigSnapshot` (shared `OpalConfigSnapshot` envelope plus module const and
+    `ConfigSnapshotResources`). Snapshots carry persistent desired configuration only:
+    profiles, personas, models, engines; never runtime history, sessions, streams, binaries, or secrets.

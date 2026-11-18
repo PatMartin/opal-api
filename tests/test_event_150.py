@@ -1,6 +1,6 @@
 """Contract regression tests for the unified opal_event.yaml (self-describing actions).
 
-Verifies the published 1.7.1 spec:
+Verifies the published 2.0.0 spec:
 - all four optional metadata fields are present on each action type;
 - all $refs are internal and resolve; no duplicate YAML mapping keys;
 - positive/negative fixture payloads validate against each action schema.
@@ -95,7 +95,7 @@ def main():
     spec = load(SPEC)
 
     # --- version and metadata ---------------------------------------------------
-    check(spec["info"]["version"] == "1.7.1", "info.version is 1.7.1")
+    check(spec["info"]["version"] == "2.0.0", "info.version is 2.0.0")
     check(spec["openapi"].startswith("3.1"), "openapi 3.1 declared")
     schemas = spec["components"]["schemas"]
 
@@ -250,14 +250,16 @@ def main():
     sr = spec["components"]["schemas"]["SettingRead"]
     check("value" in sr["properties"] and "type" not in sr["properties"]["value"],
           "SettingRead.value is native JSON (untyped)")
-    check(sr["required"] == ["key", "value"], "SettingRead requires key+value")
+    check(set(sr["required"]) >= {"key","value","configured_value","default","has_override",
+                                 "is_default","source","restart_required","pending_restart"},
+          "SettingRead requires the full metadata contract")
     su = spec["components"]["schemas"]["SettingUpdate"]
     check(su["required"] == ["value"], "SettingUpdate requires only value")
-    imp = spec["paths"]["/api/v1/backup/import"]["post"]
+    imp = spec["paths"]["/api/v1/config/load"]["post"]
     imp_names = [x.get("name") for x in imp.get("parameters", []) if isinstance(x, dict)]
-    check("If-Match" in imp_names, "backup/import requires If-Match")
+    check("If-Match" in imp_names, "config/load requires If-Match")
     check("412" in imp["responses"] and "428" in imp["responses"],
-          "backup/import declares 412 + 428")
+          "config/load declares 412 + 428")
     check(not any("secret" in str(v).lower() and "value" in str(v).lower()
                   for v in sr.get("properties", {}).values()),
           "settings read masks secrets")

@@ -126,7 +126,7 @@ def m_dup_opid(d):
 
 def m_ifmatch_pattern(d):
     # Resolved doc: drop the strong-ETag pattern from an inlined If-Match parameter.
-    op = d["paths"]["/api/v1/setting/"]["patch"]
+    op = d["paths"]["/api/v1/setting/{key}"]["put"]
     ifm = next(x for x in op["parameters"] if x.get("name") == "If-Match")
     assert "pattern" in ifm["schema"]
     ifm["schema"].pop("pattern")

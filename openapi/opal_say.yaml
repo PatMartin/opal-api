@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OPAL Say API
-  version: 1.7.1
+  version: 2.0.0
   description: "Implementation-neutral text-to-speech (TTS) service for the OPAL suite.\n\nOPAL Say provides\
     \ a stable REST contract over one or more host-installed TTS\nengine such as Piper or Kokoro. Clients\
     \ interact with OPAL concepts—engine,\nvoice, profile, generation setting, and audio output—without\
@@ -20,8 +20,8 @@ info:
     * Long input is internally chunked by the service. Internal chunk boundaries are\n  not visible in the\
     \ generated audio contract.\n* Audio playback, audio-device control, synthesis history, request logging,\n\
     \  performance history, and asynchronous job management are intentionally outside\n  this API.\n* Configuration\
-    \ backup/import/export follows the same operational model as the\n  sister OPAL Listen service.\n\n\nOPAL\
-    \ SUITE STANDARD v1.7.1 (normative)\nX-Opal-Session-Id is an optional logical context identifier; it does\
+    \ save/load/validate follows the same operational model as the\n  sister OPAL Listen service.\n\n\nOPAL\
+    \ SUITE STANDARD v2.0.0 (normative)\nX-Opal-Session-Id is an optional logical context identifier; it does\
     \ not create a server-managed session or grant authorization. Entry-point services generate one when absent\
     \ where a workflow requires it, and propagate it unchanged. A preexisting service-local session resource\
     \ has a separate lifecycle. X-Opal-Transaction-Id is a single logical end-to-end operation and is not an\
@@ -32,14 +32,14 @@ info:
     \ session ID if known and transaction/request IDs. Never trust these values for access control. Propagate\
     \ them into derived ZeroMQ envelope metadata. All identifiers are opaque 1..128-character printable ASCII\
     \ tokens with no control/whitespace characters; client-supplied invalid values yield 422.\nStandard health\
-    \ routes: /api/v1/health/, /api/v1/health/live, /api/v1/health/ready. Setting: GET and PATCH /api/v1/setting/\
-    \ for the whole map, plus GET, PUT and DELETE /api/v1/setting/{key} for individual keys retained\
-    \ for OPAL suite consistency; PATCH is atomic. Mutable configuration uses strong ETags and mandatory If-Match with 428\
+    \ routes: /api/v1/health/, /api/v1/health/live, /api/v1/health/ready. Setting: GET /api/v1/setting/ for the flat map, plus GET, PUT and
+    \ DELETE /api/v1/setting/{key} for individual overrides; configuration snapshots via
+    \ POST /api/v1/config/save, /config/load and /config/validate. Mutable configuration uses strong ETags and mandatory If-Match with 428\
     \ missing, 412 stale. For bounded configuration catalogs return full arrays (subject to explicit deployment\
     \ caps); growing histories return bounded arrays in stable deterministic order and `limit` caps the returned\
     \ items. Standard HTTP creation 201 Location, async admission 202, empty deletion 204. Streaming\
     \ keeps media-specific transports but exposes correlation headers, defined failure behavior, and no unsupported\
-    \ replay guarantee. Configuration export/import/validation excludes secrets and history.\n"
+    \ replay guarantee. Configuration save/load/validate excludes secrets and history.\n"
 tags:
 - name: engine
   description: 'Discover and configure TTS engine installed by the service implementation.
@@ -53,7 +53,7 @@ tags:
     present on the host. Voice operations never upload, modify, or delete model files.
 
     '
-- name: profile
+- name: profiles
   description: 'Manage reusable generation presets. Exactly one profile may be active at a time.
 
     The active profile supplies defaults when a generation request does not name a
@@ -79,16 +79,16 @@ tags:
     SSML is not supported by version 1 of this contract.
 
     '
-- name: setting
-  description: Service-wide key/value setting.
 - name: info
   description: Service identity, version and liveness probes.
 - name: health
   description: Service readiness and health information. Playback devices are out of scope.
-- name: backup
-  description: Backup, restore, import, export, and validate OPAL Say configuration.
+- name: config
+  description: Save, load, validate, and inspect portable module configuration.
 - name: service
   description: Service process lifecycle (start, stop, log tail).
+- name: engines
+  description: Engine registration and inspection.
 servers:
 - url: http://127.0.0.1:8080
   description: Illustrative local endpoint; actual bind address and port are configurable.
@@ -1047,12 +1047,6 @@ paths:
         parent: config
         group: setting
         command: list
-
-        aliases:
-      patch:
-        parent: config
-        group: setting
-        command: update
   /api/v1/setting/{key}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_key'
     x-opal-cli:
@@ -1060,40 +1054,82 @@ paths:
         parent: config
         group: setting
         command: show
-
-        aliases:
-        - setting get
+        options:
+        - flag: --name
+          value: NAME
+          required: true
+          binds:
+            kind: path
+            target: key
       put:
         parent: config
         group: setting
         command: set
-
-        aliases:
+        options:
+        - flag: --name
+          value: NAME
+          required: true
+          binds:
+            kind: path
+            target: key
+        - flag: --value
+          value: VALUE
+          required: true
+          binds:
+            kind: body
+            target: value
+            parse: json_or_string
       delete:
         parent: config
         group: setting
         command: remove
-
-        aliases:
-        - setting delete
+        options:
+        - flag: --name
+          value: NAME
+          required: true
+          binds:
+            kind: path
+            target: key
+  /api/v1/config/save:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/config_save'
+    x-opal-cli:
+      post:
+        group: config
+        command: save
+        options:
+        - flag: --out
+          value: FILE
+          binds:
+            kind: local_out
+            target: snapshot
+  /api/v1/config/load:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/config_load'
+    x-opal-cli:
+      post:
+        group: config
+        command: load
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: snapshot
+            parse: yaml_or_json_file
+  /api/v1/config/validate:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/config_validate'
+    x-opal-cli:
+      post:
+        group: config
+        command: validate
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: snapshot
+            parse: yaml_or_json_file
   /api/v1/health/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health'
-  /api/v1/backup/list:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_list'
-  /api/v1/backup/create:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_create'
-  /api/v1/backup/download/{filename}:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_download'
-  /api/v1/backup/restore/{filename}:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_restore'
-  /api/v1/backup/{filename}:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_delete'
-  /api/v1/backup/export:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_export'
-  /api/v1/backup/import:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_import'
-  /api/v1/backup/validate:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/backup_validate'
   /api/v1/info/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/info'
   /api/v1/info/ping:
@@ -1281,6 +1317,39 @@ components:
         X-Opal-Causation-Id:
           $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
   schemas:
+    ConfigSnapshotResources:
+      type: object
+      additionalProperties: false
+      description: 'Declarative configuration resource sections carried in `resources` of this
+        module''s snapshots. Unknown sections are rejected explicitly; empty collections are valid.'
+      properties:
+        profiles:
+          type: array
+          items:
+            $ref: './shared/opal_kernel.yaml#/components/schemas/OpalProfile'
+        personas:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonaRead'
+        voices:
+          type: array
+          items:
+            $ref: '#/components/schemas/VoiceRead'
+        engines:
+          type: array
+          items:
+            $ref: './shared/opal_kernel.yaml#/components/schemas/OpalEngine'
+    ConfigSnapshot:
+      allOf:
+      - $ref: './shared/opal_kernel.yaml#/components/schemas/OpalConfigSnapshot'
+      - type: object
+        properties:
+          module:
+            const: opal-say
+          resources:
+            $ref: '#/components/schemas/ConfigSnapshotResources'
+      description: Module-constrained configuration snapshot; validates `module` identity and the
+        declared resource sections for this module.
     AudioFormat:
       type: string
       enum:
@@ -1732,7 +1801,7 @@ components:
         engine_options:
           $ref: '#/components/schemas/EngineOptions'
 x-opal-context-standard:
-  version: '1.7.1'
+  version: '2.0.0'
   headers:
     metadata_schema_version: '1.0'
   pagination:
@@ -1756,3 +1825,19 @@ x-opal-profile-fields:
 - output_format
 - sample_rate
 - engine_options
+x-opal-snapshot:
+  version: '1.0'
+  module: opal-say
+  format_versions:
+  - '1.0.0'
+  resources:
+  - profiles
+  - personas
+  - voices
+  - engines
+  description: >-
+    Declares the canonical module identity and resource sections carried in this module's
+    configuration snapshots. `config load`/`config validate` validate `snapshot` against
+    `ConfigSnapshot` (shared `OpalConfigSnapshot` envelope plus module const and
+    `ConfigSnapshotResources`). Snapshots carry persistent desired configuration only:
+    profiles, personas, voices, engines; never runtime history, sessions, streams, binaries, or secrets.

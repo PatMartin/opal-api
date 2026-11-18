@@ -4,8 +4,8 @@
 openapi: 3.1.0
 info:
   title: OPAL Suite Kernel
-  version: 1.7.1
-  description: 'Shared contract kernel for the OPAL suite (SUITE STANDARD v1.7.1).
+  version: 2.0.0
+  description: 'Shared contract kernel for the OPAL suite (SUITE STANDARD v2.0.0).
 
 
     This document is never served directly. Service specs under `openapi/` mount its reusable Path Items and reference
@@ -14,11 +14,15 @@ info:
 
     Conventions encoded here: the four X-Opal-* correlation headers on every request and response; strong ETag +
     mandatory If-Match on mutable configuration (428 missing, 412 stale); 204 for empty deletion; 201 + Location
-    for creation; the OpalError envelope for all 4xx/5xx JSON bodies; and the standard health/settings/backup/profiles/engines
-    route families. If-Match concurrency covers portable logical configuration only; runtime-data deletes (events,
-    executions, failed utterances, sessions, backup archives) are exempt by design. Collections return bounded arrays;
+    for creation; the OpalError envelope for all 4xx/5xx JSON bodies; and the standard health/settings/config/profiles/engines
+    route families. If-Match concurrency covers portable logical configuration only: `config load`, `config
+    setting set`, and `config setting remove` require it; runtime-data deletes (events, executions, failed
+    utterances, sessions) are exempt by design; `config save` and `config validate` neither mutate live
+    configuration nor bump the live revision, so they take no If-Match. Collections return bounded arrays;
     list endpoints that can grow unboundedly declare the `limit` query parameter (server caps apply); opaque cursors
-    are used only where bounded arrays cannot bound a dataset.
+    are used only where bounded arrays cannot bound a dataset. Configuration save/load/validate replaces the
+    retired backup/restore and export/import interfaces; snapshots capture persistent desired configuration
+    only - never history, sessions, binaries, secrets, or observed runtime inventory.
 
 
     Kernel schemas are deliberately open (`additionalProperties: true`) on union types: suite-standard required
@@ -56,14 +60,30 @@ x-opal-cli-format:
     to the same operation (e.g. Think's `ask`/`chat`/`create` invoke `task add`). Readers hoist a path-level per-method
     map onto each operation; both forms carry the same descriptor shape.
   descriptor:
-    command: required — canonical verb, kebab-case (`list`, `add`, `show`, `update`, `remove`, `validate`, ...)
-    group: optional — command group (`task`, `persona`, `backup`, `info`, ...)
-    parent: optional — super-group above `group` (`config`, `data`)
-    aliases: optional — array of alternate complete command spellings for this operation
+    command: required - canonical verb, kebab-case (`list`, `add`, `show`, `update`, `remove`, `save`,
+      `load`, `validate`, ...)
+    group: optional - command group (`task`, `persona`, `setting`, `info`, ...)
+    parent: optional - super-group above `group` (`config`, `data`)
+    aliases: optional - array of alternate complete command spellings for this operation
+    options: optional - array of named-option descriptors; each carries `flag` (long option spelling),
+      `value` (metavar such as NAME/VALUE/FILE), `required` (default false), optional `description`, and
+      `binds` describing how the option feeds the REST call - `{kind, target, parse?}` with kind `path` |
+      `query` | `body` | `header` | `local_in` | `local_out`.
   placement:
     operation: '`x-opal-cli: <descriptor>`'
-    path_item: '`x-opal-cli: {<method>: <descriptor>}` — required for kernel-mounted paths (extensions cannot
+    path_item: '`x-opal-cli: {<method>: <descriptor>}` - required for kernel-mounted paths (extensions cannot
       inject into `$ref`ed operations)'
+  local_file_options:
+    local_in: The CLI reads and parses a client-local file, then submits the parsed object in the request
+      body at `target`. The service never sees the client filename. For snapshot operations, `.yaml`/`.yml`
+      select YAML parsing and `.json` selects JSON; other extensions are client errors, never server errors.
+    local_out: The CLI writes the named response field to a client-local file, serialized as YAML for
+      `.yaml`/`.yml` or JSON for `.json`; other extensions are client errors. The service never sees the
+      client filename. For `config save`, `--out FILE` also switches request `destination` to `response`
+      so no managed snapshot is written.
+    parse_json_or_string: For `config setting set --value`, the CLI parses the argument as JSON first; valid
+      JSON becomes the native JSON value, otherwise the exact string is sent. JSON `null` is a nullable
+      value, never a deletion instruction.
   example:
     parent: config
     group: persona
@@ -249,21 +269,6 @@ components:
       schema:
         type: string
         minLength: 1
-    BackupFilename:
-      name: filename
-      in: path
-      required: true
-      description: 'Filename/identifier of a backup managed by the service. It must not contain
-
-        path separators or traversal components.
-
-        '
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 255
-        pattern: ^[^/\\]+$
-      example: opal-say-2026-10-04T230000Z.tar.gz
     ProfileId:
       name: profile_id
       in: path
@@ -674,22 +679,59 @@ components:
           type: string
         value:
           title: Value
-          description: Native JSON setting value.
+          description: Effective native JSON value after environment and .env overlays.
+        configured_value:
+          title: Configured Value
+          description: Persistent desired value before environment/.env overlays; equals the registered
+            default when no override exists.
         updated_at:
           format: date-time
           title: Updated At
           type: string
         default:
-          description: Default native JSON value, when safe to expose.
+          description: Registered default native JSON value, when safe to expose.
+        has_override:
+          type: boolean
+          description: True when a persistent user override exists for this key.
         is_default:
           type: boolean
+          description: True when the effective value comes from the registered default (provenance, not
+            value equality).
+        source:
+          type: string
+          enum:
+          - default
+          - persisted
+          - dotenv
+          - environment
+          description: 'Provenance of the effective value. Precedence, highest first: environment, dotenv,
+            persisted, default.'
+        restart_required:
+          type: boolean
+          description: True when changing this setting requires a service restart to take effect.
         pending_restart:
           type: boolean
+          description: 'For restart-only settings, true when the desired effective value diverges from the
+            currently running value. An environment-masked persistent edit reports masked (via
+            `source`/`configured_value`), not pending_restart.'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpalValidationIssue'
+          description: Structured warnings, e.g. an environment overlay masking the persisted value.
       required:
       - key
       - value
+      - configured_value
+      - default
+      - has_override
+      - is_default
+      - source
+      - restart_required
+      - pending_restart
       additionalProperties: true
-      description: One setting key/value pair with optional lifecycle metadata.
+      description: One setting record with effective/configured/default values and provenance metadata.
+        Lifecycle metadata such as `pending_restart_fields` never appears inside the settings map itself.
     SettingUpdate:
       type: object
       properties:
@@ -702,162 +744,9 @@ components:
     OpalSettingsMap:
       type: object
       additionalProperties: true
-      description: 'The complete portable settings map: dotted keys to native JSON values. Secret material is never
-        included. `pending_restart_fields` is a reserved key naming settings that require a restart to take effect.'
-    OpalConfigExport:
-      type: object
-      properties:
-        format_version:
-          anyOf:
-          - type: string
-          - type: integer
-          description: Bundle format version; canonical form is a string such as "1.0.0".
-        exported_at:
-          type: string
-          format: date-time
-        engines:
-          type: array
-          items:
-            $ref: '#/components/schemas/OpalEngine'
-        voices:
-          type: array
-          items:
-            type: object
-            additionalProperties: true
-            description: Service-defined section.
-        profiles:
-          type: array
-          items:
-            $ref: '#/components/schemas/OpalProfile'
-        settings:
-          type: object
-          additionalProperties: true
-        wakewords:
-          items:
-            type: object
-            additionalProperties: true
-            description: Service-defined section.
-          type: array
-          title: Wakewords
-          default: []
-        stt:
-          additionalProperties:
-            anyOf:
-            - type: string
-            - type: integer
-            - type: number
-            - type: boolean
-          type: object
-          title: Stt
-          default: {}
-        intents:
-          items:
-            type: object
-            additionalProperties: true
-            description: Service-defined section.
-          type: array
-          title: Intents
-          default: []
-        slots:
-          items:
-            type: object
-            additionalProperties: true
-            description: Service-defined section.
-          type: array
-          title: Slots
-          default: []
-        models:
-          type: array
-          items:
-            type: object
-            additionalProperties: true
-            description: Service-defined section.
-        rules:
-          type: array
-          items:
-            type: object
-            additionalProperties: true
-            description: Service-defined section.
-        actions:
-          type: array
-          items:
-            type: object
-            additionalProperties: true
-            description: Service-defined section.
-      required:
-      - format_version
-      - settings
-      additionalProperties: true
-      description: Portable logical configuration bundle. `format_version` and `settings` are the only suite-standard
-        members; all other sections are service-defined. Secrets and history are never included.
-    OpalBackupInfo:
-      type: object
-      properties:
-        filename:
-          type: string
-          title: Filename
-        size_bytes:
-          type: integer
-          title: Size Bytes
-        created_at:
-          type: string
-          format: date-time
-          title: Created At
-      required:
-      - created_at
-      - filename
-      - size_bytes
-      additionalProperties: true
-      description: Metadata for one service-managed backup archive.
-    OpalBackupCreateResponse:
-      type: object
-      properties:
-        filename:
-          type: string
-        message:
-          type: string
-      required:
-      - filename
-      additionalProperties: true
-    OpalImportResult:
-      type: object
-      properties:
-        success:
-          type: boolean
-        validation:
-          $ref: '#/components/schemas/OpalValidationReport'
-        message:
-          anyOf:
-          - type: string
-          - type: 'null'
-        status:
-          type: string
-          const: imported
-          title: Status
-        backup_filename:
-          type: string
-          title: Backup Filename
-        counts:
-          additionalProperties:
-            type: integer
-          type: object
-          title: Counts
-        warnings:
-          type: array
-          items:
-            anyOf:
-            - type: string
-            - type: object
-          description: Diagnostic entries (warnings); string or structured object per service.
-        revision:
-          type: string
-        pending_restart:
-          type: boolean
-      required:
-      - success
-      additionalProperties: true
-      description: Result of a configuration import/restore. Outcome fields are service-defined (`success`, `status`
-        and `revision` variants exist); no field is suite-standard.
+      description: 'The complete portable settings map: flat map of registered setting keys to effective
+        native JSON values. Secret material is never included. Lifecycle metadata such as
+        `pending_restart_fields` is never mixed into this map.'
     OpalValidationReport:
       type: object
       properties:
@@ -900,6 +789,148 @@ components:
       additionalProperties: true
       description: Non-mutating validation result. `valid` is suite-standard; remaining fields describe per-service
         diagnostics.
+    OpalValidationIssue:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Stable machine-readable issue or warning code.
+        path:
+          type: string
+          description: 'Field or resource path the issue applies to (e.g. `settings.vad.threshold`,
+            `resources.profiles[2].id`); empty string for whole-snapshot issues.'
+        message:
+          type: string
+          description: Human-readable description of the issue.
+      required:
+      - code
+      - path
+      - message
+      additionalProperties: true
+      description: One structured validation issue or warning.
+    OpalConfigSnapshot:
+      type: object
+      properties:
+        format_version:
+          type: string
+          description: Snapshot envelope format version. This contract accepts `1.0.0` only; other
+            versions are rejected explicitly.
+        module:
+          type: string
+          minLength: 1
+          description: 'Canonical module identity (e.g. `opal-listen`). Snapshots for a different module
+            are rejected before application.'
+        created_at:
+          type: string
+          format: date-time
+        settings:
+          type: object
+          additionalProperties: true
+          description: 'Flat map of registered setting-key overrides to native JSON values (booleans,
+            numbers, arrays and objects are never stringified). Unknown setting keys are rejected
+            explicitly.'
+        resources:
+          type: object
+          additionalProperties: true
+          description: 'Module-owned declarative configuration sections (e.g. profiles, personas, engine
+            configurations, voices, wakewords, intents, slots, rules, actions, device definitions, peers,
+            groups, sharing policies, orchestrator service definitions). Each module declares its sections
+            via `x-opal-snapshot.resources` and its `ConfigSnapshotResources` schema; unknown sections are
+            rejected explicitly.'
+      required:
+      - format_version
+      - module
+      - created_at
+      - settings
+      - resources
+      additionalProperties: false
+      description: 'Versioned portable configuration snapshot. Closed envelope: `settings` and `resources`
+        are the only variable slots. Contains persistent desired configuration only: credential references
+        but never secret values; never history, sessions, tasks, streams, generated media, model binaries,
+        hardware-discovery caches, database files, runtime IDs, or synchronization status.'
+    OpalConfigSaveRequest:
+      type: object
+      properties:
+        destination:
+          type: string
+          enum:
+          - managed
+          - response
+          default: managed
+          description: '`managed` atomically creates or replaces the module''s default managed snapshot;
+            `response` returns the snapshot in the body for the caller to store (CLI `config save --out`
+            maps here) and never replaces the managed snapshot.'
+      additionalProperties: false
+    OpalConfigSaveResult:
+      type: object
+      properties:
+        snapshot:
+          $ref: '#/components/schemas/OpalConfigSnapshot'
+        managed:
+          type: boolean
+          description: True when the default managed snapshot was written.
+      required:
+      - snapshot
+      - managed
+      additionalProperties: true
+    OpalConfigLoadRequest:
+      type: object
+      properties:
+        snapshot:
+          $ref: '#/components/schemas/OpalConfigSnapshot'
+          description: 'Candidate snapshot. Omit or send `{}` to load the managed snapshot; an explicit
+            null is invalid.'
+      additionalProperties: false
+    OpalConfigLoadResult:
+      type: object
+      properties:
+        applied:
+          type: boolean
+          const: true
+          description: 'Always true on HTTP 200; failed loads use the shared error envelope, never
+            `applied: false`.'
+        pending_restart_fields:
+          type: array
+          items:
+            type: string
+          description: Setting keys whose new values require a service restart to take effect.
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpalValidationIssue'
+      required:
+      - applied
+      additionalProperties: true
+    OpalConfigValidateRequest:
+      type: object
+      properties:
+        snapshot:
+          type: object
+          description: 'Candidate snapshot to validate. Typed loosely as a JSON object so malformed
+            envelopes are reported as structured issues rather than rejected as a malformed request;
+            an explicit null is invalid. Omit to validate the current live configuration.'
+      additionalProperties: false
+    OpalConfigValidation:
+      type: object
+      properties:
+        valid:
+          type: boolean
+          description: True exactly when `errors` is empty.
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpalValidationIssue'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpalValidationIssue'
+      required:
+      - valid
+      - errors
+      - warnings
+      additionalProperties: true
+      description: 'Non-mutating configuration validation result. Load performs equivalent checks
+        internally; a prior successful validate call never bypasses load checks.'
     OpalProfile:
       type: object
       properties:
@@ -1625,7 +1656,7 @@ components:
       - $ref: '#/components/parameters/OpalCausationIdParameter'
       get:
         tags:
-        - settings
+        - config
         summary: List settings
         operationId: opal_setting_list
         description: Return the complete portable settings map with values; never returns secret material. ETag
@@ -1654,26 +1685,23 @@ components:
             $ref: '#/components/responses/Forbidden'
           '422':
             $ref: '#/components/responses/UnprocessableEntity'
-      patch:
+    settings_key:
+      parameters:
+      - $ref: '#/components/parameters/OpalSessionIdParameter'
+      - $ref: '#/components/parameters/OpalTransactionIdParameter'
+      - $ref: '#/components/parameters/OpalRequestIdParameter'
+      - $ref: '#/components/parameters/OpalCausationIdParameter'
+      - $ref: '#/components/parameters/SettingKey'
+      get:
         tags:
-        - settings
-        summary: Patch settings
-        operationId: opal_setting_patch
-        description: Atomically apply a partial update to the portable settings map. Strong If-Match is mandatory.
-        parameters:
-        - $ref: '#/components/parameters/IfMatch'
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                allOf:
-                - $ref: '#/components/schemas/OpalSettingsMap'
-                - type: object
-                  minProperties: 1
+        - config
+        summary: Get setting
+        operationId: opal_setting_get
+        description: 'Return one setting record with effective value, configured value, default, and
+          provenance. ETag carries the current revision for subsequent If-Match writes.'
         responses:
           '200':
-            description: Updated settings map.
+            description: Setting record.
             headers:
               X-Opal-Session-Id:
                 $ref: '#/components/headers/OpalSessionIdHeader'
@@ -1688,47 +1716,6 @@ components:
             content:
               application/json:
                 schema:
-                  $ref: '#/components/schemas/OpalSettingsMap'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '409':
-            $ref: '#/components/responses/Conflict'
-          '412':
-            $ref: '#/components/responses/PreconditionFailed'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
-          '428':
-            $ref: '#/components/responses/PreconditionRequired'
-    settings_key:
-      parameters:
-      - $ref: '#/components/parameters/OpalSessionIdParameter'
-      - $ref: '#/components/parameters/OpalTransactionIdParameter'
-      - $ref: '#/components/parameters/OpalRequestIdParameter'
-      - $ref: '#/components/parameters/OpalCausationIdParameter'
-      - $ref: '#/components/parameters/SettingKey'
-      get:
-        tags:
-        - settings
-        summary: Get setting
-        operationId: opal_setting_get
-        description: Return a single setting key/value pair.
-        responses:
-          '200':
-            description: Setting value.
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-            content:
-              application/json:
-                schema:
                   $ref: '#/components/schemas/SettingRead'
           '401':
             $ref: '#/components/responses/Unauthorized'
@@ -1740,10 +1727,13 @@ components:
             $ref: '#/components/responses/UnprocessableEntity'
       put:
         tags:
-        - settings
+        - config
         summary: Set setting
         operationId: opal_setting_put
-        description: Create or replace one setting value. Strong If-Match is mandatory.
+        description: 'Validate and immediately persist one setting override; creates or replaces the
+          override for a registered setting - never a new setting definition. Strong If-Match is mandatory.
+          When an environment overlay masks the persisted value, the returned record shows configured and
+          effective values accurately and carries a structured warning; the environment is never modified.'
         parameters:
         - $ref: '#/components/parameters/IfMatch'
         requestBody:
@@ -1754,7 +1744,7 @@ components:
                 $ref: '#/components/schemas/SettingUpdate'
         responses:
           '200':
-            description: Updated setting.
+            description: Updated setting record (the new revision travels in the ETag header).
             headers:
               X-Opal-Session-Id:
                 $ref: '#/components/headers/OpalSessionIdHeader'
@@ -1764,6 +1754,8 @@ components:
                 $ref: '#/components/headers/OpalRequestIdHeader'
               X-Opal-Causation-Id:
                 $ref: '#/components/headers/OpalCausationIdHeader'
+              ETag:
+                $ref: '#/components/headers/ETag'
             content:
               application/json:
                 schema:
@@ -1784,15 +1776,17 @@ components:
             $ref: '#/components/responses/PreconditionRequired'
       delete:
         tags:
-        - settings
+        - config
         summary: Delete setting
         operationId: opal_setting_delete
-        description: Remove one setting key and revert it to its implementation default. Strong If-Match is mandatory.
+        description: 'Delete the persistent override for one registered setting key - never the setting
+          definition. Returns 204 even when the key already has no override; environment overlays continue
+          to apply afterwards. Strong If-Match is mandatory.'
         parameters:
         - $ref: '#/components/parameters/IfMatch'
         responses:
           '204':
-            description: Setting removed.
+            description: Setting override removed (the new revision travels in the ETag header).
             headers:
               X-Opal-Session-Id:
                 $ref: '#/components/headers/OpalSessionIdHeader'
@@ -1802,6 +1796,8 @@ components:
                 $ref: '#/components/headers/OpalRequestIdHeader'
               X-Opal-Causation-Id:
                 $ref: '#/components/headers/OpalCausationIdHeader'
+              ETag:
+                $ref: '#/components/headers/ETag'
           '401':
             $ref: '#/components/responses/Unauthorized'
           '403':
@@ -1816,7 +1812,7 @@ components:
             $ref: '#/components/responses/UnprocessableEntity'
           '428':
             $ref: '#/components/responses/PreconditionRequired'
-    backup_create:
+    config_save:
       parameters:
       - $ref: '#/components/parameters/OpalSessionIdParameter'
       - $ref: '#/components/parameters/OpalTransactionIdParameter'
@@ -1824,209 +1820,26 @@ components:
       - $ref: '#/components/parameters/OpalCausationIdParameter'
       post:
         tags:
-        - backup
-        summary: Create backup
-        operationId: opal_backup_create
-        description: Write a timestamped archive of the current logical configuration to the service's backup directory.
-        responses:
-          '201':
-            description: Backup created.
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-              Location:
-                $ref: '#/components/headers/Location'
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/OpalBackupCreateResponse'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
-          '500':
-            $ref: '#/components/responses/OperationFailed'
-    backup_list:
-      parameters:
-      - $ref: '#/components/parameters/OpalSessionIdParameter'
-      - $ref: '#/components/parameters/OpalTransactionIdParameter'
-      - $ref: '#/components/parameters/OpalRequestIdParameter'
-      - $ref: '#/components/parameters/OpalCausationIdParameter'
-      get:
-        tags:
-        - backup
-        summary: List backups
-        operationId: opal_backup_list
-        description: List backup archives managed by this service instance.
-        responses:
-          '200':
-            description: Known backups.
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/OpalBackupInfo'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
-    backup_download:
-      parameters:
-      - $ref: '#/components/parameters/OpalSessionIdParameter'
-      - $ref: '#/components/parameters/OpalTransactionIdParameter'
-      - $ref: '#/components/parameters/OpalRequestIdParameter'
-      - $ref: '#/components/parameters/OpalCausationIdParameter'
-      - $ref: '#/components/parameters/BackupFilename'
-      get:
-        tags:
-        - backup
-        summary: Download backup
-        operationId: opal_backup_download
-        description: Download one service-managed backup archive.
-        responses:
-          '200':
-            description: Backup archive.
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-            content:
-              application/octet-stream:
-                schema:
-                  type: string
-                  format: binary
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '404':
-            $ref: '#/components/responses/NotFound'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
-    backup_delete:
-      parameters:
-      - $ref: '#/components/parameters/OpalSessionIdParameter'
-      - $ref: '#/components/parameters/OpalTransactionIdParameter'
-      - $ref: '#/components/parameters/OpalRequestIdParameter'
-      - $ref: '#/components/parameters/OpalCausationIdParameter'
-      - $ref: '#/components/parameters/BackupFilename'
-      delete:
-        tags:
-        - backup
-        summary: Delete backup
-        operationId: opal_backup_delete
-        description: Delete a named backup file managed by this service.
-        responses:
-          '204':
-            description: Backup deleted.
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '404':
-            $ref: '#/components/responses/NotFound'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
-    backup_export:
-      parameters:
-      - $ref: '#/components/parameters/OpalSessionIdParameter'
-      - $ref: '#/components/parameters/OpalTransactionIdParameter'
-      - $ref: '#/components/parameters/OpalRequestIdParameter'
-      - $ref: '#/components/parameters/OpalCausationIdParameter'
-      get:
-        tags:
-        - backup
-        summary: Export configuration
-        operationId: opal_backup_export
-        description: 'Export the full logical service configuration as JSON. The bundle describes portable configuration
-          only: it never embeds secrets, binaries, model files, or history.'
-        responses:
-          '200':
-            description: Logical service configuration.
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/OpalConfigExport'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
-          '500':
-            $ref: '#/components/responses/OperationFailed'
-    backup_import:
-      parameters:
-      - $ref: '#/components/parameters/OpalSessionIdParameter'
-      - $ref: '#/components/parameters/OpalTransactionIdParameter'
-      - $ref: '#/components/parameters/OpalRequestIdParameter'
-      - $ref: '#/components/parameters/OpalCausationIdParameter'
-      post:
-        tags:
-        - backup
-        summary: Import configuration
-        operationId: opal_backup_import
-        parameters:
-        - $ref: '#/components/parameters/IfMatch'
-        description: 'Atomically import a logical configuration bundle. Validation runs before application; the
-          import is applied as a single atomic operation and a failed import leaves the previous configuration intact.
-          Omit the body to import the implementation''s `./config/` file set. Strong If-Match is mandatory: 428
-          when the precondition is missing, 412 when the supplied precondition is stale.'
+        - config
+        summary: Save configuration snapshot
+        operationId: opal_config_save
+        description: 'Capture the module''s persistent desired configuration as a portable snapshot.
+          `destination: managed` (default) atomically creates or replaces the module''s single default
+          managed snapshot - an explicit recovery snapshot, separate from live persisted configuration;
+          a failed write preserves the previous managed snapshot and does not report success.
+          `destination: response` returns the snapshot in the body for the caller to store (CLI
+          `config save --out FILE`); it never replaces the managed snapshot. Save is not a
+          live-configuration mutation: no If-Match and no live-revision bump. The response ETag carries
+          the captured live-configuration revision.'
         requestBody:
           required: false
           content:
             application/json:
               schema:
-                anyOf:
-                - $ref: '#/components/schemas/OpalConfigExport'
-                - type: 'null'
-                description: Bundle to import; omit to use ./config/
+                $ref: '#/components/schemas/OpalConfigSaveRequest'
         responses:
           '200':
-            description: Import result.
+            description: Snapshot result; ETag carries the captured live-configuration revision.
             headers:
               X-Opal-Session-Id:
                 $ref: '#/components/headers/OpalSessionIdHeader'
@@ -2036,45 +1849,56 @@ components:
                 $ref: '#/components/headers/OpalRequestIdHeader'
               X-Opal-Causation-Id:
                 $ref: '#/components/headers/OpalCausationIdHeader'
+              ETag:
+                $ref: '#/components/headers/ETag'
             content:
               application/json:
                 schema:
-                  $ref: '#/components/schemas/OpalImportResult'
+                  $ref: '#/components/schemas/OpalConfigSaveResult'
           '401':
             $ref: '#/components/responses/Unauthorized'
           '403':
             $ref: '#/components/responses/Forbidden'
-          '409':
-            $ref: '#/components/responses/Conflict'
-          '412':
-            $ref: '#/components/responses/PreconditionFailed'
           '422':
             $ref: '#/components/responses/UnprocessableEntity'
-          '428':
-            $ref: '#/components/responses/PreconditionRequired'
           '500':
             $ref: '#/components/responses/OperationFailed'
-    backup_restore:
+    config_load:
       parameters:
       - $ref: '#/components/parameters/OpalSessionIdParameter'
       - $ref: '#/components/parameters/OpalTransactionIdParameter'
       - $ref: '#/components/parameters/OpalRequestIdParameter'
       - $ref: '#/components/parameters/OpalCausationIdParameter'
-      - $ref: '#/components/parameters/BackupFilename'
       post:
         tags:
-        - backup
-        summary: Restore backup
-        operationId: opal_backup_restore
+        - config
+        summary: Load configuration snapshot
+        operationId: opal_config_load
+        description: 'Atomically replace the module''s complete persistent portable configuration -
+          settings overrides and declarative resource collections - with a snapshot. Omit the body or
+          send `{}` to load the default managed snapshot (404 when none exists); a supplied `snapshot`
+          selects that candidate; an explicit null is invalid. This is replacement, not merge: omitted
+          registered setting overrides revert to defaults and omitted resource collections become empty,
+          subject to module invariants. Resource identifiers and references are preserved, never
+          regenerated. Validation of the entire candidate precedes any change; a failure, stale revision,
+          invalid resource reference, or incompatible snapshot leaves the previous configuration intact -
+          the revision check and all changes apply in one atomic unit. Loading executes no actions,
+          starts no pipelines, downloads no models, and restarts no process; supported live settings
+          activate and restart-only fields are reported in `pending_restart_fields`. Loading never
+          overwrites the managed snapshot with pre-load live state, and never mutates another module or
+          the authoritative persona registry (restored owner-linked records remain subject to the
+          owner-resolution policy). Strong If-Match is mandatory: 428 when missing, 412 when stale.'
         parameters:
         - $ref: '#/components/parameters/IfMatch'
-        description: 'Atomically restore a named service-managed backup. Validation runs before application; the
-          restore is applied as a single atomic operation and a failed restore leaves the previous configuration
-          intact. Strong If-Match is mandatory: 428 when the precondition is missing, 412 when the supplied precondition
-          is stale.'
+        requestBody:
+          required: false
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpalConfigLoadRequest'
         responses:
           '200':
-            description: Restore result.
+            description: Load result; ETag carries the new live-configuration revision.
             headers:
               X-Opal-Session-Id:
                 $ref: '#/components/headers/OpalSessionIdHeader'
@@ -2084,10 +1908,12 @@ components:
                 $ref: '#/components/headers/OpalRequestIdHeader'
               X-Opal-Causation-Id:
                 $ref: '#/components/headers/OpalCausationIdHeader'
+              ETag:
+                $ref: '#/components/headers/ETag'
             content:
               application/json:
                 schema:
-                  $ref: '#/components/schemas/OpalImportResult'
+                  $ref: '#/components/schemas/OpalConfigLoadResult'
           '401':
             $ref: '#/components/responses/Unauthorized'
           '403':
@@ -2104,7 +1930,7 @@ components:
             $ref: '#/components/responses/PreconditionRequired'
           '500':
             $ref: '#/components/responses/OperationFailed'
-    backup_validate:
+    config_validate:
       parameters:
       - $ref: '#/components/parameters/OpalSessionIdParameter'
       - $ref: '#/components/parameters/OpalTransactionIdParameter'
@@ -2112,16 +1938,20 @@ components:
       - $ref: '#/components/parameters/OpalCausationIdParameter'
       post:
         tags:
-        - backup
+        - config
         summary: Validate configuration
-        operationId: opal_backup_validate
-        description: Validate a configuration bundle without applying it.
+        operationId: opal_config_validate
+        description: 'Validate configuration without mutating anything. Omit `snapshot` to validate the
+          current live configuration (the managed snapshot is never read implicitly); supply a candidate
+          `snapshot` to validate it without applying it or storing it. Validation must not modify
+          configuration, snapshots, revisions, active profiles, model residency, or runtime state. The
+          same checks run inside `config load`; a prior successful validate never bypasses them.'
         requestBody:
-          required: true
+          required: false
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OpalConfigExport'
+                $ref: '#/components/schemas/OpalConfigValidateRequest'
         responses:
           '200':
             description: Validation report.
@@ -2137,36 +1967,9 @@ components:
             content:
               application/json:
                 schema:
-                  $ref: '#/components/schemas/OpalValidationReport'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
-      get:
-        tags:
-        - backup
-        summary: Validate stored configuration
-        operationId: opal_backup_validate_stored
-        description: Validate the configuration currently staged in the implementation's `./config/` file set without
-          applying it.
-        responses:
-          '200':
-            description: Validation report.
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/OpalValidationReport'
+                  $ref: '#/components/schemas/OpalConfigValidation'
+          '400':
+            $ref: '#/components/responses/BadRequest'
           '401':
             $ref: '#/components/responses/Unauthorized'
           '403':

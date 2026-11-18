@@ -89,15 +89,15 @@ def main():
         ("get", "/api/v1/health/live"),
         ("get", "/api/v1/health/ready"),
         ("get", "/api/v1/setting/"),
-        ("patch", "/api/v1/setting/"),
         ("get", "/api/v1/setting/{key}"),
         ("put", "/api/v1/setting/{key}"),
         ("delete", "/api/v1/setting/{key}"),
         ("get", "/api/v1/profile/"),
         ("post", "/api/v1/profile/"),
         ("post", "/api/v1/profile/{profile_id}/activate"),
-        ("post", "/api/v1/backup/create"),
-        ("post", "/api/v1/backup/import"),
+        ("post", "/api/v1/config/save"),
+        ("post", "/api/v1/config/load"),
+        ("post", "/api/v1/config/validate"),
         ("post", "/api/v1/service/start"),
         ("post", "/api/v1/service/stop"),
         ("get", "/api/v1/service/log"),
@@ -125,7 +125,6 @@ def main():
 
     # Config mutations require a strong If-Match (resolved kernel mounts).
     for m, p in (
-        ("patch", "/api/v1/setting/"),
         ("put", "/api/v1/setting/{key}"),
         ("delete", "/api/v1/setting/{key}"),
         ("patch", "/api/v1/engine/{engine_id}"),
