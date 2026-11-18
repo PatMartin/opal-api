@@ -13,18 +13,13 @@ excluding the shared kernel):
   no configuration aliases
 * no retired surfaces: no /api/v1/backup/*, no settings-collection PATCH, no
   backup/restore/export/import command groups or operationIds
-* the closed snapshot envelope, per-module ConfigSnapshot (module const +
-  declared resource sections), and x-opal-snapshot metadata
-* positive and negative snapshot documents validated against each module's
-  resolved ConfigSnapshot schema
+* the closed snapshot envelope and x-opal-snapshot metadata
 * a negative discovery proof: a doctored nonconforming module fails the same
   checks
 """
 import copy
 import os
 import sys
-
-import jsonschema
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import spec_util  # noqa: E402
@@ -234,40 +229,7 @@ def check_module(d, name, quiet=False):
     xsnap = d.get("x-opal-snapshot") or {}
     c(bool(xsnap.get("module")), "x-opal-snapshot declares canonical module id")
     c(bool(xsnap.get("resources")), "x-opal-snapshot declares resource sections")
-    cs = comps.get("ConfigSnapshot", {})
-    c(bool(cs), "module declares ConfigSnapshot schema")
-    const = None
-    for part in cs.get("allOf", []):
-        props = part.get("properties", {})
-        if "module" in props:
-            const = props["module"].get("const")
-    c(const is not None and const == xsnap.get("module"),
-      "ConfigSnapshot pins module const to the declared identity")
-    csr = comps.get("ConfigSnapshotResources", {})
-    c(csr.get("additionalProperties") is False,
-      "ConfigSnapshotResources rejects unknown sections")
-    c(set(csr.get("properties", {})) == set(xsnap.get("resources", [])),
-      "ConfigSnapshotResources sections match x-opal-snapshot.resources")
     return local
-
-
-def snapshot_cases(module, sections):
-    """Positive + negative snapshot documents for a module."""
-    good = {"format_version": "1.0.0", "module": module,
-            "created_at": "2026-11-18T20:00:00Z",
-            "settings": {"audio.volume": 0.8, "net.retries": 3, "flags.enabled": True},
-            "resources": {s: [] for s in sections}}
-    bad = {
-        "missing format_version": {k: v for k, v in good.items() if k != "format_version"},
-        "format_version int": {**good, "format_version": 100},
-        "wrong module": {**good, "module": "opal-other"},
-        "extra envelope key": {**good, "extra": 1},
-        "unknown resource section": {**good, "resources": {"bogus_section": []}},
-        "resources not object": {**good, "resources": []},
-        "settings not object": {**good, "settings": []},
-        "null snapshot": None,
-    }
-    return good, bad
 
 
 def main():
@@ -285,24 +247,6 @@ def main():
         name = os.path.splitext(os.path.basename(path))[0]
         docs[name] = spec_util.load(path)
         check_module(docs[name], name)
-
-    # -- per-module snapshot positive/negative validation -------------------
-    for name, d in docs.items():
-        module = (d.get("x-opal-snapshot") or {}).get("module")
-        sections = (d.get("x-opal-snapshot") or {}).get("resources") or []
-        cs = d["components"]["schemas"].get("ConfigSnapshot", {})
-        good, bad = snapshot_cases(module, sections)
-        try:
-            jsonschema.validate(good, cs)
-            check(True, f"{name}: valid snapshot accepted")
-        except jsonschema.ValidationError as e:
-            check(False, f"{name}: valid snapshot accepted ({e.message})")
-        for label, doc in bad.items():
-            try:
-                jsonschema.validate(doc, cs)
-                check(False, f"{name}: rejects snapshot with {label}")
-            except jsonschema.ValidationError:
-                check(True, f"{name}: rejects snapshot with {label}")
 
     # -- negative discovery proof -------------------------------------------
     victim = copy.deepcopy(docs["opal_event"])

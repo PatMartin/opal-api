@@ -2419,47 +2419,6 @@ components:
   securitySchemes:
     BearerAuth: {$ref: './shared/opal_kernel.yaml#/components/securitySchemes/BearerAuth'}
   schemas:
-    ConfigSnapshotResources:
-      type: object
-      additionalProperties: false
-      description: 'Declarative configuration resource sections carried in `resources` of this
-        module''s snapshots. Unknown sections are rejected explicitly; empty collections are valid.'
-      properties:
-        profiles:
-          type: array
-          items:
-            $ref: './shared/opal_kernel.yaml#/components/schemas/OpalProfile'
-        personas:
-          type: array
-          items:
-            $ref: './shared/opal_kernel.yaml#/components/schemas/OpalPersonaRead'
-        wakewords:
-          type: array
-          items:
-            $ref: '#/components/schemas/WakewordRead'
-        intents:
-          type: array
-          items:
-            $ref: '#/components/schemas/IntentReadWithPhrases'
-        slots:
-          type: array
-          items:
-            $ref: '#/components/schemas/SlotReadWithValues'
-        regression_tests:
-          type: array
-          items:
-            $ref: '#/components/schemas/RegressionTestRead'
-    ConfigSnapshot:
-      allOf:
-      - $ref: './shared/opal_kernel.yaml#/components/schemas/OpalConfigSnapshot'
-      - type: object
-        properties:
-          module:
-            const: opal-listen
-          resources:
-            $ref: '#/components/schemas/ConfigSnapshotResources'
-      description: Module-constrained configuration snapshot; validates `module` identity and the
-        declared resource sections for this module.
     AudioDevice:
       properties:
         index:
@@ -3753,7 +3712,8 @@ x-opal-snapshot:
   - regression_tests
   description: >-
     Declares the canonical module identity and resource sections carried in this module's
-    configuration snapshots. `config load`/`config validate` validate `snapshot` against
-    `ConfigSnapshot` (shared `OpalConfigSnapshot` envelope plus module const and
-    `ConfigSnapshotResources`). Snapshots carry persistent desired configuration only:
+    configuration snapshots. `config load`/`config validate` validate `snapshot` against the shared
+    `OpalConfigSnapshot` envelope and the declared `module` identity and resource
+    sections; wrong-module, unsupported-version, and unknown-section snapshots are
+    rejected. Snapshots carry persistent desired configuration only:
     profiles, personas, wakewords, intents, slots, regression_tests; never runtime history, sessions, streams, binaries, or secrets.

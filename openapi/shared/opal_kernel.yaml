@@ -478,21 +478,6 @@ components:
           $ref: '#/components/headers/OpalRequestIdHeader'
         X-Opal-Causation-Id:
           $ref: '#/components/headers/OpalCausationIdHeader'
-    InternalError:
-      description: Unexpected internal failure.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/OpalError'
-      headers:
-        X-Opal-Session-Id:
-          $ref: '#/components/headers/OpalSessionIdHeader'
-        X-Opal-Transaction-Id:
-          $ref: '#/components/headers/OpalTransactionIdHeader'
-        X-Opal-Request-Id:
-          $ref: '#/components/headers/OpalRequestIdHeader'
-        X-Opal-Causation-Id:
-          $ref: '#/components/headers/OpalCausationIdHeader'
     ServiceUnavailable:
       description: The service or a required dependency is currently unavailable.
       content:
@@ -839,7 +824,7 @@ components:
           description: 'Module-owned declarative configuration sections (e.g. profiles, personas, engine
             configurations, voices, wakewords, intents, slots, rules, actions, device definitions, peers,
             groups, sharing policies, orchestrator service definitions). Each module declares its sections
-            via `x-opal-snapshot.resources` and its `ConfigSnapshotResources` schema; unknown sections are
+            via `x-opal-snapshot.resources`; unknown sections are
             rejected explicitly.'
       required:
       - format_version

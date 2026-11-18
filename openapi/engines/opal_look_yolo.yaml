@@ -752,32 +752,6 @@ components:
         maxLength: 128
       description: Opaque correlation context, not authentication
   schemas:
-    ConfigSnapshotResources:
-      type: object
-      additionalProperties: false
-      description: 'Declarative configuration resource sections carried in `resources` of this
-        module''s snapshots: registered engine configuration and model registry entries.'
-      properties:
-        engines:
-          type: array
-          items:
-            type: object
-            additionalProperties: true
-        models:
-          type: array
-          items:
-            type: object
-            additionalProperties: true
-    ConfigSnapshot:
-      allOf:
-      - $ref: '../shared/opal_kernel.yaml#/components/schemas/OpalConfigSnapshot'
-      - type: object
-        properties:
-          module:
-            const: opal-look-yolo
-          resources:
-            $ref: '#/components/schemas/ConfigSnapshotResources'
-      description: Module-constrained configuration snapshot for the YOLO adapter.
     ServiceInfo:
       type: object
       required:
@@ -961,23 +935,6 @@ components:
           items:
             type: number
           description: Original-image pixel xyxy [x1,y1,x2,y2], after orientation correction.
-    PredictOptions:
-      type: object
-      properties:
-        confidence:
-          type: number
-          minimum: 0
-          maximum: 1
-          default: 0.25
-        device:
-          type: string
-        engine_options:
-          type: object
-          additionalProperties: true
-          description: Engine-specific options validated using advertised options_schema; unknown names rejected.
-        include_native:
-          type: boolean
-          default: false
     PredictRequest:
       type: object
       additionalProperties: false
@@ -1297,8 +1254,10 @@ x-opal-snapshot:
   - models
   description: >-
     Declares the canonical module identity and resource sections carried in this module's
-    configuration snapshots. `config load`/`config validate` validate `snapshot` against
-    `ConfigSnapshot`. Snapshots carry persistent desired configuration only: engine
+    configuration snapshots. `config load`/`config validate` validate `snapshot` against the shared
+    `OpalConfigSnapshot` envelope and the declared `module` identity and resource
+    sections; wrong-module, unsupported-version, and unknown-section snapshots are
+    rejected. Snapshots carry persistent desired configuration only: engine
     configuration and model registry entries; never model binaries, loaded-model residency,
     hardware-discovery caches, or inference history.
 x-opal-authorization:

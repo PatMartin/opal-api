@@ -150,8 +150,8 @@ opal say
 | `opal say persona show` † | `<persona_id>` | Get Persona. `GET /api/v1/persona/{persona_id}` |
 | `opal say persona update` † | `<persona_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Update Persona. `PATCH /api/v1/persona/{persona_id}` |
 | `opal say persona remove` † | `<persona_id>`, `--if-match ETAG` | Delete Persona. `DELETE /api/v1/persona/{persona_id}` |
-| `opal say generate` † | `<text>`, `--profile-id ID`, `--voice-id ID`, `--persona ID`, `--engine-id ID`, `--speed FLOAT`, `--volume FLOAT`, `--sample-rate INT`, `--engine-options JSON`, `--output-format [wav\|pcm]`, `--out PATH`, `--play` | Synthesize completed WAV or raw PCM audio from text. `POST /api/v1/generate` |
-| `opal say stream` † | `<text>`, `--profile-id ID`, `--voice-id ID`, `--persona ID`, `--engine-id ID`, `--speed FLOAT`, `--volume FLOAT`, `--sample-rate INT`, `--engine-options JSON`, `--out PATH`, `--play` | Synthesize progressive raw `s16le` mono PCM from text. `POST /api/v1/generate/stream` |
+| `opal say generate` † | `<text>`, `--profile-id ID`, `--voice-id ID`, `--persona-id ID`, `--engine-id ID`, `--speed FLOAT`, `--volume FLOAT`, `--sample-rate INT`, `--engine-options JSON`, `--output-format [wav\|pcm]`, `--out PATH`, `--play` | Synthesize completed WAV or raw PCM audio from text. `POST /api/v1/generate` |
+| `opal say stream` † | `<text>`, `--profile-id ID`, `--voice-id ID`, `--persona-id ID`, `--engine-id ID`, `--speed FLOAT`, `--volume FLOAT`, `--sample-rate INT`, `--engine-options JSON`, `--out PATH`, `--play` | Synthesize progressive raw `s16le` mono PCM from text. `POST /api/v1/generate/stream` |
 | `opal say config save` | `--out FILE` | Save snapshot to managed store or file. `POST /api/v1/config/save` |
 | `opal say config load` | `--in FILE` | Load managed or file snapshot atomically. `POST /api/v1/config/load` |
 | `opal say config validate` | `--in FILE` | Validate live config or a file snapshot. `POST /api/v1/config/validate` |
@@ -703,7 +703,7 @@ opal say generate "Tea is served in the library." --voice-id en-gb-alan-low --pl
 **4. Speak as a persona and let its bound voice follow along.**
 
 ```bash
-opal say generate "Good evening. I will be your narrator." --persona vox --play
+opal say generate "Good evening. I will be your narrator." --persona-id vox --play
 ```
 
 **5. Slow down for the people in the back.**
@@ -1322,9 +1322,9 @@ opal event data event list --topic opal.listen.intent.match --limit 1
 
 ```bash
 opal say persona list --enabled
-opal say generate "hey opal, turn on the lights" --persona vox --out lights-vox.wav
-opal say generate "hey opal, turn on the lights" --persona amy --out lights-amy.wav
-opal say generate "hey opal, turn on the lights" --persona butler --out lights-butler.wav
+opal say generate "hey opal, turn on the lights" --persona-id vox --out lights-vox.wav
+opal say generate "hey opal, turn on the lights" --persona-id amy --out lights-amy.wav
+opal say generate "hey opal, turn on the lights" --persona-id butler --out lights-butler.wav
 opal listen recognition test-audio lights-vox.wav --require-wakeword
 opal listen recognition test-audio lights-amy.wav --require-wakeword
 opal listen recognition test-audio lights-butler.wav --require-wakeword
@@ -1385,7 +1385,7 @@ opal listen regression run | opal think ask "Summarize this regression run in on
 opal think persona add --persona-id amy --name Amy --description "Ops assistant" --voice-id en-gb-alan-low
 opal say persona add --persona-id amy --name Amy --description "Ops assistant" --voice-id en-gb-alan-low
 opal say persona validate amy
-opal think ask "Introduce yourself as Amy, the ops assistant, in one friendly sentence." | opal say generate - --persona amy --play
+opal think ask "Introduce yourself as Amy, the ops assistant, in one friendly sentence." | opal say generate - --persona-id amy --play
 ```
 
 ### Eyes on the property
@@ -1428,7 +1428,7 @@ opal event rule add --id package-alert --topic porch.detection --conditions '[{"
 ```bash
 opal look stream watch str-porch | opal event publish --topic porch.detection --source opal-look --data -
 opal event action add --id snapshot-porch --type shell --mode exec --executable /usr/local/bin/opal --args '["look","stream","snapshot","str-porch","--out","/tmp/porch.jpg"]' --stdin none --description "Keep a frame from the porch camera."
-opal event action add --id warn-visitor --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Hello there. You are on camera. Have a lovely day.","--persona","vox","--play"]' --stdin none --description "Politely greet a visitor."
+opal event action add --id warn-visitor --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Hello there. You are on camera. Have a lovely day.","--persona-id","vox","--play"]' --stdin none --description "Politely greet a visitor."
 opal event rule add --id porch-visitor-response --topic porch.detection --conditions '[{"path":"data.detections[0].class_name","operator":"eq","value":"person"}]' --actions '["snapshot-porch","warn-visitor"]'
 ```
 
@@ -1516,7 +1516,7 @@ opal event rule add --id fact-on-demand --topic opal.listen.intent.match --condi
 *think + say.* A bedtime story, streamed so the narration starts before the ending is synthesized.
 
 ```bash
-opal think ask "Make up a two-minute bedtime story about a lighthouse keeper's cat who is afraid of the dark." --timeout-seconds 300 | opal say stream - --persona vox --speed 0.9 --play
+opal think ask "Make up a two-minute bedtime story about a lighthouse keeper's cat who is afraid of the dark." --timeout-seconds 300 | opal say stream - --persona-id vox --speed 0.9 --play
 ```
 
 #### 21. A story about whatever they just asked for
