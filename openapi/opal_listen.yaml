@@ -1663,22 +1663,13 @@ paths:
       description: Promote a failed utterance as a training phrase for the given intent.
       operationId: promote_failed_utterance
       parameters:
-      - name: intent_name
-        in: query
-        required: true
-        schema:
-          type: string
-          title: Intent Name
-      - name: create_regression
-        in: query
-        required: false
-        schema:
-          type: boolean
-          description: Also add a regression test for this utterance
-          default: true
-          title: Create Regression
-        description: Also add a regression test for this utterance
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FailedUtterancePromoteRequest'
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -2601,6 +2592,23 @@ components:
       type: object
       minProperties: 1
       title: FailedUtteranceUpdate
+    FailedUtterancePromoteRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        intent_id:
+          type: string
+          minLength: 1
+          description: Identifier of the intent this utterance becomes a training phrase for.
+          title: Intent Id
+        create_regression:
+          type: boolean
+          description: Also add a regression test for this utterance.
+          default: true
+          title: Create Regression
+      required:
+      - intent_id
+      title: FailedUtterancePromoteRequest
     IntentAlternative:
       properties:
         intent_name:

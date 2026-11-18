@@ -64,7 +64,7 @@ tags:
 - name: persona
   description: 'Manage named persona: identities that bind a registered voice so requests can
 
-    select a consistent character with a single `persona` field. Personas and
+    select a consistent character with a single `persona_id` field. Personas and
     profiles are explained together in the shared kernel doc `x-opal-persona`
     (`profiles_vs_personas`). The schema is kept
 
@@ -570,7 +570,7 @@ paths:
 
         sister OPAL services) so that generation requests can select a consistent
 
-        identity with a single `persona` field.
+        identity with a single `persona_id` field.
 
 
         Return the complete bounded configuration collection; pagination is not supported.
@@ -867,11 +867,11 @@ paths:
         \ continuous audio\nresult. Internal chunk boundaries are not part of the public API.\n\nGeneration\
         \ setting are resolved in this order, from lowest to highest precedence:\n\n1. Service defaults.\n\
         2. The active profile, when `profile_id` is omitted and an active profile exists.\n3. The explicitly\
-        \ selected `profile_id`, when present.\n4. The `persona`'s bound voice, when `persona` is present\
+        \ selected `profile_id`, when present.\n4. The `persona_id`'s bound voice, when `persona_id` is present\
         \ (voice field only).\n5. Fields supplied directly in this request.\n\nRequest-level\
         \ `engine_options` are shallow-merged over profile-level\n`engine_options`; request keys win. Other\
         \ request fields directly replace their\ncorresponding profile defaults.\n\nVoice and engine selection:\n\
-        \n* A request-level `voice_id` overrides the `persona` voice; the persona voice\n  overrides the profile voice.\n* An unknown or disabled `persona` is rejected with `422 Unprocessable Entity`.\n* The resolved voice normally determines\
+        \n* A request-level `voice_id` overrides the `persona_id` voice; the persona voice\n  overrides the profile voice.\n* An unknown or disabled `persona_id` is rejected with `422 Unprocessable Entity`.\n* The resolved voice normally determines\
         \ the engine.\n* `engine_id` is an optional advanced override. The service MUST reject an\n  override\
         \ that cannot use the resolved voice rather than silently substituting\n  another voice.\n* If no voice\
         \ can be resolved from either the request or a profile, generation\n  fails with `409 Conflict`.\n\n\
@@ -903,7 +903,7 @@ paths:
                   profile's voice for this request.
                 value:
                   text: Hello from Amy.
-                  persona: amy
+                  persona_id: amy
               explicit-voice-overrides:
                 summary: >-
                   Explicit voice_id wins. Even with persona "amy" selected, the
@@ -911,7 +911,7 @@ paths:
                   the profile.
                 value:
                   text: Hello in Ryan's voice.
-                  persona: amy
+                  persona_id: amy
                   voice_id: en-us-ryan-high
       responses:
         '401':
@@ -1544,99 +1544,11 @@ components:
           type: string
           format: date-time
     PersonaCreate:
-      type: object
-      additionalProperties: false
-      required:
-      - persona_id
-      - name
-      - voice_id
-      properties:
-        persona_id:
-          type: string
-          minLength: 1
-          maxLength: 200
-          pattern: ^[A-Za-z0-9][A-Za-z0-9._-]*$
-          description: Globally unique OPAL persona identifier.
-          example: amy
-        name:
-          type: string
-          minLength: 1
-          maxLength: 200
-          description: Human-readable persona name.
-          example: Amy
-        description:
-          anyOf:
-          - type: string
-            maxLength: 1000
-          - type: 'null'
-          description: Optional human-readable description or character notes.
-        voice_id:
-          type: string
-          minLength: 1
-          description: Registered voice this persona speaks with.
-          example: en-gb-alan-low
-        enabled:
-          type: boolean
-          default: true
-          description: Whether this persona may be selected for generation.
-      example:
-        persona_id: amy
-        name: Amy
-        voice_id: en-gb-alan-low
-        enabled: true
+      $ref: './shared/opal_kernel.yaml#/components/schemas/OpalPersonaCreate'
     PersonaUpdate:
-      type: object
-      minProperties: 1
-      additionalProperties: false
-      description: Partial update to a persona.
-      properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 200
-        description:
-          anyOf:
-          - type: string
-            maxLength: 1000
-          - type: 'null'
-        voice_id:
-          type: string
-          minLength: 1
-          description: Rebind the persona to a different registered voice.
-        enabled:
-          type: boolean
+      $ref: './shared/opal_kernel.yaml#/components/schemas/OpalPersonaUpdate'
     PersonaRead:
-      type: object
-      required:
-      - persona_id
-      - name
-      - voice_id
-      - enabled
-      - created_at
-      - updated_at
-      properties:
-        persona_id:
-          type: string
-          example: amy
-        name:
-          type: string
-          example: Amy
-        description:
-          anyOf:
-          - type: string
-          - type: 'null'
-        voice_id:
-          type: string
-          description: Registered voice this persona speaks with.
-          example: en-gb-alan-low
-        enabled:
-          type: boolean
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
+      $ref: './shared/opal_kernel.yaml#/components/schemas/OpalPersonaRead'
     GenerateRequestBase:
       type: object
       required:
@@ -1672,7 +1584,7 @@ components:
           - type: 'null'
           description: Request-level voice override. Takes precedence over the profile voice.
           example: en-us-lessac-medium
-        persona:
+        persona_id:
           anyOf:
           - $ref: './shared/opal_kernel.yaml#/components/schemas/OpalPersonaRef'
           - type: 'null'
@@ -1686,6 +1598,12 @@ components:
 
             '
           example: amy
+        persona:
+          anyOf:
+          - $ref: './shared/opal_kernel.yaml#/components/schemas/OpalPersonaRef'
+          - type: 'null'
+          deprecated: true
+          description: Deprecated alias of `persona_id`.
         engine_id:
           anyOf:
           - type: string

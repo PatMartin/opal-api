@@ -229,7 +229,7 @@ opal listen
 │   ├── /status                             GET
 │   └── /stream                             GET
 ├── /failed_utterance/                      GET, POST
-│   └── /{fu_id}                            GET, PATCH, DELETE
+│   └── /{failed_utterance_id}                            GET, PATCH, DELETE
 │       └── /promote                        POST
 ├── /regression/                            GET, POST
 │   ├── /run                                POST
@@ -306,10 +306,10 @@ opal listen
 | `opal listen recognition stream` † | `--debug/--no-debug` | Stream live recognition results (SSE, live-only). `GET /api/v1/recognition/stream` |
 | `opal listen data failed-utterance list` † | `--reviewed/--no-reviewed`, `--promoted/--no-promoted`, `--limit INT` | List Failed Utterances. `GET /api/v1/failed_utterance/` |
 | `opal listen data failed-utterance add` † | `--transcript TEXT`, `--expected-intent TEXT`, `--notes TEXT`, `--recognition-log-id ID` | Create Failed Utterance. `POST /api/v1/failed_utterance/` |
-| `opal listen data failed-utterance show` † | `<fu_id>` | Get Failed Utterance. `GET /api/v1/failed_utterance/{fu_id}` |
-| `opal listen data failed-utterance update` † | `<fu_id>`, `--expected-intent TEXT`, `--notes TEXT`, `--reviewed/--no-reviewed`, `--promoted-to-phrase/--no-promoted-to-phrase` | Update Failed Utterance. `PATCH /api/v1/failed_utterance/{fu_id}` |
-| `opal listen data failed-utterance remove` † | `<fu_id>` | Delete Failed Utterance. `DELETE /api/v1/failed_utterance/{fu_id}` |
-| `opal listen data failed-utterance promote` † | `<fu_id>`, `--intent-name TEXT`, `--create-regression/--no-create-regression`, `--if-match ETAG` | Promote To Phrase. `POST /api/v1/failed_utterance/{fu_id}/promote` |
+| `opal listen data failed-utterance show` † | `<failed_utterance_id>` | Get Failed Utterance. `GET /api/v1/failed_utterance/{failed_utterance_id}` |
+| `opal listen data failed-utterance update` † | `<failed_utterance_id>`, `--expected-intent TEXT`, `--notes TEXT`, `--reviewed/--no-reviewed`, `--promoted-to-phrase/--no-promoted-to-phrase` | Update Failed Utterance. `PATCH /api/v1/failed_utterance/{failed_utterance_id}` |
+| `opal listen data failed-utterance remove` † | `<failed_utterance_id>` | Delete Failed Utterance. `DELETE /api/v1/failed_utterance/{failed_utterance_id}` |
+| `opal listen data failed-utterance promote` † | `<failed_utterance_id>`, `--intent-id ID`, `--create-regression/--no-create-regression`, `--if-match ETAG` | Promote To Phrase. `POST /api/v1/failed_utterance/{failed_utterance_id}/promote` |
 | `opal listen regression list` † | — | List Regression Tests. `GET /api/v1/regression/` |
 | `opal listen regression add` † | `--if-match ETAG`, `--name TEXT`, `--phrase TEXT`, `--expected-intent TEXT`, `--enabled/--no-enabled`, `--expected-slots JSON` | Create Regression Test. `POST /api/v1/regression/` |
 | `opal listen regression run` † | `--enabled-only/--no-enabled-only` | Run Regression Tests. `POST /api/v1/regression/run` |
@@ -893,7 +893,7 @@ opal listen data failed-utterance list --no-reviewed --limit 10
 **15. Turn a miss into a training phrase and a regression case in one move.**
 
 ```bash
-opal listen data failed-utterance promote 7 --intent-name lights.turn_on --create-regression
+opal listen data failed-utterance promote 7 --intent-id lights.turn_on --create-regression
 ```
 
 **16. Pin down expected behavior with a regression case.**
@@ -1366,7 +1366,7 @@ opal listen recognition test-audio tricky.wav
 
 ```bash
 opal listen data failed-utterance show 7 | opal think ask "This utterance matched no intent. My intents are lights.turn_on, lights.turn_off, and timer.set. Which one did the speaker most likely mean? Reply with the intent name only." --context -
-opal listen data failed-utterance promote 7 --intent-name lights.turn_on --create-regression
+opal listen data failed-utterance promote 7 --intent-id lights.turn_on --create-regression
 ```
 
 #### 6. Spoken regression report
