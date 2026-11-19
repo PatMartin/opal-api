@@ -898,103 +898,10 @@ paths:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/config_validate'
   /api/v1/profile/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profiles_collection'
-    x-opal-cli:
-      get:
-        group: profile
-        command: list
-      post:
-        group: profile
-        command: add
-        options:
-        - flag: --in
-          value: FILE
-          binds:
-            kind: local_in
-            target: body
-            parse: yaml_or_json_file
-          description: Whole portable profile document; exclusive with --name/--shared/--module.
-        - flag: --name
-          value: NAME
-          binds:
-            kind: body
-            target: name
-        - flag: --description
-          value: TEXT
-          binds:
-            kind: body
-            target: description
-        - flag: --is-active/--no-is-active
-          binds:
-            kind: body
-            target: is_active
-        - flag: --shared
-          value: FILE
-          binds:
-            kind: local_in
-            target: shared
-            parse: yaml_or_json_file
-          description: Shared-values object merged into the submitted document.
-        - flag: --module
-          value: FILE
-          binds:
-            kind: local_in
-            target: modules.opal-look
-            parse: yaml_or_json_file
-          description: This service's own compartment (currently an empty closed schema).
   /api/v1/profile/{profile_id}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_item'
-    x-opal-cli:
-      get:
-        group: profile
-        command: show
-      patch:
-        group: profile
-        command: update
-        options:
-        - flag: --in
-          value: FILE
-          binds:
-            kind: local_in
-            target: body
-            parse: yaml_or_json_file
-          description: Patch document; exclusive with --name/--shared/--module.
-        - flag: --name
-          value: NAME
-          binds:
-            kind: body
-            target: name
-        - flag: --description
-          value: TEXT
-          binds:
-            kind: body
-            target: description
-        - flag: --is-active/--no-is-active
-          binds:
-            kind: body
-            target: is_active
-        - flag: --shared
-          value: FILE
-          binds:
-            kind: local_in
-            target: shared
-            parse: yaml_or_json_file
-        - flag: --module
-          value: FILE
-          binds:
-            kind: local_in
-            target: modules.opal-look
-            parse: yaml_or_json_file
-          description: Partial own-compartment document; supplied fields merge field-wise,
-            unmentioned compartments are preserved.
-      delete:
-        group: profile
-        command: remove
   /api/v1/profile/{profile_id}/activate:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_activate'
-    x-opal-cli:
-      post:
-        group: profile
-        command: activate
   /api/v1/health/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health'
   /api/v1/health/live:

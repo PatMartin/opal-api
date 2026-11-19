@@ -200,7 +200,7 @@ Each bundle incorporates external kernel references into a single document suita
 
 ### Inspect a resolved operation
 
-The test helper resolves local and shared-base references and copies path-level CLI mappings onto the corresponding operations. From the repository root, run:
+The test helper resolves local and shared-base references, copies path-level CLI mappings onto the corresponding operations, and substitutes `modules.<module-key>` with each module's declared profile compartment. From the repository root, run:
 
 ```bash
 python -c "import sys; sys.path.insert(0, 'tests'); import spec_util; d = spec_util.load('openapi/opal_think.yaml'); print(d['info']['title'], d['info']['version']); print(d['paths']['/api/v1/task/']['post']['x-opal-cli'])"
@@ -235,7 +235,7 @@ x-opal-cli:
   - chat
 ```
 
-Descriptors have a required `command` and optional `parent`, `group`, and `aliases`. Kernel Path Items carry per-operation descriptors directly, making the kernel the single source of truth for shared-operation bindings — including all seven `config`/`config setting` operations mounted by every module. Module-declared bindings on `$ref` mounts may instead use a path-level per-method map; the test helper hoists that map onto operations for assertions.
+Descriptors have a required `command` and optional `parent`, `group`, and `aliases`. Kernel Path Items carry per-operation descriptors directly, making the kernel the single source of truth for every shared-operation binding — `config`/`config setting`, `info health`, `service`, and the `profile` lifecycle. For profile `--module FILE`, the kernel binds `modules.<module-key>` and each service substitutes its declared `x-opal-profile-namespace.compartment` (e.g. `modules.opal-say` on opal-say). Module-declared bindings on `$ref` mounts may instead use a path-level per-method map; the test helper hoists that map onto operations for assertions.
 
 Look and Think currently annotate all their operations. Event, Listen, and Say have partial annotation coverage. The general Spectral rules validate descriptor shape where annotations exist, while the Look parity test explicitly checks operation coverage and command uniqueness.
 

@@ -4,10 +4,13 @@ Enforces, for every published module contract discovered recursively under
 openapi/ (top-level services plus nested modules such as openapi/engines/,
 excluding the shared kernel):
 
-* the six canonical profile operations mounted at the suite paths with the
-  shared operationIds, If-Match on mutations, ETag on reads, 401/403
+* the six canonical profile operations mounted at the suite paths as bare
+  kernel $refs, with the shared operationIds, If-Match on mutations, ETag on
+  reads, 401/403
 * the uniform CLI subtree `profile list|add|show|update|remove|activate`
-  with per-method descriptors and structured file-input options
+  with kernel-owned per-operation descriptors and structured file-input
+  options (`--module` binding `modules.<module-key>`, substituted per
+  module in the resolved view)
 * the closed namespaced envelope: OpalProfile requires
   {id, name, is_active, shared, modules}; OpalProfileCreate requires only
   `name`; OpalProfilePatch is closed with minProperties 1
@@ -29,6 +32,7 @@ import os
 import sys
 
 import jsonschema
+import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import spec_util  # noqa: E402
@@ -267,11 +271,52 @@ def check_module(d, name, quiet=False):
     return local
 
 
+MOUNTS = {
+    "/api/v1/profile/": "profiles_collection",
+    "/api/v1/profile/{profile_id}": "profile_item",
+    "/api/v1/profile/{profile_id}/activate": "profile_activate",
+}
+
+
+def kernel_ref(spec_path, item):
+    rel = os.path.relpath(spec_util.KERNEL_PATH,
+                          os.path.dirname(os.path.abspath(spec_path)))
+    return rel.replace(os.sep, "/") + "#/components/pathItems/" + item
+
+
+def check_source(d, spec_path, name, quiet=False):
+    """Source-level: the three profile mounts are bare $refs to the kernel
+    Path Items - the kernel owns the operations and their x-opal-cli
+    descriptors; no module-local override remains."""
+    local = []
+
+    def c(cond, msg):
+        if not cond:
+            local.append(msg)
+        if not quiet:
+            check(cond, f"{name}: {msg}")
+
+    paths = d.get("paths", {})
+    ok = 0
+    for p, item in MOUNTS.items():
+        entry = paths.get(p)
+        want = kernel_ref(spec_path, item)
+        if isinstance(entry, dict) and set(entry.keys()) == {"$ref"}:
+            ref = (entry.get("$ref") or "").replace("\\", "/")
+            if ref in (want, "./" + want):
+                ok += 1
+                continue
+        c(False, f"{p} is a bare $ref to kernel pathItem {item}")
+    c(ok == len(MOUNTS), f"{ok}/3 profile mounts are canonical kernel $refs")
+    return local
+
+
 def main():
     specs = spec_util.module_specs()
     docs = {}
     for path in specs:
         name = os.path.splitext(os.path.basename(path))[0]
+        check_source(yaml.safe_load(open(path, encoding="utf-8")), path, name)
         docs[name] = spec_util.load(path)
         check_module(docs[name], name)
 
@@ -293,6 +338,14 @@ def main():
     found = check_module(victim, "nonconforming-probe", quiet=True)
     check(any("profile/" in m or "OpalProfile" in m for m in found),
           "negative discovery: doctored nonconforming module is caught")
+
+    event_path = next(p for p in specs if p.endswith("opal_event.yaml"))
+    victim_src = yaml.safe_load(open(event_path, encoding="utf-8"))
+    victim_src["paths"]["/api/v1/profile/"]["x-opal-cli"] = {
+        "get": {"group": "profile", "command": "list"}}
+    found = check_source(victim_src, event_path, "nonconforming-source", quiet=True)
+    check(any("bare $ref" in m for m in found),
+          "negative discovery: a copied local profile CLI binding is caught")
 
     sys.exit(1 if failures else 0)
 

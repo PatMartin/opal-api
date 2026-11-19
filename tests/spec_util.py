@@ -110,12 +110,41 @@ def _internalize(node):
     return node
 
 
+def _resolve_module_key(spec):
+    """Kernel-owned CLI descriptors use `modules.<module-key>` as the binds
+    target for `--module FILE`; each receiving module substitutes its own
+    compartment key (declared via `x-opal-profile-namespace.compartment`)."""
+    comp = (spec.get("x-opal-profile-namespace") or {}).get("compartment")
+    if not comp:
+        return spec
+
+    def walk(node):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if isinstance(v, str) and "<module-key>" in v:
+                    node[k] = v.replace("<module-key>", comp)
+                else:
+                    walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+
+    for item in (spec.get("paths") or {}).values():
+        if isinstance(item, dict):
+            for op in item.values():
+                if isinstance(op, dict) and "x-opal-cli" in op:
+                    walk(op["x-opal-cli"])
+    return spec
+
+
 def load(path):
     """Return the spec at `path` with all $refs resolved.
 
     Components of every externally referenced document are also merged into
     `components` and all file-qualified refs are internalized, so the result
-    mirrors the bundled (self-contained) document a consumer would see."""
+    mirrors the bundled (self-contained) document a consumer would see.
+    Kernel-owned `modules.<module-key>` binds targets are substituted with
+    the receiving module's declared compartment key."""
     ap = os.path.normpath(os.path.abspath(path))
     docs = {ap: yaml.safe_load(open(ap, encoding="utf-8"))}
     resolved = _hoist_cli(_deref(docs[ap], ap, docs))
@@ -127,7 +156,7 @@ def load(path):
             target = comps.setdefault(kind, {})
             for name, val in entries.items():
                 target.setdefault(name, copy.deepcopy(val))
-    return _internalize(resolved)
+    return _resolve_module_key(_internalize(resolved))
 
 
 def module_specs():

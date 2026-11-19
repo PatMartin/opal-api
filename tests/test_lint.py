@@ -172,8 +172,7 @@ def m_cli_descriptor(d):
 def m_cli_map(d):
     # Path-level per-method map gains a non-method key.
     item = d["paths"]["/api/v1/profile/"]
-    assert item["x-opal-cli"]["get"]["command"] == "list"
-    item["x-opal-cli"]["bogus"] = {"command": "list"}
+    item["x-opal-cli"] = {"get": {"command": "list"}, "bogus": {"command": "list"}}
 
 
 CASES = [

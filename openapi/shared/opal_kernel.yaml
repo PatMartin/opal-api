@@ -62,7 +62,8 @@ x-opal-cli-format:
     command `opal <service> [parent] [group] <command>`; `aliases` names alternate complete spellings that dispatch
     to the same operation (e.g. Think's `ask`/`chat`/`create` invoke `task add`). Kernel Path Items carry
     per-operation descriptors directly and are the single source of truth for shared-operation bindings,
-    including all `config`/`config setting`, `info`, and `service` commands. Readers hoist a path-level
+    including all `config`/`config setting`, `info`, `service`, and `profile` commands. Readers hoist
+    a path-level
     per-method map onto each
     operation for module-declared mounts; both forms carry the same descriptor shape.
   descriptor:
@@ -86,8 +87,10 @@ x-opal-cli-format:
       select YAML parsing and `.json` selects JSON; other extensions are client errors, never server errors.
       Profile operations use the same convention for nested structured input - `--in FILE` targets the
       whole request body (the portable profile document or patch document), `--shared FILE` targets
-      `shared`, and `--module FILE` targets `modules.<module-key>` of the receiving service's own
-      compartment.
+      `shared`, and `--module FILE` targets `modules.<module-key>`, a placeholder the receiving
+      service substitutes with its own declared compartment key
+      (`x-opal-profile-namespace.compartment`) when generating commands, so a published binding
+      reads e.g. `modules.opal-say` on opal-say.
     local_out: The CLI writes the named response field to a client-local file, serialized as YAML for
       `.yaml`/`.yml` or JSON for `.json`; other extensions are client errors. The service never sees the
       client filename. For `config save`, `--out FILE` also switches request `destination` to `response`
@@ -2324,6 +2327,9 @@ components:
             $ref: '#/components/responses/Forbidden'
           '422':
             $ref: '#/components/responses/UnprocessableEntity'
+        x-opal-cli:
+          group: profile
+          command: list
       post:
         tags:
         - profiles
@@ -2375,6 +2381,49 @@ components:
             $ref: '#/components/responses/UnprocessableEntity'
           '428':
             $ref: '#/components/responses/PreconditionRequired'
+        x-opal-cli:
+          group: profile
+          command: add
+          options:
+          - flag: --in
+            value: FILE
+            binds:
+              kind: local_in
+              target: body
+              parse: yaml_or_json_file
+            description: Whole portable profile document; exclusive with --name/--shared/--module.
+          - flag: --name
+            value: NAME
+            binds:
+              kind: body
+              target: name
+          - flag: --description
+            value: TEXT
+            binds:
+              kind: body
+              target: description
+          - flag: --is-active
+            binds:
+              kind: body
+              target: is_active
+          - flag: --no-is-active
+            binds:
+              kind: body
+              target: is_active
+          - flag: --shared
+            value: FILE
+            binds:
+              kind: local_in
+              target: shared
+              parse: yaml_or_json_file
+            description: Shared-values object merged into the submitted document.
+          - flag: --module
+            value: FILE
+            binds:
+              kind: local_in
+              target: modules.<module-key>
+              parse: yaml_or_json_file
+            description: The receiving service's own compartment; <module-key> resolves to the service's declared compartment.
     profile_item:
       parameters:
       - $ref: '#/components/parameters/OpalSessionIdParameter'
@@ -2415,6 +2464,9 @@ components:
             $ref: '#/components/responses/NotFound'
           '422':
             $ref: '#/components/responses/UnprocessableEntity'
+        x-opal-cli:
+          group: profile
+          command: show
       patch:
         tags:
         - profiles
@@ -2464,6 +2516,48 @@ components:
             $ref: '#/components/responses/UnprocessableEntity'
           '428':
             $ref: '#/components/responses/PreconditionRequired'
+        x-opal-cli:
+          group: profile
+          command: update
+          options:
+          - flag: --in
+            value: FILE
+            binds:
+              kind: local_in
+              target: body
+              parse: yaml_or_json_file
+            description: Patch document; exclusive with --name/--shared/--module.
+          - flag: --name
+            value: NAME
+            binds:
+              kind: body
+              target: name
+          - flag: --description
+            value: TEXT
+            binds:
+              kind: body
+              target: description
+          - flag: --is-active
+            binds:
+              kind: body
+              target: is_active
+          - flag: --no-is-active
+            binds:
+              kind: body
+              target: is_active
+          - flag: --shared
+            value: FILE
+            binds:
+              kind: local_in
+              target: shared
+              parse: yaml_or_json_file
+          - flag: --module
+            value: FILE
+            binds:
+              kind: local_in
+              target: modules.<module-key>
+              parse: yaml_or_json_file
+            description: Partial own-compartment document; supplied fields merge field-wise, unmentioned compartments are preserved. <module-key> resolves to the service's declared compartment.
       delete:
         tags:
         - profiles
@@ -2500,6 +2594,9 @@ components:
             $ref: '#/components/responses/UnprocessableEntity'
           '428':
             $ref: '#/components/responses/PreconditionRequired'
+        x-opal-cli:
+          group: profile
+          command: remove
     profile_activate:
       parameters:
       - $ref: '#/components/parameters/OpalSessionIdParameter'
@@ -2547,6 +2644,9 @@ components:
             $ref: '#/components/responses/UnprocessableEntity'
           '428':
             $ref: '#/components/responses/PreconditionRequired'
+        x-opal-cli:
+          group: profile
+          command: activate
     engines_collection:
       parameters:
       - $ref: '#/components/parameters/OpalSessionIdParameter'

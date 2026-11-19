@@ -84,7 +84,7 @@ opal say
 │   ├── load                [--in FILE]
 │   ├── validate            [--in FILE]
 │   └── setting             list | show | set | remove
-├── info                  health | version | ping | live | ready
+├── info                  health
 └── service               start | stop | log
 ```
 
@@ -334,7 +334,7 @@ Visual observation: optional engine discovery, engine-owned models, single-image
 
 ```text
 opal look
-├── info                  version | ping | health | live | ready
+├── info                  health
 ├── engine                list | show | discover | capabilities | update
 ├── model                 list | show | load | unload
 ├── predict               image
@@ -453,7 +453,7 @@ opal think
 │   ├── load                [--in FILE]
 │   ├── validate            [--in FILE]
 │   └── setting             list | show | set | remove
-├── info                  health | version | ping | live | ready
+├── info                  health
 └── service               start | stop | log
 ```
 
@@ -539,9 +539,8 @@ Event publication, rule routing, and registered shell, HTTP, and Python actions.
 
 ```text
 opal event
-├── publish
 ├── data
-│   ├── event             list | clear | show | remove
+│   ├── event             list | publish | clear | show | remove
 │   ├── topic             list
 │   └── execution         list | show
 ├── rule                  list | add | show | update | remove | test
@@ -553,7 +552,7 @@ opal event
 │   ├── load                [--in FILE]
 │   ├── validate            [--in FILE]
 │   └── setting             list | show | set | remove
-├── info                  health | stats | version | ping | live | ready
+├── info                  health
 └── service               start | stop | log
 ```
 
@@ -601,7 +600,7 @@ opal event
 | COMMAND | OPTIONS | DESCRIPTION |
 |---|---|---|
 | `opal event data event list` † | `--limit INT`, `--topic TEXT`, `--source TEXT`, `--from ISO`, `--to ISO` | List stored events. `GET /api/v1/event/` |
-| `opal event publish` † | `--id ID`, `--topic TEXT`, `--source TEXT`, `--timestamp ISO`, `--data JSON` | Publish an event (202 means admitted, not delivered). `POST /api/v1/event/` |
+| `opal event data event publish` † | `--id ID`, `--topic TEXT`, `--source TEXT`, `--timestamp ISO`, `--data JSON` | Publish an event (202 means admitted, not delivered). `POST /api/v1/event/` |
 | `opal event data event clear` † | — | Clear all stored events. `DELETE /api/v1/event/` |
 | `opal event data event show` † | `<event_id>` | Get stored event. `GET /api/v1/event/{event_id}` |
 | `opal event data event remove` † | `<event_id>` | Delete stored event. `DELETE /api/v1/event/{event_id}` |
@@ -1138,13 +1137,13 @@ opal think persona add --persona-id amy --name Amy --description "Ops assistant"
 **1. Publish an event.**
 
 ```bash
-opal event publish --topic home.doorbell.pressed --data '{"door":"front"}'
+opal event data event publish --topic home.doorbell.pressed --data '{"door":"front"}'
 ```
 
 **2. Publish a sensor reading with a named source.**
 
 ```bash
-opal event publish --topic garden.soil.moisture --source greenhouse-pi --data '{"bed":"tomatoes","moisture_pct":14.2}'
+opal event data event publish --topic garden.soil.moisture --source greenhouse-pi --data '{"bed":"tomatoes","moisture_pct":14.2}'
 ```
 
 **3. List the five most recent doorbell events.**
@@ -1381,7 +1380,7 @@ opal think ask "Introduce yourself as Amy, the ops assistant, in one friendly se
 
 ```bash
 opal look stream start --source rtsp://192.168.1.40:554/stream1 --engine-id yolo --model-id yolo11n
-opal look stream watch str-42 | opal event publish --topic yard.detection --source opal-look --data -
+opal look stream watch str-42 | opal event data event publish --topic yard.detection --source opal-look --data -
 opal event action add --id announce-front-yard --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Heads up. Someone is in the front yard.","--play"]' --stdin none --description "Announce a visitor in the front yard."
 opal event rule add --id front-yard-visitor --topic yard.detection --conditions '[{"path":"data.detections[0].class_name","operator":"eq","value":"person"}]' --actions '["announce-front-yard"]'
 ```
@@ -1401,7 +1400,7 @@ opal look predict image --engine-id yolo --model-id yolo11n --source front.jpg |
 
 ```bash
 opal look stream start --source rtsp://192.168.1.41:554/stream1 --engine-id yolo --model-id yolo11n
-opal look stream watch str-44 | opal event publish --topic porch.detection --source opal-look --data -
+opal look stream watch str-44 | opal event data event publish --topic porch.detection --source opal-look --data -
 opal event action add --id announce-package --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","A package has arrived. Act natural.","--play"]' --stdin none --description "Announce a delivered package."
 opal event rule add --id package-alert --topic porch.detection --conditions '[{"path":"data.detections[0].class_name","operator":"eq","value":"package"}]' --actions '["announce-package"]'
 ```
@@ -1411,7 +1410,7 @@ opal event rule add --id package-alert --topic porch.detection --conditions '[{"
 *look + event + say.* Someone shows up at the porch: keep a frame and let them know, politely.
 
 ```bash
-opal look stream watch str-porch | opal event publish --topic porch.detection --source opal-look --data -
+opal look stream watch str-porch | opal event data event publish --topic porch.detection --source opal-look --data -
 opal event action add --id snapshot-porch --type shell --mode exec --executable /usr/local/bin/opal --args '["look","stream","snapshot","str-porch","--out","/tmp/porch.jpg"]' --stdin none --description "Keep a frame from the porch camera."
 opal event action add --id warn-visitor --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Hello there. You are on camera. Have a lovely day.","--persona-id","vox","--play"]' --stdin none --description "Politely greet a visitor."
 opal event rule add --id porch-visitor-response --topic porch.detection --conditions '[{"path":"data.detections[0].class_name","operator":"eq","value":"person"}]' --actions '["snapshot-porch","warn-visitor"]'
@@ -1431,7 +1430,7 @@ opal look predict image --engine-id yolo --model-id yolo11n --source drive.jpg |
 *look + event + say.* A stream fails; you hear about it before the burglars do.
 
 ```bash
-opal look stream watch str-front | opal event publish --topic front.stream --source opal-look --data -
+opal look stream watch str-front | opal event data event publish --topic front.stream --source opal-look --data -
 opal event action add --id announce-camera-down --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","A camera stream has failed. Please check the cameras.","--play"]' --stdin none --description "Announce a failed camera stream."
 opal event rule add --id camera-down --topic front.stream --conditions '[{"path":"data.status","operator":"eq","value":"failed"}]' --actions '["announce-camera-down"]'
 ```
@@ -1441,7 +1440,7 @@ opal event rule add --id camera-down --topic front.stream --conditions '[{"path"
 *look + event + think + say.* The dog shows up on the couch camera. Think writes a fresh scolding every time, so Biscuit never gets used to it, and delivers it through the `speak` action.
 
 ```bash
-opal look stream watch str-living-room | opal event publish --topic couch.detection --source opal-look --data -
+opal look stream watch str-living-room | opal event data event publish --topic couch.detection --source opal-look --data -
 opal event action add --id scold-dog --type http --method POST --url http://127.0.0.1:8083/api/v1/task/ --body-mode template --body '{"prompt":"A dog named Biscuit just climbed onto the couch. Write one short, firm, funny sentence telling him to get off, then say it aloud with the speak action.","max_steps":4}' --description "Ask Think to scold the dog out loud."
 opal event rule add --id couch-patrol --topic couch.detection --conditions '[{"path":"data.detections[0].class_name","operator":"eq","value":"dog"}]' --actions '["scold-dog"]'
 ```
@@ -1648,7 +1647,7 @@ opal look profile activate 2
 ```bash
 opal event action add --id announce-doorbell --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Someone is at the {{data.door}} door.","--play"]' --stdin none --description "Announce which doorbell was pressed."
 opal event rule add --id doorbell --topic home.doorbell.pressed --conditions '[]' --actions '["announce-doorbell","capture-front"]'
-opal event publish --topic home.doorbell.pressed --data '{"door":"front"}'
+opal event data event publish --topic home.doorbell.pressed --data '{"door":"front"}'
 ```
 
 #### 36. Welcome home
@@ -1656,7 +1655,7 @@ opal event publish --topic home.doorbell.pressed --data '{"door":"front"}'
 *look + event + say.* A person appears on the hallway camera; the house says hello.
 
 ```bash
-opal look stream watch str-hallway | opal event publish --topic hallway.detection --source opal-look --data -
+opal look stream watch str-hallway | opal event data event publish --topic hallway.detection --source opal-look --data -
 opal event action add --id welcome-home --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Welcome home. The dog has been told you were gone for years.","--play"]' --stdin none --description "Greet someone arriving home."
 opal event rule add --id greet-arrival --topic hallway.detection --conditions '[{"path":"data.detections[0].class_name","operator":"eq","value":"person"}]' --actions '["welcome-home"]'
 ```
@@ -1668,7 +1667,7 @@ opal event rule add --id greet-arrival --topic hallway.detection --conditions '[
 ```bash
 opal event action add --id water-reminder --type http --method POST --url http://127.0.0.1:8083/api/v1/task/ --body-mode template --body '{"prompt":"A garden sensor reports low soil moisture. The reading is in the context. Use the speak action to give a one-sentence watering reminder that names the bed and the moisture percentage.","context":"{{event}}","max_steps":3}' --description "Ask Think to speak a watering reminder."
 opal event rule add --id thirsty-plants --topic 'garden.*' --conditions '[{"path":"data.moisture_pct","operator":"lt","value":20}]' --actions '["water-reminder"]'
-opal event publish --topic garden.soil.moisture --source greenhouse-pi --data '{"bed":"tomatoes","moisture_pct":14.2}'
+opal event data event publish --topic garden.soil.moisture --source greenhouse-pi --data '{"bed":"tomatoes","moisture_pct":14.2}'
 ```
 
 #### 38. Leak alarm
@@ -1686,7 +1685,7 @@ opal event rule add --id leak-response --topic home.leak.detected --conditions '
 *look + event + say.* A person shows up on the workshop camera and gets reminded about their eyes.
 
 ```bash
-opal look stream watch str-workshop | opal event publish --topic workshop.detection --source opal-look --data -
+opal look stream watch str-workshop | opal event data event publish --topic workshop.detection --source opal-look --data -
 opal event action add --id safety-reminder --type shell --mode exec --executable /usr/local/bin/opal --args '["say","generate","Safety glasses. You only get two eyes, and no, the warranty has expired.","--play"]' --stdin none --description "Remind the woodworker about safety glasses."
 opal event rule add --id saw-safety --topic workshop.detection --conditions '[{"path":"data.detections[0].class_name","operator":"eq","value":"person"}]' --actions '["safety-reminder"]'
 ```
@@ -1699,7 +1698,7 @@ opal event rule add --id saw-safety --topic workshop.detection --conditions '[{"
 
 ```bash
 opal event rule add --id ci-announcer --topic 'ci.*' --conditions '[{"path":"data.text","operator":"exists","value":true}]' --actions '["speak"]'
-opal event publish --topic ci.build.finished --source jenkins --data '{"text":"The build passed. You may now exhale."}'
+opal event data event publish --topic ci.build.finished --source jenkins --data '{"text":"The build passed. You may now exhale."}'
 ```
 
 #### 41. Log triage
@@ -1732,7 +1731,7 @@ opal event data event list --from 2026-11-09T00:00:00Z --to 2026-11-10T00:00:00Z
 *look + event + think.* Republish a loading-dock detection stream, then ask for the highlights.
 
 ```bash
-opal look stream watch str-dock | opal event publish --topic dock.detection --source opal-look --data -
+opal look stream watch str-dock | opal event data event publish --topic dock.detection --source opal-look --data -
 opal event data event list --topic dock.detection --limit 200 | opal think ask "Summarize this loading-dock activity in three sentences: what appeared, when, and anything unusual." --context -
 ```
 
@@ -1801,7 +1800,7 @@ opal event action execute speak --event '{"topic":"manual.test","data":{"text":"
 
 ```bash
 opal say generate "All OPAL services are standing down for maintenance. Goodnight." --play
-opal event publish --topic ops.fleet.shutdown --source cli --data '{"reason":"scheduled maintenance"}'
+opal event data event publish --topic ops.fleet.shutdown --source cli --data '{"reason":"scheduled maintenance"}'
 opal look service stop
 opal listen service stop
 opal think service stop
