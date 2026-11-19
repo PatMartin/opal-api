@@ -1725,8 +1725,8 @@ security:
 x-opal-authorization: {$ref: './shared/opal_kernel.yaml#/x-opal-authorization'}
 x-opal-profile-namespace:
   compartment: opal-say
-  schema: './shared/opal_profiles.yaml#/components/schemas/OpalSayProfileNamespace'
-  patch_schema: './shared/opal_profiles.yaml#/components/schemas/OpalSayProfileNamespacePatch'
+  schema: './shared/opal_kernel.yaml#/components/schemas/OpalSayProfileNamespace'
+  patch_schema: './shared/opal_kernel.yaml#/components/schemas/OpalSayProfileNamespacePatch'
   description: >-
     Declares this module's compartment key in namespaced profiles and the
     schemas that validate it. Profile defaults migrated from the v2 flat

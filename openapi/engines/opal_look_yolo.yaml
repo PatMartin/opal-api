@@ -1272,8 +1272,8 @@ components:
         maxLength: 128
 x-opal-profile-namespace:
   compartment: opal-look-yolo
-  schema: '../shared/opal_profiles.yaml#/components/schemas/OpalYoloProfileNamespace'
-  patch_schema: '../shared/opal_profiles.yaml#/components/schemas/OpalYoloProfileNamespacePatch'
+  schema: '../shared/opal_kernel.yaml#/components/schemas/OpalYoloProfileNamespace'
+  patch_schema: '../shared/opal_kernel.yaml#/components/schemas/OpalYoloProfileNamespacePatch'
   description: >-
     Declares this module's compartment key in namespaced profiles and the
     schemas that validate it. The adapter declares no profile-specific

@@ -29,7 +29,7 @@ info:
     fields are normative, and each service layers its own domain fields on top. The namespaced profile
     schemas (`OpalProfile`, `OpalProfileCreate`, `OpalProfilePatch`, v3.0.0) are the documented exception:
     their envelopes are closed, module-owned fields live only inside `shared` and per-module `modules`
-    compartments declared in `opal_profiles.yaml`, and lifecycle semantics are defined by `x-opal-profiles`.'
+    compartments declared in this document, and lifecycle semantics are defined by `x-opal-profiles`.'
 paths: {}
 x-opal-authorization:
   version: '1.0'
@@ -172,7 +172,7 @@ x-opal-profiles:
     compartments keyed by canonical module identity. Each service stores its
     own local profile records, reads only `shared` and its own compartment,
     and preserves all other compartments verbatim. Namespace schemas and the
-    compartment catalog live in `openapi/shared/opal_profiles.yaml`.
+    compartment catalog live in this document's `components.schemas`.
   storage:
     locality: >-
       Profiles are per-service local configuration. A portable document may
@@ -206,7 +206,7 @@ x-opal-profiles:
     partial is persisted.
   validation: >-
     `shared` and every declared compartment are validated structurally
-    against `opal_profiles.yaml` schemas (closed objects). The receiving
+    against the kernel's namespace schemas (closed objects). The receiving
     module additionally validates its own compartment's local resource
     references semantically (e.g. opal-say checks `voice_id` resolvability);
     foreign voice/model/pipeline references are portable references and are
@@ -1027,9 +1027,9 @@ components:
             payload. At most one profile reports true in a service''s local catalog; config save/load
             stores and restores it so the local selection survives transfer.'
         shared:
-          $ref: './opal_profiles.yaml#/components/schemas/OpalProfileShared'
+          $ref: '#/components/schemas/OpalProfileShared'
         modules:
-          $ref: './opal_profiles.yaml#/components/schemas/OpalProfileModules'
+          $ref: '#/components/schemas/OpalProfileModules'
         created_at:
           type: string
           format: date-time
@@ -1046,7 +1046,7 @@ components:
       - modules
       additionalProperties: false
       description: 'A complete local profile record: identity, display metadata, a `shared` section and
-        a `modules` map of module-owned compartments (catalog in `opal_profiles.yaml`). `shared` and
+        a `modules` map of module-owned compartments (catalog in `OpalProfileModules`). `shared` and
         `modules` are required and always objects - empty objects and missing module compartments are
         valid. The envelope is closed: undeclared fields are rejected. Exactly one active profile per
         service is the local ceiling; zero is legal. Lifecycle semantics are defined by
@@ -1089,9 +1089,9 @@ components:
           default: false
           description: If true, activate this profile locally and deactivate all others.
         shared:
-          $ref: './opal_profiles.yaml#/components/schemas/OpalProfileShared'
+          $ref: '#/components/schemas/OpalProfileShared'
         modules:
-          $ref: './opal_profiles.yaml#/components/schemas/OpalProfileModules'
+          $ref: '#/components/schemas/OpalProfileModules'
         id:
           type: string
           minLength: 1
@@ -1134,9 +1134,9 @@ components:
             false leaves the local selection unchanged; it never produces a no-active-profile state by
             itself.'
         shared:
-          $ref: './opal_profiles.yaml#/components/schemas/OpalProfileShared'
+          $ref: '#/components/schemas/OpalProfileShared'
         modules:
-          $ref: './opal_profiles.yaml#/components/schemas/OpalProfileModulesPatch'
+          $ref: '#/components/schemas/OpalProfileModulesPatch'
       additionalProperties: false
       description: 'Partial profile update: only supplied fields change; omitted properties stay
         unchanged. A supplied compartment merges field-wise over the stored compartment - sibling
@@ -1151,6 +1151,277 @@ components:
           opal-say:
             speed: 1.25
             voice_id: null
+    # Profile namespace compartment schemas (canonical module identities as catalog keys).
+    OpalProfileShared:
+      type: object
+      additionalProperties: false
+      description: 'Shared profile values: fields with proven identical meaning across multiple modules.
+        Starts empty - a field is promoted here only when two or more module contracts already accept it
+        with the same name, type and semantics. Promotion records consumers, units, accepted values and
+        the compartment mapping in docs/PROFILE_MIGRATION.md. Until then this is a closed empty object:
+        any member is rejected.'
+    OpalProfileModules:
+      type: object
+      properties:
+        opal-event:
+          $ref: '#/components/schemas/OpalEventProfileNamespace'
+        opal-listen:
+          $ref: '#/components/schemas/OpalListenProfileNamespace'
+        opal-look:
+          $ref: '#/components/schemas/OpalLookProfileNamespace'
+        opal-look-yolo:
+          $ref: '#/components/schemas/OpalYoloProfileNamespace'
+        opal-say:
+          $ref: '#/components/schemas/OpalSayProfileNamespace'
+        opal-think:
+          $ref: '#/components/schemas/OpalThinkProfileNamespace'
+      additionalProperties:
+        type: object
+        description: Unrecognized module namespace. Any well-formed object is accepted and preserved
+          verbatim through reads, own-compartment edits and config save/load; its validation status is
+          unverified. Declared compartments above enforce their strict schemas.
+      description: 'The reference-connected catalog of module-owned profile compartments, keyed by
+        canonical module identity (`x-opal-snapshot.module`). Every participating runtime module,
+        including nested engine contracts, is registered - modules with no profile-specific defaults use
+        an explicit empty compartment schema. Each service stores and returns this complete map on
+        profile records; it reads only `shared` and its own compartment, and preserves all others.'
+    OpalProfileModulesPatch:
+      type: object
+      properties:
+        opal-event:
+          $ref: '#/components/schemas/OpalEventProfileNamespacePatch'
+        opal-listen:
+          $ref: '#/components/schemas/OpalListenProfileNamespacePatch'
+        opal-look:
+          $ref: '#/components/schemas/OpalLookProfileNamespacePatch'
+        opal-look-yolo:
+          $ref: '#/components/schemas/OpalYoloProfileNamespacePatch'
+        opal-say:
+          $ref: '#/components/schemas/OpalSayProfileNamespacePatch'
+        opal-think:
+          $ref: '#/components/schemas/OpalThinkProfileNamespacePatch'
+      additionalProperties:
+        type: object
+        description: Unrecognized module namespace in a patch document. Structurally any object is
+          accepted, but ordinary partial edits may target only the receiving service''s own compartment;
+          a service rejects foreign compartment edits with 422 and preserves stored foreign contents.
+      description: 'Patch catalog mirroring `OpalProfileModules`; compartment values use each module''s
+        patch namespace where supplied fields merge field-wise over the stored compartment. Supplying any
+        compartment key other than the receiving module''s own is rejected with 422 Unprocessable Entity.'
+    OpalSayProfileNamespace:
+      type: object
+      properties:
+        voice_id:
+          type: string
+          minLength: 1
+          description: Registered OPAL Say voice used by default.
+          example: en-us-lessac-medium
+        speed:
+          type: number
+          format: float
+          minimum: 0.25
+          maximum: 4.0
+          description: Default speaking-rate multiplier for generation.
+        volume:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 2.0
+          description: Default output volume multiplier for generation.
+        output_format:
+          type: string
+          description: Default audio output format; values are service-defined (e.g. 'wav', 'pcm').
+        sample_rate:
+          anyOf:
+          - type: integer
+            minimum: 8000
+            maximum: 192000
+          - type: 'null'
+          description: Optional default output sample rate. Stored `null` is an allowed value meaning
+            the service chooses; it is not a deletion marker.
+        engine_options:
+          type: object
+          additionalProperties: true
+          description: Engine-specific option passthrough, shallow-merged under request-level
+            `engine_options` during generation (request keys win). The engine-options extension point is
+            unchanged.
+      additionalProperties: false
+      description: 'opal-say compartment: generation defaults migrated from the v2 flat profile fields
+        `voice_id`, `speed`, `volume`, `output_format`, `sample_rate`, `engine_options`. All fields are
+        optional overrides; omission inherits.'
+    OpalSayProfileNamespacePatch:
+      type: object
+      properties:
+        voice_id:
+          anyOf:
+          - type: string
+            minLength: 1
+          - type: 'null'
+        speed:
+          anyOf:
+          - type: number
+            format: float
+            minimum: 0.25
+            maximum: 4.0
+          - type: 'null'
+        volume:
+          anyOf:
+          - type: number
+            format: float
+            minimum: 0.0
+            maximum: 2.0
+          - type: 'null'
+        output_format:
+          anyOf:
+          - type: string
+          - type: 'null'
+        sample_rate:
+          anyOf:
+          - type: integer
+            minimum: 8000
+            maximum: 192000
+          - type: 'null'
+        engine_options:
+          anyOf:
+          - type: object
+            additionalProperties: true
+          - type: 'null'
+      additionalProperties: false
+      description: 'Patch form of the opal-say compartment. Supplied fields merge field-wise; explicit
+        `null` removes that override and restores inheritance (`sample_rate` removal is equivalent to its
+        stored null value: the service chooses). Non-object values and undeclared fields are rejected.'
+    OpalListenProfileNamespace:
+      type: object
+      properties:
+        wakeword_names:
+          type: array
+          items:
+            type: string
+          title: Wakeword Names
+          description: Wakewords the recognition pipeline listens for by default.
+        confidence_thresholds:
+          type: object
+          additionalProperties: true
+          title: Confidence Thresholds
+          description: Per-intent or global minimum recognition confidence overrides.
+        vad_settings:
+          type: object
+          additionalProperties: true
+          title: Vad Settings
+          description: Voice-activity-detection overrides used by the recognition pipeline.
+        enabled_intents:
+          type: array
+          items:
+            type: string
+          title: Enabled Intents
+          description: Intent identifiers enabled by default.
+        enabled_slots:
+          type: array
+          items:
+            type: string
+          title: Enabled Slots
+          description: Slot identifiers enabled by default.
+        model_paths:
+          type: object
+          additionalProperties:
+            type: string
+          title: Model Paths
+          description: Named model-resource path overrides (e.g. stt, tts-adjacent assets).
+      additionalProperties: false
+      description: 'opal-listen compartment: recognition defaults migrated from the v2 flat profile
+        fields `wakeword_names`, `confidence_thresholds`, `vad_settings`, `enabled_intents`,
+        `enabled_slots`, `model_paths`. All fields are optional overrides; omission inherits.'
+    OpalListenProfileNamespacePatch:
+      type: object
+      properties:
+        wakeword_names:
+          anyOf:
+          - type: array
+            items:
+              type: string
+          - type: 'null'
+          title: Wakeword Names
+        confidence_thresholds:
+          anyOf:
+          - type: object
+            additionalProperties: true
+          - type: 'null'
+          title: Confidence Thresholds
+        vad_settings:
+          anyOf:
+          - type: object
+            additionalProperties: true
+          - type: 'null'
+          title: Vad Settings
+        enabled_intents:
+          anyOf:
+          - type: array
+            items:
+              type: string
+          - type: 'null'
+          title: Enabled Intents
+        enabled_slots:
+          anyOf:
+          - type: array
+            items:
+              type: string
+          - type: 'null'
+          title: Enabled Slots
+        model_paths:
+          anyOf:
+          - type: object
+            additionalProperties:
+              type: string
+          - type: 'null'
+          title: Model Paths
+      additionalProperties: false
+      description: 'Patch form of the opal-listen compartment. Supplied fields merge field-wise; arrays
+        replace as whole values; explicit `null` removes that override and restores inheritance.'
+    OpalLookProfileNamespace:
+      type: object
+      additionalProperties: false
+      description: 'opal-look compartment. Look currently declares no profile-specific defaults; this is
+        an explicit empty closed schema so the compartment is registered, validated and round-tripped.
+        Fields added later must be declared here before they are accepted.'
+    OpalLookProfileNamespacePatch:
+      type: object
+      additionalProperties: false
+      description: Patch form of the opal-look compartment. No fields are declared; any member is
+        rejected until a declared field exists.
+    OpalThinkProfileNamespace:
+      type: object
+      additionalProperties: false
+      description: 'opal-think compartment. Think currently declares no profile-specific defaults; this
+        is an explicit empty closed schema so the compartment is registered, validated and
+        round-tripped.'
+    OpalThinkProfileNamespacePatch:
+      type: object
+      additionalProperties: false
+      description: Patch form of the opal-think compartment. No fields are declared; any member is
+        rejected until a declared field exists.
+    OpalEventProfileNamespace:
+      type: object
+      additionalProperties: false
+      description: 'opal-event compartment. Event currently declares no profile-specific defaults; this
+        is an explicit empty closed schema so the compartment is registered, validated and
+        round-tripped.'
+    OpalEventProfileNamespacePatch:
+      type: object
+      additionalProperties: false
+      description: Patch form of the opal-event compartment. No fields are declared; any member is
+        rejected until a declared field exists.
+    OpalYoloProfileNamespace:
+      type: object
+      additionalProperties: false
+      description: 'opal-look-yolo compartment. The nested YOLO engine adapter currently declares no
+        profile-specific defaults; this is an explicit empty closed schema so the engine compartment is
+        registered, validated and round-tripped like every other runtime module.'
+    OpalYoloProfileNamespacePatch:
+      type: object
+      additionalProperties: false
+      description: Patch form of the opal-look-yolo compartment. No fields are declared; any member is
+        rejected until a declared field exists.
+
     OpalEngine:
       type: object
       properties:

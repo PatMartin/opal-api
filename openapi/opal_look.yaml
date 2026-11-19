@@ -1474,8 +1474,8 @@ x-opal-authorization:
   $ref: './shared/opal_kernel.yaml#/x-opal-authorization'
 x-opal-profile-namespace:
   compartment: opal-look
-  schema: './shared/opal_profiles.yaml#/components/schemas/OpalLookProfileNamespace'
-  patch_schema: './shared/opal_profiles.yaml#/components/schemas/OpalLookProfileNamespacePatch'
+  schema: './shared/opal_kernel.yaml#/components/schemas/OpalLookProfileNamespace'
+  patch_schema: './shared/opal_kernel.yaml#/components/schemas/OpalLookProfileNamespacePatch'
   description: >-
     Declares this module's compartment key in namespaced profiles and the
     schemas that validate it. Look declares no profile-specific defaults; the

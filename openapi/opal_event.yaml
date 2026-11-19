@@ -2643,8 +2643,8 @@ x-opal-authorization:
       bypass endpoint/destination restrictions.
 x-opal-profile-namespace:
   compartment: opal-event
-  schema: './shared/opal_profiles.yaml#/components/schemas/OpalEventProfileNamespace'
-  patch_schema: './shared/opal_profiles.yaml#/components/schemas/OpalEventProfileNamespacePatch'
+  schema: './shared/opal_kernel.yaml#/components/schemas/OpalEventProfileNamespace'
+  patch_schema: './shared/opal_kernel.yaml#/components/schemas/OpalEventProfileNamespacePatch'
   description: >-
     Declares this module's compartment key in namespaced profiles and the
     schemas that validate it. Event declares no profile-specific defaults; the

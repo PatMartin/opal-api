@@ -1470,8 +1470,8 @@ x-opal-event-integration:
 x-opal-authorization: {$ref: './shared/opal_kernel.yaml#/x-opal-authorization'}
 x-opal-profile-namespace:
   compartment: opal-think
-  schema: './shared/opal_profiles.yaml#/components/schemas/OpalThinkProfileNamespace'
-  patch_schema: './shared/opal_profiles.yaml#/components/schemas/OpalThinkProfileNamespacePatch'
+  schema: './shared/opal_kernel.yaml#/components/schemas/OpalThinkProfileNamespace'
+  patch_schema: './shared/opal_kernel.yaml#/components/schemas/OpalThinkProfileNamespacePatch'
   description: >-
     Declares this module's compartment key in namespaced profiles and the
     schemas that validate it. Think declares no profile-specific defaults; the

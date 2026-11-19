@@ -10,7 +10,7 @@ deterministically on migration (below).
 | Area | v2.x | v3.0.0 |
 | --- | --- | --- |
 | Profile shape | One open object unioning every service's fields | Closed envelope `{id, name, description, is_active, created_at, updated_at, shared, modules}` |
-| Operational fields | Top-level on the profile | Inside `modules.<module-id>` compartments; each module's fields declared by its own closed schema in `openapi/shared/opal_profiles.yaml` |
+| Operational fields | Top-level on the profile | Inside `modules.<module-id>` compartments; each module's fields declared by its own closed schema in `openapi/shared/opal_kernel.yaml` |
 | Ownership declaration | `x-opal-profile-fields` (flat field list per service) | `x-opal-profile-namespace` (compartment key + schema refs) |
 | Field defaults on create | JSON Schema `default:` annotations stored literal values | Every compartment field is an optional override; omission means *inherit* (shared → service default). No create-time defaults inside compartments |
 | Engine coverage | `opal-look-yolo` had no profile surface | Same six profile operations mounted as every runtime module; explicit empty `opal-look-yolo` compartment |
@@ -122,7 +122,7 @@ module-override mapping here.
 ## Validation and portability
 
 - `shared` and every declared compartment validate structurally against the
-  closed `opal_profiles.yaml` schemas (misspelled fields in a recognized
+  closed kernel namespace schemas (misspelled fields in a recognized
   compartment are rejected).
 - The receiving service additionally validates its own compartment's local
   references semantically (e.g. opal-say checks `voice_id` resolvability).
