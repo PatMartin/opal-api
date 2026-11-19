@@ -2,7 +2,7 @@ openapi: 3.1.0
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 info:
   title: OPAL YOLO — Simplified Inference Adapter API
-  version: 4.0.0-mvp-plus
+  version: '5.0.0-mvp-plus'
   description: Standalone Ultralytics YOLO engine adapter for the OPAL Look MVP Plus. This engine owns YOLO model
     discovery, loading, local compute-device discovery, and image/frame inference. OPAL Look owns RTSP decoding,
     stream lifecycle, SSE, MJPEG rendering, snapshots and stream metrics. No opal-devices dependency. Native YOLO
@@ -20,6 +20,7 @@ tags:
 - name: models
 - name: hardware
 - name: predict
+- name: persona
 - name: profiles
   description: 'Reusable namespaced configuration profiles; at most one is locally active.
     This adapter declares no compartment fields today (`modules.opal-look-yolo` is an
@@ -557,6 +558,12 @@ paths:
     $ref: '../shared/opal_kernel.yaml#/components/pathItems/service_stop'
   /api/v1/service/log:
     $ref: '../shared/opal_kernel.yaml#/components/pathItems/service_log'
+  /api/v1/persona/:
+    $ref: '../shared/opal_kernel.yaml#/components/pathItems/persona_collection'
+  /api/v1/persona/{persona_id}:
+    $ref: '../shared/opal_kernel.yaml#/components/pathItems/persona_item'
+  /api/v1/persona/{persona_id}/validate:
+    $ref: '../shared/opal_kernel.yaml#/components/pathItems/persona_validate'
 components:
   securitySchemes:
     BearerAuth:
@@ -1112,6 +1119,7 @@ x-opal-snapshot:
   - '1.0.0'
   resources:
   - profiles
+  - personas
   - engines
   - models
   description: >-

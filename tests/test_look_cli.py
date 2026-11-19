@@ -212,14 +212,20 @@ def main():
     check("source_redacted" in (status.get("required") or []),
           "StreamStatus requires source_redacted")
 
-    # MVP Plus scope guards: personas, event bus, sources/observations/recording
-    # are out of scope.
+    # MVP Plus scope guards: event bus, sources/observations/recording are out
+    # of scope. The shared persona management surface is in scope (mounted via
+    # the kernel) - look adds no persona-specific bindings.
+    shared_persona = {"/api/v1/persona/", "/api/v1/persona/{persona_id}",
+                      "/api/v1/persona/{persona_id}/validate"}
     forbidden = [p for p in paths if any(
         p.startswith(f"/api/v1{s}") for s in (
             "/persona", "/event", "/observation", "/recording", "/source",
             "/monitor", "/pipeline", "/job", "/media", "/capture",
-            "/artifact", "/zone", "/rule", "/session"))]
+            "/artifact", "/zone", "/rule", "/session"))
+        and p not in shared_persona]
     check(not forbidden, f"out-of-scope paths absent ({forbidden[:4]})")
+    check(shared_persona <= set(paths),
+          "shared persona management surface is mounted")
 
     sys.exit(1 if failures else 0)
 

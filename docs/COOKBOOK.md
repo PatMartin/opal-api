@@ -27,7 +27,7 @@ The kernel's `x-opal-cli-format` extension defines the shape of every command:
 opal <service> [parent] [group] <command>
 ```
 
-Look and Think annotate every operation with `x-opal-cli`, so their command names come straight from the contracts. Event, Listen, and Say annotate only their `config`, `config setting`, and `service` commands; the shared kernel owns the `config`/`config setting` bindings for every module, mounted through `$ref`ed Path Items. For the rest, this cookbook proposes names that follow the same kernel format and the Look/Think vocabulary (`list`, `add`, `show`, `update`, `remove`, plus explicit verbs for operations). Proposed names are marked with **†** in the command tables.
+Look and Think annotate every operation with `x-opal-cli`, so their command names come straight from the contracts. The shared kernel owns the `config`/`config setting`, `info health`, `service`, `profile`, and `persona` bindings for every module, mounted through `$ref`ed Path Items. For the rest, this cookbook proposes names that follow the same kernel format and the Look/Think vocabulary (`list`, `add`, `show`, `update`, `remove`, plus explicit verbs for operations). Proposed names are marked with **†** in the command tables.
 
 ### How options are named
 
@@ -107,6 +107,9 @@ opal say
 │       └── /validate                       POST
 ├── /generate                               POST
 │   └── /stream                             POST
+├── /persona/                               GET, POST
+│   └── /{persona_id}                       GET, PATCH, DELETE
+│       └── /validate                       POST
 ├── /setting/                               GET
 │   └── /{key}                              GET, PUT, DELETE
 ├── /health/                                GET
@@ -145,12 +148,12 @@ opal say
 | `opal say profile update` † | `<profile_id>`, `--if-match ETAG`, `--in FILE`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--shared FILE`, `--module FILE` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
 | `opal say profile remove` † | `<profile_id>`, `--if-match ETAG` | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
 | `opal say profile activate` † | `<profile_id>`, `--if-match ETAG` | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
-| `opal say persona list` † | `--enabled/--no-enabled` | List Personas. `GET /api/v1/persona/` |
-| `opal say persona add` † | `--if-match ETAG`, `--persona-id ID`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Create Persona. `POST /api/v1/persona/` |
-| `opal say persona validate` † | `<persona_id>` | Validate Persona. `POST /api/v1/persona/{persona_id}/validate` |
-| `opal say persona show` † | `<persona_id>` | Get Persona. `GET /api/v1/persona/{persona_id}` |
-| `opal say persona update` † | `<persona_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Update Persona. `PATCH /api/v1/persona/{persona_id}` |
-| `opal say persona remove` † | `<persona_id>`, `--if-match ETAG` | Delete Persona. `DELETE /api/v1/persona/{persona_id}` |
+| `opal say persona list` | `--enabled/--no-enabled` | List Personas. `GET /api/v1/persona/` |
+| `opal say persona add` | `--if-match ETAG`, `--persona-id ID`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Create Persona. `POST /api/v1/persona/` |
+| `opal say persona validate` | `<persona_id>` | Validate Persona. `POST /api/v1/persona/{persona_id}/validate` |
+| `opal say persona show` | `<persona_id>` | Get Persona. `GET /api/v1/persona/{persona_id}` |
+| `opal say persona update` | `<persona_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Update Persona. `PATCH /api/v1/persona/{persona_id}` |
+| `opal say persona remove` | `<persona_id>`, `--if-match ETAG` | Delete Persona. `DELETE /api/v1/persona/{persona_id}` |
 | `opal say generate` † | `<text>`, `--profile-id ID`, `--voice-id ID`, `--persona-id ID`, `--engine-id ID`, `--speed FLOAT`, `--volume FLOAT`, `--sample-rate INT`, `--engine-options JSON`, `--output-format [wav\|pcm]`, `--out PATH`, `--play` | Synthesize completed WAV or raw PCM audio from text. `POST /api/v1/generate` |
 | `opal say stream` † | `<text>`, `--profile-id ID`, `--voice-id ID`, `--persona-id ID`, `--engine-id ID`, `--speed FLOAT`, `--volume FLOAT`, `--sample-rate INT`, `--engine-options JSON`, `--out PATH`, `--play` | Synthesize progressive raw `s16le` mono PCM from text. `POST /api/v1/generate/stream` |
 | `opal say config save` | `--out FILE` | Save snapshot to managed store or file. `POST /api/v1/config/save` |
@@ -317,12 +320,12 @@ opal listen
 | `opal listen service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
 | `opal listen service stop` | — | Stop service. `POST /api/v1/service/stop` |
 | `opal listen service log` | `--lines INT` | Tail service log. `GET /api/v1/service/log` |
-| `opal listen persona list` † | `--enabled/--no-enabled` | List Personas. `GET /api/v1/persona/` |
-| `opal listen persona add` † | `--if-match ETAG`, `--persona-id ID`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Create Persona. `POST /api/v1/persona/` |
-| `opal listen persona validate` † | `<persona_id>` | Validate Persona. `POST /api/v1/persona/{persona_id}/validate` |
-| `opal listen persona show` † | `<persona_id>` | Get Persona. `GET /api/v1/persona/{persona_id}` |
-| `opal listen persona update` † | `<persona_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Update Persona. `PATCH /api/v1/persona/{persona_id}` |
-| `opal listen persona remove` † | `<persona_id>`, `--if-match ETAG` | Delete Persona. `DELETE /api/v1/persona/{persona_id}` |
+| `opal listen persona list` | `--enabled/--no-enabled` | List Personas. `GET /api/v1/persona/` |
+| `opal listen persona add` | `--if-match ETAG`, `--persona-id ID`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Create Persona. `POST /api/v1/persona/` |
+| `opal listen persona validate` | `<persona_id>` | Validate Persona. `POST /api/v1/persona/{persona_id}/validate` |
+| `opal listen persona show` | `<persona_id>` | Get Persona. `GET /api/v1/persona/{persona_id}` |
+| `opal listen persona update` | `<persona_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Update Persona. `PATCH /api/v1/persona/{persona_id}` |
+| `opal listen persona remove` | `<persona_id>`, `--if-match ETAG` | Delete Persona. `DELETE /api/v1/persona/{persona_id}` |
 
 † Proposed name; the operation has no `x-opal-cli` annotation yet.
 
@@ -341,6 +344,7 @@ opal look
 ├── hardware              list | show
 ├── stream                start | list | show | stop | watch | watch-video | snapshot | metrics
 ├── profile               list | add | show | update | remove | activate
+├── persona               list | add | validate | show | update | remove
 ├── config
 │   ├── save                [--out FILE]
 │   ├── load                [--in FILE]
@@ -428,6 +432,12 @@ opal look
 | `opal look profile update` | `<profile_id>`, `--if-match ETAG`, `--in FILE`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--shared FILE`, `--module FILE` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
 | `opal look profile remove` | `<profile_id>`, `--if-match ETAG` | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
 | `opal look profile activate` | `<profile_id>`, `--if-match ETAG` | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
+| `opal look persona list` | `--enabled/--no-enabled` | List personas. `GET /api/v1/persona/` |
+| `opal look persona add` | `--if-match ETAG`, `--persona-id ID`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Create persona. `POST /api/v1/persona/` |
+| `opal look persona validate` | `<persona_id>` | Validate persona. `POST /api/v1/persona/{persona_id}/validate` |
+| `opal look persona show` | `<persona_id>` | Get persona. `GET /api/v1/persona/{persona_id}` |
+| `opal look persona update` | `<persona_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Update persona. `PATCH /api/v1/persona/{persona_id}` |
+| `opal look persona remove` | `<persona_id>`, `--if-match ETAG` | Delete persona. `DELETE /api/v1/persona/{persona_id}` |
 | `opal look info health` | — | Service health report (name, version, api_version, status, live, ready, details). `GET /api/v1/health/` |
 | `opal look service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
 | `opal look service stop` | — | Stop service. `POST /api/v1/service/stop` |
@@ -636,12 +646,12 @@ opal event
 | `opal event service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
 | `opal event service stop` | — | Stop service. `POST /api/v1/service/stop` |
 | `opal event service log` | `--lines INT` | Tail service log. `GET /api/v1/service/log` |
-| `opal event persona list` † | `--enabled/--no-enabled` | List Personas. `GET /api/v1/persona/` |
-| `opal event persona add` † | `--if-match ETAG`, `--persona-id ID`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Create Persona. `POST /api/v1/persona/` |
-| `opal event persona validate` † | `<persona_id>` | Validate Persona. `POST /api/v1/persona/{persona_id}/validate` |
-| `opal event persona show` † | `<persona_id>` | Get Persona. `GET /api/v1/persona/{persona_id}` |
-| `opal event persona update` † | `<persona_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Update Persona. `PATCH /api/v1/persona/{persona_id}` |
-| `opal event persona remove` † | `<persona_id>`, `--if-match ETAG` | Delete Persona. `DELETE /api/v1/persona/{persona_id}` |
+| `opal event persona list` | `--enabled/--no-enabled` | List Personas. `GET /api/v1/persona/` |
+| `opal event persona add` | `--if-match ETAG`, `--persona-id ID`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Create Persona. `POST /api/v1/persona/` |
+| `opal event persona validate` | `<persona_id>` | Validate Persona. `POST /api/v1/persona/{persona_id}/validate` |
+| `opal event persona show` | `<persona_id>` | Get Persona. `GET /api/v1/persona/{persona_id}` |
+| `opal event persona update` | `<persona_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Update Persona. `PATCH /api/v1/persona/{persona_id}` |
+| `opal event persona remove` | `<persona_id>`, `--if-match ETAG` | Delete Persona. `DELETE /api/v1/persona/{persona_id}` |
 
 † Proposed name; the operation has no `x-opal-cli` annotation yet.
 

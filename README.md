@@ -255,10 +255,10 @@ Routes use `/api/v1`, singular resource names, and trailing slashes on collectio
 | Configuration | `POST /api/v1/config/save`, `POST /api/v1/config/load`, `POST /api/v1/config/validate` — save/load/validate a portable configuration snapshot (managed store or client file) |
 | Settings | `GET /api/v1/setting/`; `GET`/`PUT`/`DELETE /api/v1/setting/{key}` |
 | Profiles | Collection and item CRUD (create, read, update, delete), plus activation |
-| Personas | Collection and item CRUD, plus service-local binding validation (Event, Listen, Say, and Think; Look has no persona surface in the MVP Plus contract) |
+| Personas | Collection and item CRUD, plus service-local binding validation — mounted by every module including Look and Look-YOLO |
 | Service lifecycle | `POST /api/v1/service/start`, `POST /api/v1/service/stop`, `GET /api/v1/service/log` |
 
-Say and Look also expose engine listing and item read/update operations. Every published module contract — the five services and the nested Look-YOLO engine adapter — mounts the same seven configuration operations defined once in the kernel: `config save`, `config load`, `config validate`, and `config setting list|show|set|remove`. Persona operations are defined in each media service using shared schemas rather than mounted kernel Path Items.
+Say and Look also expose engine listing and item read/update operations. Every published module contract — the five services and the nested Look-YOLO engine adapter — mounts the same seven configuration operations defined once in the kernel: `config save`, `config load`, `config validate`, and `config setting list|show|set|remove`. Persona operations are mounted from the kernel's `persona_collection`, `persona_item`, and `persona_validate` Path Items with kernel-owned `persona` CLI bindings.
 
 ### Correlation, concurrency, and errors
 

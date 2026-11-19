@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OPAL Look — MVP Plus Visual Observation API
-  version: 4.0.0
+  version: '5.0.0'
   description: |
     Clean-cut replacement contract for OPAL Look. Video-only RTSP streams work
     with no AI engine installed; YOLO, RF-DETR, RT-DETR and D-FINE are optional
@@ -44,6 +44,7 @@ tags:
   description: Engine-local compute devices (cpu, gpu, accelerator).
 - name: streams
   description: Ephemeral RTSP video-only or inference sessions with SSE metadata, MJPEG viewing, snapshots and metrics.
+- name: persona
 - name: profiles
   description: 'Reusable namespaced configuration profiles; at most one is locally active.
     Look declares no compartment fields today (`modules.opal-look` is an explicit empty
@@ -914,6 +915,12 @@ paths:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/service_stop'
   /api/v1/service/log:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/service_log'
+  /api/v1/persona/:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/persona_collection'
+  /api/v1/persona/{persona_id}:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/persona_item'
+  /api/v1/persona/{persona_id}/validate:
+    $ref: './shared/opal_kernel.yaml#/components/pathItems/persona_validate'
 components:
   securitySchemes:
     BearerAuth:
@@ -1429,7 +1436,9 @@ x-opal-mvp-rules:
     auth beyond loopback.
   decoding: Decode a source once per stream and fan frames out to consumers; viewing must not establish a new RTSP connection.
   bounded_resources: Bound frame queues and stream admission; stopping releases resources; stale replays fail explicitly.
-  scope: No opal-devices, recording, pipelines, tracking, jobs, personas, event bus, training, or model downloads in MVP Plus.
+  scope: No opal-devices, recording, pipelines, tracking, jobs, event bus, training, or model downloads
+    in MVP Plus. Persona support is limited to the shared management surface (catalog CRUD plus
+    validate) and identity/enabled checks; look-specific persona bindings are out of scope.
 x-opal-health-details:
   version: '1.0'
   description: >-
@@ -1444,6 +1453,7 @@ x-opal-snapshot:
   - '1.0.0'
   resources:
   - profiles
+  - personas
   - engines
   - models
   description: >-
@@ -1452,4 +1462,4 @@ x-opal-snapshot:
     `OpalConfigSnapshot` envelope and the declared `module` identity and resource
     sections; wrong-module, unsupported-version, and unknown-section snapshots are
     rejected. Snapshots carry persistent desired configuration only:
-    profiles, engines, models; never runtime history, sessions, streams, binaries, or secrets.
+    profiles, personas, engines, models; never runtime history, sessions, streams, binaries, or secrets.

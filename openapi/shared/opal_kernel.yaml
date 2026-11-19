@@ -4,7 +4,7 @@
 openapi: 3.1.0
 info:
   title: OPAL Suite Kernel
-  version: 4.0.0
+  version: '5.0.0'
   description: 'Shared contract kernel for the OPAL suite (SUITE STANDARD v3.0.0).
 
 
@@ -62,7 +62,8 @@ x-opal-cli-format:
     command `opal <service> [parent] [group] <command>`; `aliases` names alternate complete spellings that dispatch
     to the same operation (e.g. Think's `ask`/`chat`/`create` invoke `task add`). Kernel Path Items carry
     per-operation descriptors directly and are the single source of truth for shared-operation bindings,
-    including all `config`/`config setting`, `info`, `service`, and `profile` commands. Readers hoist
+    including all `config`/`config setting`, `info`, `service`, `profile`, and `persona` commands.
+    Readers hoist
     a path-level
     per-method map onto each
     operation for module-declared mounts; both forms carry the same descriptor shape.
@@ -2770,6 +2771,380 @@ components:
             $ref: '#/components/responses/UnprocessableEntity'
           '428':
             $ref: '#/components/responses/PreconditionRequired'
+    persona_collection:
+      parameters:
+      - $ref: '#/components/parameters/OpalSessionIdParameter'
+      - $ref: '#/components/parameters/OpalTransactionIdParameter'
+      - $ref: '#/components/parameters/OpalRequestIdParameter'
+      - $ref: '#/components/parameters/OpalCausationIdParameter'
+      get:
+        tags:
+        - persona
+        summary: List personas
+        operationId: opal_persona_list
+        description: 'List the personas registered in this service''s local catalog. A persona is a
+          named identity that binds an OPAL Say voice (and, in future contract versions,
+          per-service fragments for sister services) so requests can select a consistent identity
+          by `persona_id`. Returns the complete bounded collection; pagination is not supported.
+          The optional `enabled` query parameter filters by enabled state; omission returns the
+          unfiltered catalog.'
+        parameters:
+        - name: enabled
+          in: query
+          required: false
+          description: If supplied, filter by enabled state.
+          schema:
+            type: boolean
+        responses:
+          '200':
+            description: Registered personas.
+            headers:
+              X-Opal-Session-Id:
+                $ref: '#/components/headers/OpalSessionIdHeader'
+              X-Opal-Transaction-Id:
+                $ref: '#/components/headers/OpalTransactionIdHeader'
+              X-Opal-Request-Id:
+                $ref: '#/components/headers/OpalRequestIdHeader'
+              X-Opal-Causation-Id:
+                $ref: '#/components/headers/OpalCausationIdHeader'
+              ETag:
+                $ref: '#/components/headers/ETag'
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/OpalPersonaRead'
+          '401':
+            $ref: '#/components/responses/Unauthorized'
+          '403':
+            $ref: '#/components/responses/Forbidden'
+          '422':
+            $ref: '#/components/responses/UnprocessableEntity'
+        x-opal-cli:
+          group: persona
+          command: list
+          options:
+          - flag: --enabled
+            description: Include only enabled personas.
+            binds:
+              kind: query
+              target: enabled
+          - flag: --no-enabled
+            description: Send enabled=false; include only disabled personas.
+            binds:
+              kind: query
+              target: enabled
+      post:
+        tags:
+        - persona
+        summary: Create persona
+        operationId: opal_persona_create
+        description: 'Register a persona in the receiving service''s local catalog. OPAL Think hosts
+          the authoritative registry (see `x-opal-persona`); every service accepts local creation
+          for standalone operation and owner records win on conflict where an owner is configured.
+          Referenced bindings SHOULD resolve locally: opal-say rejects an unregistered `voice_id`
+          with 404; services without resolvable bindings treat the reference as opaque. Strong
+          If-Match on the current catalog revision is mandatory; a missing precondition is 428 and
+          a stale revision is 412.'
+        parameters:
+        - $ref: '#/components/parameters/IfMatch'
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpalPersonaCreate'
+        responses:
+          '201':
+            description: Persona created.
+            headers:
+              X-Opal-Session-Id:
+                $ref: '#/components/headers/OpalSessionIdHeader'
+              X-Opal-Transaction-Id:
+                $ref: '#/components/headers/OpalTransactionIdHeader'
+              X-Opal-Request-Id:
+                $ref: '#/components/headers/OpalRequestIdHeader'
+              X-Opal-Causation-Id:
+                $ref: '#/components/headers/OpalCausationIdHeader'
+              ETag:
+                $ref: '#/components/headers/ETag'
+              Location:
+                $ref: '#/components/headers/Location'
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/OpalPersonaRead'
+          '401':
+            $ref: '#/components/responses/Unauthorized'
+          '403':
+            $ref: '#/components/responses/Forbidden'
+          '404':
+            $ref: '#/components/responses/NotFound'
+          '409':
+            $ref: '#/components/responses/Conflict'
+          '412':
+            $ref: '#/components/responses/PreconditionFailed'
+          '422':
+            $ref: '#/components/responses/UnprocessableEntity'
+          '428':
+            $ref: '#/components/responses/PreconditionRequired'
+        x-opal-cli:
+          group: persona
+          command: add
+          options:
+          - flag: --if-match
+            value: ETAG
+            description: Strong If-Match precondition on the current catalog revision (required).
+            binds:
+              kind: header
+              target: If-Match
+          - flag: --persona-id
+            value: ID
+            required: true
+            binds:
+              kind: body
+              target: persona_id
+          - flag: --name
+            value: TEXT
+            required: true
+            binds:
+              kind: body
+              target: name
+          - flag: --description
+            value: TEXT
+            binds:
+              kind: body
+              target: description
+          - flag: --voice-id
+            value: ID
+            binds:
+              kind: body
+              target: voice_id
+          - flag: --enabled
+            binds:
+              kind: body
+              target: enabled
+          - flag: --no-enabled
+            binds:
+              kind: body
+              target: enabled
+    persona_item:
+      parameters:
+      - $ref: '#/components/parameters/OpalSessionIdParameter'
+      - $ref: '#/components/parameters/OpalTransactionIdParameter'
+      - $ref: '#/components/parameters/OpalRequestIdParameter'
+      - $ref: '#/components/parameters/OpalCausationIdParameter'
+      - $ref: '#/components/parameters/OpalPersonaIdParameter'
+      get:
+        tags:
+        - persona
+        summary: Get persona
+        operationId: opal_persona_get
+        description: 'Return one persona record from the local catalog. Consumers configured with
+          an owner resolve unknown personas against the authoritative registry and revalidate the
+          cached ETag (see `x-opal-persona`).'
+        responses:
+          '200':
+            description: Persona record.
+            headers:
+              X-Opal-Session-Id:
+                $ref: '#/components/headers/OpalSessionIdHeader'
+              X-Opal-Transaction-Id:
+                $ref: '#/components/headers/OpalTransactionIdHeader'
+              X-Opal-Request-Id:
+                $ref: '#/components/headers/OpalRequestIdHeader'
+              X-Opal-Causation-Id:
+                $ref: '#/components/headers/OpalCausationIdHeader'
+              ETag:
+                $ref: '#/components/headers/ETag'
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/OpalPersonaRead'
+          '401':
+            $ref: '#/components/responses/Unauthorized'
+          '403':
+            $ref: '#/components/responses/Forbidden'
+          '404':
+            $ref: '#/components/responses/NotFound'
+          '422':
+            $ref: '#/components/responses/UnprocessableEntity'
+        x-opal-cli:
+          group: persona
+          command: show
+      patch:
+        tags:
+        - persona
+        summary: Update persona
+        operationId: opal_persona_patch
+        description: 'Partially update one local persona record under the `OpalPersonaUpdate` rules:
+          field-wise merge, `null` clears a nullable field, atomic application. Strong If-Match is
+          mandatory. 409 reports a conflicting update - for example a binding change published by
+          opal-say that conflicts with its registry state.'
+        parameters:
+        - $ref: '#/components/parameters/IfMatch'
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpalPersonaUpdate'
+        responses:
+          '200':
+            description: Updated persona.
+            headers:
+              X-Opal-Session-Id:
+                $ref: '#/components/headers/OpalSessionIdHeader'
+              X-Opal-Transaction-Id:
+                $ref: '#/components/headers/OpalTransactionIdHeader'
+              X-Opal-Request-Id:
+                $ref: '#/components/headers/OpalRequestIdHeader'
+              X-Opal-Causation-Id:
+                $ref: '#/components/headers/OpalCausationIdHeader'
+              ETag:
+                $ref: '#/components/headers/ETag'
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/OpalPersonaRead'
+          '401':
+            $ref: '#/components/responses/Unauthorized'
+          '403':
+            $ref: '#/components/responses/Forbidden'
+          '404':
+            $ref: '#/components/responses/NotFound'
+          '409':
+            $ref: '#/components/responses/Conflict'
+          '412':
+            $ref: '#/components/responses/PreconditionFailed'
+          '422':
+            $ref: '#/components/responses/UnprocessableEntity'
+          '428':
+            $ref: '#/components/responses/PreconditionRequired'
+        x-opal-cli:
+          group: persona
+          command: update
+          options:
+          - flag: --if-match
+            value: ETAG
+            description: Strong If-Match precondition on the record revision (required).
+            binds:
+              kind: header
+              target: If-Match
+          - flag: --name
+            value: TEXT
+            binds:
+              kind: body
+              target: name
+          - flag: --description
+            value: TEXT
+            binds:
+              kind: body
+              target: description
+          - flag: --voice-id
+            value: ID
+            binds:
+              kind: body
+              target: voice_id
+          - flag: --enabled
+            binds:
+              kind: body
+              target: enabled
+          - flag: --no-enabled
+            binds:
+              kind: body
+              target: enabled
+      delete:
+        tags:
+        - persona
+        summary: Delete persona
+        operationId: opal_persona_delete
+        description: 'Delete this service''s local copy of one persona record; other services''
+          catalogs are unaffected. Returns a bodyless 204. Strong If-Match is mandatory.'
+        parameters:
+        - $ref: '#/components/parameters/IfMatch'
+        responses:
+          '204':
+            description: Persona deleted.
+            headers:
+              X-Opal-Session-Id:
+                $ref: '#/components/headers/OpalSessionIdHeader'
+              X-Opal-Transaction-Id:
+                $ref: '#/components/headers/OpalTransactionIdHeader'
+              X-Opal-Request-Id:
+                $ref: '#/components/headers/OpalRequestIdHeader'
+              X-Opal-Causation-Id:
+                $ref: '#/components/headers/OpalCausationIdHeader'
+              ETag:
+                $ref: '#/components/headers/ETag'
+          '401':
+            $ref: '#/components/responses/Unauthorized'
+          '403':
+            $ref: '#/components/responses/Forbidden'
+          '404':
+            $ref: '#/components/responses/NotFound'
+          '412':
+            $ref: '#/components/responses/PreconditionFailed'
+          '422':
+            $ref: '#/components/responses/UnprocessableEntity'
+          '428':
+            $ref: '#/components/responses/PreconditionRequired'
+        x-opal-cli:
+          group: persona
+          command: remove
+          options:
+          - flag: --if-match
+            value: ETAG
+            description: Strong If-Match precondition on the record revision (required).
+            binds:
+              kind: header
+              target: If-Match
+    persona_validate:
+      parameters:
+      - $ref: '#/components/parameters/OpalSessionIdParameter'
+      - $ref: '#/components/parameters/OpalTransactionIdParameter'
+      - $ref: '#/components/parameters/OpalRequestIdParameter'
+      - $ref: '#/components/parameters/OpalCausationIdParameter'
+      - $ref: '#/components/parameters/OpalPersonaIdParameter'
+      post:
+        tags:
+        - persona
+        summary: Validate persona
+        operationId: opal_persona_validate
+        description: 'Evaluate one local persona record against the receiving service''s rules and
+          return an `OpalValidationReport`. Read-only and service-local: no state changes. Each
+          service validates the bindings it understands - opal-say checks voice and engine
+          compatibility, opal-think checks its service-local model and instruction bindings,
+          opal-look and opal-look-yolo validate the registered identity and enabled state; foreign
+          bindings are opaque references. 404 means no such record; 422 reports invalid input.'
+        responses:
+          '200':
+            description: Validation report for the persona.
+            headers:
+              X-Opal-Session-Id:
+                $ref: '#/components/headers/OpalSessionIdHeader'
+              X-Opal-Transaction-Id:
+                $ref: '#/components/headers/OpalTransactionIdHeader'
+              X-Opal-Request-Id:
+                $ref: '#/components/headers/OpalRequestIdHeader'
+              X-Opal-Causation-Id:
+                $ref: '#/components/headers/OpalCausationIdHeader'
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/OpalValidationReport'
+          '401':
+            $ref: '#/components/responses/Unauthorized'
+          '403':
+            $ref: '#/components/responses/Forbidden'
+          '404':
+            $ref: '#/components/responses/NotFound'
+          '422':
+            $ref: '#/components/responses/UnprocessableEntity'
+        x-opal-cli:
+          group: persona
+          command: validate
     service_start:
       parameters:
       - $ref: '#/components/parameters/OpalSessionIdParameter'
