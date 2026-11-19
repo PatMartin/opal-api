@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Voice Intent API
-  version: 2.0.0
+  version: 3.0.0
   description: "Wakeword, STT, intent recognition, and slot extraction engine\n\n\
     OPAL SUITE STANDARD v2.0.0 (normative; follows the shared kernel version)\nX-Opal-Session-Id is an optional logical\
     \ context identifier; it does not create a server-managed session or grant authorization.\
@@ -1063,10 +1063,104 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
   /api/v1/profile/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profiles_collection'
+    x-opal-cli:
+      get:
+        group: profile
+        command: list
+      post:
+        group: profile
+        command: add
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: body
+            parse: yaml_or_json_file
+          description: Whole portable profile document; exclusive with --name/--shared/--module.
+        - flag: --name
+          value: NAME
+          binds:
+            kind: body
+            target: name
+        - flag: --description
+          value: TEXT
+          binds:
+            kind: body
+            target: description
+        - flag: --is-active/--no-is-active
+          binds:
+            kind: body
+            target: is_active
+        - flag: --shared
+          value: FILE
+          binds:
+            kind: local_in
+            target: shared
+            parse: yaml_or_json_file
+          description: Shared-values object merged into the submitted document.
+        - flag: --module
+          value: FILE
+          binds:
+            kind: local_in
+            target: modules.opal-listen
+            parse: yaml_or_json_file
+          description: This service's own compartment (wakeword_names, confidence_thresholds,
+            vad_settings, enabled_intents, enabled_slots, model_paths).
   /api/v1/profile/{profile_id}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_item'
+    x-opal-cli:
+      get:
+        group: profile
+        command: show
+      patch:
+        group: profile
+        command: update
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: body
+            parse: yaml_or_json_file
+          description: Patch document; exclusive with --name/--shared/--module.
+        - flag: --name
+          value: NAME
+          binds:
+            kind: body
+            target: name
+        - flag: --description
+          value: TEXT
+          binds:
+            kind: body
+            target: description
+        - flag: --is-active/--no-is-active
+          binds:
+            kind: body
+            target: is_active
+        - flag: --shared
+          value: FILE
+          binds:
+            kind: local_in
+            target: shared
+            parse: yaml_or_json_file
+        - flag: --module
+          value: FILE
+          binds:
+            kind: local_in
+            target: modules.opal-listen
+            parse: yaml_or_json_file
+          description: Partial own-compartment document; supplied fields merge field-wise,
+            unmentioned compartments are preserved.
+      delete:
+        group: profile
+        command: remove
   /api/v1/profile/{profile_id}/activate:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_activate'
+    x-opal-cli:
+      post:
+        group: profile
+        command: activate
   /api/v1/setting/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_collection'
     x-opal-cli:
@@ -3646,7 +3740,9 @@ tags:
 - name: config
   description: Save, load, validate, and inspect portable module configuration.
 - name: profiles
-  description: Reusable configuration profiles.
+  description: 'Reusable namespaced configuration profiles; at most one is locally active.
+    The active profile''s `shared` values and `modules.opal-listen` compartment supply
+    recognition defaults.'
 - name: failed_utterances
 - name: health
 - name: intents
@@ -3691,13 +3787,16 @@ x-opal-context-standard:
 security:
 - BearerAuth: []
 x-opal-authorization: {$ref: './shared/opal_kernel.yaml#/x-opal-authorization'}
-x-opal-profile-fields:
-- wakeword_names
-- confidence_thresholds
-- vad_settings
-- enabled_intents
-- enabled_slots
-- model_paths
+x-opal-profile-namespace:
+  compartment: opal-listen
+  schema: './shared/opal_profiles.yaml#/components/schemas/OpalListenProfileNamespace'
+  patch_schema: './shared/opal_profiles.yaml#/components/schemas/OpalListenProfileNamespacePatch'
+  description: >-
+    Declares this module's compartment key in namespaced profiles and the
+    schemas that validate it. Profile defaults migrated from the v2 flat
+    fields wakeword_names, confidence_thresholds, vad_settings,
+    enabled_intents, enabled_slots, model_paths; see
+    docs/PROFILE_MIGRATION.md.
 x-opal-snapshot:
   version: '1.0'
   module: opal-listen

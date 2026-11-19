@@ -274,13 +274,13 @@ The event envelope extension describes two ZeroMQ frames: a topic and a JSON env
 
 ### Profiles and personas
 
-A **profile** is a named preset of a service's operating defaults. A **persona** is an identity that can carry service-specific bindings, such as a Say voice. The kernel defines per-field resolution as:
+A **profile** is a portable document of named presets: a `shared` section plus one compartment per module (`modules.<module-id>`), stored locally by each service. At most one profile is locally active at a time; its shared values and the service's own compartment fill in settings a request leaves out. Compartment schemas are cataloged in `openapi/shared/opal_profiles.yaml` and keyed by canonical module identity; foreign compartments are preserved verbatim for transfer. A **persona** is an identity that can carry service-specific bindings, such as a Say voice. The kernel defines per-field resolution as:
 
 ```text
-explicit request field > persona binding > profile > service default
+explicit request field > persona binding > selected profile's module override > selected profile's shared value > service default
 ```
 
-The ownership contract names Think as the authoritative persona registry. Services can keep local records for standalone use or fetch and revalidate owner records when an owner URL is configured. Each service's persona validation reports its own binding resolvability. The concrete request schemas determine which bindings and selectors a service accepts.
+The ownership contract names Think as the authoritative persona registry. Services can keep local records for standalone use or fetch and revalidate owner records when an owner URL is configured. Each service's persona validation reports its own binding resolvability. The concrete request schemas determine which bindings and selectors a service accepts. The v2→v3 flat-to-namespaced profile migration is recorded in [docs/PROFILE_MIGRATION.md](docs/PROFILE_MIGRATION.md).
 
 ## Configuration
 

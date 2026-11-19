@@ -1,6 +1,6 @@
 """Contract regression tests for the unified opal_say.yaml (unified config save/load).
 
-Verifies the published 2.0.0 spec:
+Verifies the published 3.0.0 spec:
 - config/load requires strong If-Match with 412+428;
 - atomicity + validate-before-apply semantics are required, not SHOULD-optional.
 """
@@ -31,7 +31,7 @@ def param_names(op):
 def main():
     spec = spec_util.load(SPEC)
 
-    check(spec["info"]["version"] == "2.0.0", "info.version is 2.0.0")
+    check(spec["info"]["version"] == "3.0.0", "info.version is 3.0.0 (namespaced profile migration)")
 
     op = spec["paths"]["/api/v1/config/load"]["post"]
     names = param_names(op)

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OPAL Say API
-  version: 2.0.0
+  version: 3.0.0
   description: "Implementation-neutral text-to-speech (TTS) service for the OPAL suite.\n\nOPAL Say provides\
     \ a stable REST contract over one or more host-installed TTS\nengine such as Piper or Kokoro. Clients\
     \ interact with OPAL concepts—engine,\nvoice, profile, generation setting, and audio output—without\
@@ -54,11 +54,13 @@ tags:
 
     '
 - name: profiles
-  description: 'Manage reusable generation presets. Exactly one profile may be active at a time.
+  description: 'Manage reusable generation presets held as namespaced profile documents.
 
-    The active profile supplies defaults when a generation request does not name a
+    At most one profile is locally active at a time; the active profile''s `shared`
 
-    profile explicitly.
+    values and `modules.opal-say` compartment supply defaults when a generation
+
+    request does not name a profile explicitly.
 
     '
 - name: persona
@@ -555,10 +557,104 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/ServiceUnavailable'
   /api/v1/profile/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profiles_collection'
+    x-opal-cli:
+      get:
+        group: profile
+        command: list
+      post:
+        group: profile
+        command: add
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: body
+            parse: yaml_or_json_file
+          description: Whole portable profile document; exclusive with --name/--shared/--module.
+        - flag: --name
+          value: NAME
+          binds:
+            kind: body
+            target: name
+        - flag: --description
+          value: TEXT
+          binds:
+            kind: body
+            target: description
+        - flag: --is-active/--no-is-active
+          binds:
+            kind: body
+            target: is_active
+        - flag: --shared
+          value: FILE
+          binds:
+            kind: local_in
+            target: shared
+            parse: yaml_or_json_file
+          description: Shared-values object merged into the submitted document.
+        - flag: --module
+          value: FILE
+          binds:
+            kind: local_in
+            target: modules.opal-say
+            parse: yaml_or_json_file
+          description: This service's own compartment (voice_id, speed, volume, output_format,
+            sample_rate, engine_options).
   /api/v1/profile/{profile_id}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_item'
+    x-opal-cli:
+      get:
+        group: profile
+        command: show
+      patch:
+        group: profile
+        command: update
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: body
+            parse: yaml_or_json_file
+          description: Patch document; exclusive with --name/--shared/--module.
+        - flag: --name
+          value: NAME
+          binds:
+            kind: body
+            target: name
+        - flag: --description
+          value: TEXT
+          binds:
+            kind: body
+            target: description
+        - flag: --is-active/--no-is-active
+          binds:
+            kind: body
+            target: is_active
+        - flag: --shared
+          value: FILE
+          binds:
+            kind: local_in
+            target: shared
+            parse: yaml_or_json_file
+        - flag: --module
+          value: FILE
+          binds:
+            kind: local_in
+            target: modules.opal-say
+            parse: yaml_or_json_file
+          description: Partial own-compartment document; supplied fields merge field-wise,
+            unmentioned compartments are preserved.
+      delete:
+        group: profile
+        command: remove
   /api/v1/profile/{profile_id}/activate:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_activate'
+    x-opal-cli:
+      post:
+        group: profile
+        command: activate
   /api/v1/persona/:
     get:
       tags:
@@ -866,8 +962,10 @@ paths:
         \ text into multiple engine calls, but it\nMUST preserve the original text order and return one logically\
         \ continuous audio\nresult. Internal chunk boundaries are not part of the public API.\n\nGeneration\
         \ setting are resolved in this order, from lowest to highest precedence:\n\n1. Service defaults.\n\
-        2. The active profile, when `profile_id` is omitted and an active profile exists.\n3. The explicitly\
-        \ selected `profile_id`, when present.\n4. The `persona_id`'s bound voice, when `persona_id` is present\
+        2. The selected profile's `shared` values.\n3. The selected profile's `modules.opal-say` compartment\
+        \ (its voice_id, speed, volume, output_format, sample_rate and engine_options overrides). The\
+        \ selected profile is the active profile when `profile_id` is omitted and an active profile\
+        \ exists, else the explicitly selected `profile_id`.\n4. The `persona_id`'s bound voice, when `persona_id` is present\
         \ (voice field only).\n5. Fields supplied directly in this request.\n\nRequest-level\
         \ `engine_options` are shallow-merged over profile-level\n`engine_options`; request keys win. Other\
         \ request fields directly replace their\ncorresponding profile defaults.\n\nVoice and engine selection:\n\
@@ -1703,13 +1801,15 @@ x-opal-context-standard:
 security:
 - BearerAuth: []
 x-opal-authorization: {$ref: './shared/opal_kernel.yaml#/x-opal-authorization'}
-x-opal-profile-fields:
-- voice_id
-- speed
-- volume
-- output_format
-- sample_rate
-- engine_options
+x-opal-profile-namespace:
+  compartment: opal-say
+  schema: './shared/opal_profiles.yaml#/components/schemas/OpalSayProfileNamespace'
+  patch_schema: './shared/opal_profiles.yaml#/components/schemas/OpalSayProfileNamespacePatch'
+  description: >-
+    Declares this module's compartment key in namespaced profiles and the
+    schemas that validate it. Profile defaults migrated from the v2 flat
+    fields voice_id, speed, volume, output_format, sample_rate,
+    engine_options; see docs/PROFILE_MIGRATION.md.
 x-opal-snapshot:
   version: '1.0'
   module: opal-say

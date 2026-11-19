@@ -2,7 +2,7 @@ openapi: 3.1.0
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 info:
   title: OPAL YOLO — Simplified Inference Adapter API
-  version: 2.1.0-mvp-plus
+  version: 3.0.0-mvp-plus
   description: Standalone Ultralytics YOLO engine adapter for the OPAL Look MVP Plus. This engine owns YOLO model
     discovery, loading, local compute-device discovery, and image/frame inference. OPAL Look owns RTSP decoding,
     stream lifecycle, SSE, MJPEG rendering, snapshots and stream metrics. No opal-devices dependency. Native YOLO
@@ -21,6 +21,11 @@ tags:
 - name: models
 - name: hardware
 - name: predict
+- name: profiles
+  description: 'Reusable namespaced configuration profiles; at most one is locally active.
+    This adapter declares no compartment fields today (`modules.opal-look-yolo` is an
+    explicit empty schema), but profile records, selection and portability behave
+    suite-wide like every other runtime module.'
 - name: config
   description: Save, load, validate, and inspect portable module configuration.
 paths:
@@ -686,6 +691,105 @@ paths:
             kind: local_in
             target: snapshot
             parse: yaml_or_json_file
+  /api/v1/profile/:
+    $ref: '../shared/opal_kernel.yaml#/components/pathItems/profiles_collection'
+    x-opal-cli:
+      get:
+        group: profile
+        command: list
+      post:
+        group: profile
+        command: add
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: body
+            parse: yaml_or_json_file
+          description: Whole portable profile document; exclusive with --name/--shared/--module.
+        - flag: --name
+          value: NAME
+          binds:
+            kind: body
+            target: name
+        - flag: --description
+          value: TEXT
+          binds:
+            kind: body
+            target: description
+        - flag: --is-active/--no-is-active
+          binds:
+            kind: body
+            target: is_active
+        - flag: --shared
+          value: FILE
+          binds:
+            kind: local_in
+            target: shared
+            parse: yaml_or_json_file
+          description: Shared-values object merged into the submitted document.
+        - flag: --module
+          value: FILE
+          binds:
+            kind: local_in
+            target: modules.opal-look-yolo
+            parse: yaml_or_json_file
+          description: This service's own compartment (currently an empty closed schema).
+  /api/v1/profile/{profile_id}:
+    $ref: '../shared/opal_kernel.yaml#/components/pathItems/profile_item'
+    x-opal-cli:
+      get:
+        group: profile
+        command: show
+      patch:
+        group: profile
+        command: update
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: body
+            parse: yaml_or_json_file
+          description: Patch document; exclusive with --name/--shared/--module.
+        - flag: --name
+          value: NAME
+          binds:
+            kind: body
+            target: name
+        - flag: --description
+          value: TEXT
+          binds:
+            kind: body
+            target: description
+        - flag: --is-active/--no-is-active
+          binds:
+            kind: body
+            target: is_active
+        - flag: --shared
+          value: FILE
+          binds:
+            kind: local_in
+            target: shared
+            parse: yaml_or_json_file
+        - flag: --module
+          value: FILE
+          binds:
+            kind: local_in
+            target: modules.opal-look-yolo
+            parse: yaml_or_json_file
+          description: Partial own-compartment document; supplied fields merge field-wise,
+            unmentioned compartments are preserved.
+      delete:
+        group: profile
+        command: remove
+  /api/v1/profile/{profile_id}/activate:
+    $ref: '../shared/opal_kernel.yaml#/components/pathItems/profile_activate'
+    x-opal-cli:
+      post:
+        group: profile
+        command: activate
 components:
   securitySchemes:
     BearerAuth:
@@ -1244,12 +1348,23 @@ components:
         type: string
         minLength: 1
         maxLength: 128
+x-opal-profile-namespace:
+  compartment: opal-look-yolo
+  schema: '../shared/opal_profiles.yaml#/components/schemas/OpalYoloProfileNamespace'
+  patch_schema: '../shared/opal_profiles.yaml#/components/schemas/OpalYoloProfileNamespacePatch'
+  description: >-
+    Declares this module's compartment key in namespaced profiles and the
+    schemas that validate it. The adapter declares no profile-specific
+    defaults; the compartment is an explicit empty closed schema that
+    preserves the registered namespace for future fields. See
+    docs/PROFILE_MIGRATION.md.
 x-opal-snapshot:
   version: '1.0'
   module: opal-look-yolo
   format_versions:
   - '1.0.0'
   resources:
+  - profiles
   - engines
   - models
   description: >-
@@ -1257,7 +1372,7 @@ x-opal-snapshot:
     configuration snapshots. `config load`/`config validate` validate `snapshot` against the shared
     `OpalConfigSnapshot` envelope and the declared `module` identity and resource
     sections; wrong-module, unsupported-version, and unknown-section snapshots are
-    rejected. Snapshots carry persistent desired configuration only: engine
+    rejected. Snapshots carry persistent desired configuration only: profiles, engine
     configuration and model registry entries; never model binaries, loaded-model residency,
     hardware-discovery caches, or inference history.
 x-opal-authorization:

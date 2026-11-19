@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Opal Event API
-  version: 2.0.0
+  version: 3.0.0
   description: 'REST management and HTTP event ingress for opal-event-svc. API-first contract, release v1.
 
 
@@ -114,7 +114,9 @@ tags:
 - name: health
   description: Service readiness and health information.
 - name: profiles
-  description: Reusable configuration profiles.
+  description: 'Reusable namespaced configuration profiles; at most one is locally active.
+    Event declares no compartment fields today (`modules.opal-event` is an explicit empty
+    schema), but profile records, selection and portability behave suite-wide.'
 security:
 - BearerAuth: []
 paths:
@@ -1232,10 +1234,103 @@ paths:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
   /api/v1/profile/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profiles_collection'
+    x-opal-cli:
+      get:
+        group: profile
+        command: list
+      post:
+        group: profile
+        command: add
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: body
+            parse: yaml_or_json_file
+          description: Whole portable profile document; exclusive with --name/--shared/--module.
+        - flag: --name
+          value: NAME
+          binds:
+            kind: body
+            target: name
+        - flag: --description
+          value: TEXT
+          binds:
+            kind: body
+            target: description
+        - flag: --is-active/--no-is-active
+          binds:
+            kind: body
+            target: is_active
+        - flag: --shared
+          value: FILE
+          binds:
+            kind: local_in
+            target: shared
+            parse: yaml_or_json_file
+          description: Shared-values object merged into the submitted document.
+        - flag: --module
+          value: FILE
+          binds:
+            kind: local_in
+            target: modules.opal-event
+            parse: yaml_or_json_file
+          description: This service's own compartment (currently an empty closed schema).
   /api/v1/profile/{profile_id}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_item'
+    x-opal-cli:
+      get:
+        group: profile
+        command: show
+      patch:
+        group: profile
+        command: update
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: body
+            parse: yaml_or_json_file
+          description: Patch document; exclusive with --name/--shared/--module.
+        - flag: --name
+          value: NAME
+          binds:
+            kind: body
+            target: name
+        - flag: --description
+          value: TEXT
+          binds:
+            kind: body
+            target: description
+        - flag: --is-active/--no-is-active
+          binds:
+            kind: body
+            target: is_active
+        - flag: --shared
+          value: FILE
+          binds:
+            kind: local_in
+            target: shared
+            parse: yaml_or_json_file
+        - flag: --module
+          value: FILE
+          binds:
+            kind: local_in
+            target: modules.opal-event
+            parse: yaml_or_json_file
+          description: Partial own-compartment document; supplied fields merge field-wise,
+            unmentioned compartments are preserved.
+      delete:
+        group: profile
+        command: remove
   /api/v1/profile/{profile_id}/activate:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_activate'
+    x-opal-cli:
+      post:
+        group: profile
+        command: activate
   /api/v1/setting/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_collection'
     x-opal-cli:
@@ -2624,7 +2719,15 @@ x-opal-authorization:
       actions:read, actions:execute, executions:read cannot create/edit/delete actions,
       manage rules, change settings or credentials, escalate its own permissions, or
       bypass endpoint/destination restrictions.
-x-opal-profile-fields: []
+x-opal-profile-namespace:
+  compartment: opal-event
+  schema: './shared/opal_profiles.yaml#/components/schemas/OpalEventProfileNamespace'
+  patch_schema: './shared/opal_profiles.yaml#/components/schemas/OpalEventProfileNamespacePatch'
+  description: >-
+    Declares this module's compartment key in namespaced profiles and the
+    schemas that validate it. Event declares no profile-specific defaults; the
+    compartment is an explicit empty closed schema that preserves the
+    registered namespace for future fields. See docs/PROFILE_MIGRATION.md.
 x-opal-snapshot:
   version: '1.0'
   module: opal-event

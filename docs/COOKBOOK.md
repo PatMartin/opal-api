@@ -35,6 +35,7 @@ Look and Think annotate every operation with `x-opal-cli`, so their command name
 - Query parameters and JSON body fields become kebab-case options: `engine_voice_ref` becomes `--engine-voice-ref`.
 - Booleans become flag pairs: `--enabled/--no-enabled`.
 - Objects and arrays are passed as JSON: `--stages '[...]'`.
+- Structured profile input is file-based: `--in FILE` submits a whole portable document, `--shared FILE` the shared section, and `--module FILE` the service's own `modules.<id>` compartment (YAML or JSON, chosen by file extension).
 - A request's primary payload is positional: `<prompt>` on `task add` (and its `create`/`ask`/`chat` aliases), `<text>` on `say generate` and `say stream`.
 - Request headers become options: `--if-match`, `--idempotency-key`, `--last-event-id`, `--range`.
 
@@ -139,9 +140,9 @@ opal say
 | `opal say voice validate` † | `<voice_id>` | Validate Voice. `POST /api/v1/voice/{voice_id}/validate` |
 | `opal say voice test` † | `<voice_id>`, `--text TEXT`, `--speed FLOAT`, `--volume FLOAT`, `--output-format [wav\|pcm]`, `--sample-rate INT`, `--engine-options JSON`, `--out PATH`, `--play` | Test Voice. `POST /api/v1/voice/{voice_id}/test` |
 | `opal say profile list` † | — | List profiles. `GET /api/v1/profile/` |
-| `opal say profile add` † | `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--voice-id ID`, `--speed FLOAT`, `--volume FLOAT`, `--output-format [wav\|pcm]`, `--sample-rate INT`, `--engine-options JSON` | Create profile. `POST /api/v1/profile/` |
+| `opal say profile add` † | `--if-match ETAG`, `--in FILE`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--shared FILE`, `--module FILE` | Create profile. `POST /api/v1/profile/` |
 | `opal say profile show` † | `<profile_id>` | Get profile. `GET /api/v1/profile/{profile_id}` |
-| `opal say profile update` † | `<profile_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--voice-id ID`, `--speed FLOAT`, `--volume FLOAT`, `--output-format [wav\|pcm]`, `--sample-rate INT`, `--engine-options JSON` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
+| `opal say profile update` † | `<profile_id>`, `--if-match ETAG`, `--in FILE`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--shared FILE`, `--module FILE` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
 | `opal say profile remove` † | `<profile_id>`, `--if-match ETAG` | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
 | `opal say profile activate` † | `<profile_id>`, `--if-match ETAG` | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
 | `opal say persona list` † | `--enabled/--no-enabled` | List Personas. `GET /api/v1/persona/` |
@@ -286,9 +287,9 @@ opal listen
 | `opal listen slot-alias add` † | `<slot_id>`, `<value_id>`, `--if-match ETAG`, `--alias TEXT` | Add Alias. `POST /api/v1/slot/{slot_id}/value/{value_id}/alias` |
 | `opal listen slot-alias remove` † | `<slot_id>`, `<value_id>`, `<alias_id>`, `--if-match ETAG` | Delete Alias. `DELETE /api/v1/slot/{slot_id}/value/{value_id}/alias/{alias_id}` |
 | `opal listen profile list` † | — | List profiles. `GET /api/v1/profile/` |
-| `opal listen profile add` † | `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--wakeword-names JSON`, `--confidence-thresholds JSON`, `--vad-settings JSON`, `--enabled-intents JSON`, `--enabled-slots JSON`, `--model-paths JSON` | Create profile. `POST /api/v1/profile/` |
+| `opal listen profile add` † | `--if-match ETAG`, `--in FILE`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--shared FILE`, `--module FILE` | Create profile. `POST /api/v1/profile/` |
 | `opal listen profile show` † | `<profile_id>` | Get profile. `GET /api/v1/profile/{profile_id}` |
-| `opal listen profile update` † | `<profile_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--wakeword-names JSON`, `--confidence-thresholds JSON`, `--vad-settings JSON`, `--enabled-intents JSON`, `--enabled-slots JSON`, `--model-paths JSON` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
+| `opal listen profile update` † | `<profile_id>`, `--if-match ETAG`, `--in FILE`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--shared FILE`, `--module FILE` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
 | `opal listen profile remove` † | `<profile_id>`, `--if-match ETAG` | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
 | `opal listen profile activate` † | `<profile_id>`, `--if-match ETAG` | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
 | `opal listen config save` | `--out FILE` | Save snapshot to managed store or file. `POST /api/v1/config/save` |
@@ -434,9 +435,9 @@ opal look
 | `opal look config setting set` | `--name NAME`, `--value VALUE` | Set setting override. `PUT /api/v1/setting/{key}` |
 | `opal look config setting remove` | `--name NAME` | Remove setting override. `DELETE /api/v1/setting/{key}` |
 | `opal look profile list` | — | List profiles. `GET /api/v1/profile/` |
-| `opal look profile add` | `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active` | Create profile. `POST /api/v1/profile/` |
+| `opal look profile add` | `--if-match ETAG`, `--in FILE`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--shared FILE`, `--module FILE` | Create profile. `POST /api/v1/profile/` |
 | `opal look profile show` | `<profile_id>` | Get profile. `GET /api/v1/profile/{profile_id}` |
-| `opal look profile update` | `<profile_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
+| `opal look profile update` | `<profile_id>`, `--if-match ETAG`, `--in FILE`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--shared FILE`, `--module FILE` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
 | `opal look profile remove` | `<profile_id>`, `--if-match ETAG` | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
 | `opal look profile activate` | `<profile_id>`, `--if-match ETAG` | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
 | `opal look info version` | — | Service Info. `GET /api/v1/info/` |
@@ -523,9 +524,9 @@ opal think
 | `opal think model list` | — | List available and known models. `GET /api/v1/model/` |
 | `opal think model show` | `<model_id>` | Show model. `GET /api/v1/model/{model_id}` |
 | `opal think profile list` | — | List profiles. `GET /api/v1/profile/` |
-| `opal think profile add` | `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active` | Create profile. `POST /api/v1/profile/` |
+| `opal think profile add` | `--if-match ETAG`, `--in FILE`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--shared FILE`, `--module FILE` | Create profile. `POST /api/v1/profile/` |
 | `opal think profile show` | `<profile_id>` | Get profile. `GET /api/v1/profile/{profile_id}` |
-| `opal think profile update` | `<profile_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
+| `opal think profile update` | `<profile_id>`, `--if-match ETAG`, `--in FILE`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--shared FILE`, `--module FILE` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
 | `opal think profile remove` | `<profile_id>`, `--if-match ETAG` | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
 | `opal think profile activate` | `<profile_id>`, `--if-match ETAG` | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
 | `opal think config save` | `--out FILE` | Save snapshot to managed store or file. `POST /api/v1/config/save` |
@@ -642,9 +643,9 @@ opal event
 | `opal event info health` † | — | Service health report. `GET /api/v1/health/` |
 | `opal event info stats` † | — | Get event and execution counters. `GET /api/v1/stats/` |
 | `opal event profile list` † | — | List profiles. `GET /api/v1/profile/` |
-| `opal event profile add` † | `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active` | Create profile. `POST /api/v1/profile/` |
+| `opal event profile add` † | `--if-match ETAG`, `--in FILE`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--shared FILE`, `--module FILE` | Create profile. `POST /api/v1/profile/` |
 | `opal event profile show` † | `<profile_id>` | Get profile. `GET /api/v1/profile/{profile_id}` |
-| `opal event profile update` † | `<profile_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
+| `opal event profile update` † | `<profile_id>`, `--if-match ETAG`, `--in FILE`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--shared FILE`, `--module FILE` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
 | `opal event profile remove` † | `<profile_id>`, `--if-match ETAG` | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
 | `opal event profile activate` † | `<profile_id>`, `--if-match ETAG` | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
 | `opal event config save` | `--out FILE` | Save snapshot to managed store or file. `POST /api/v1/config/save` |
@@ -775,7 +776,12 @@ opal say voice list --language en-GB --enabled
 **16. Create a bedtime profile: slower, quieter, kinder.**
 
 ```bash
-opal say profile add --name bedtime --description "Slow and quiet for after dark" --voice-id en-gb-alan-low --speed 0.85 --volume 0.4
+cat > bedtime-compartment.yaml <<'EOF'
+voice_id: en-gb-alan-low
+speed: 0.85
+volume: 0.4
+EOF
+opal say profile add --name bedtime --description "Slow and quiet for after dark" --module bedtime-compartment.yaml
 ```
 
 **17. Make that profile the default for every request that does not say otherwise.**
@@ -917,7 +923,11 @@ opal listen performance summary --limit 50
 **19. Create a night profile that only understands light switches.**
 
 ```bash
-opal listen profile add --name night-mode --wakeword-names '["hey opal"]' --enabled-intents '["lights.turn_on","lights.turn_off"]'
+cat > night-compartment.yaml <<'EOF'
+wakeword_names: ["hey opal"]
+enabled_intents: ["lights.turn_on", "lights.turn_off"]
+EOF
+opal listen profile add --name night-mode --module night-compartment.yaml
 ```
 
 **20. Allow live microphone matches to be published as events.**

@@ -4,8 +4,8 @@
 openapi: 3.1.0
 info:
   title: OPAL Suite Kernel
-  version: 2.0.0
-  description: 'Shared contract kernel for the OPAL suite (SUITE STANDARD v2.0.0).
+  version: 3.0.0
+  description: 'Shared contract kernel for the OPAL suite (SUITE STANDARD v3.0.0).
 
 
     This document is never served directly. Service specs under `openapi/` mount its reusable Path Items and reference
@@ -26,7 +26,10 @@ info:
 
 
     Kernel schemas are deliberately open (`additionalProperties: true`) on union types: suite-standard required
-    fields are normative, and each service layers its own domain fields on top.'
+    fields are normative, and each service layers its own domain fields on top. The namespaced profile
+    schemas (`OpalProfile`, `OpalProfileCreate`, `OpalProfilePatch`, v3.0.0) are the documented exception:
+    their envelopes are closed, module-owned fields live only inside `shared` and per-module `modules`
+    compartments declared in `opal_profiles.yaml`, and lifecycle semantics are defined by `x-opal-profiles`.'
 paths: {}
 x-opal-authorization:
   version: '1.0'
@@ -77,6 +80,10 @@ x-opal-cli-format:
     local_in: The CLI reads and parses a client-local file, then submits the parsed object in the request
       body at `target`. The service never sees the client filename. For snapshot operations, `.yaml`/`.yml`
       select YAML parsing and `.json` selects JSON; other extensions are client errors, never server errors.
+      Profile operations use the same convention for nested structured input - `--in FILE` targets the
+      whole request body (the portable profile document or patch document), `--shared FILE` targets
+      `shared`, and `--module FILE` targets `modules.<module-key>` of the receiving service's own
+      compartment.
     local_out: The CLI writes the named response field to a client-local file, serialized as YAML for
       `.yaml`/`.yml` or JSON for `.json`; other extensions are client errors. The service never sees the
       client filename. For `config save`, `--out FILE` also switches request `destination` to `response`
@@ -105,10 +112,13 @@ x-opal-persona:
     conflict: owner record wins when owner_url is configured; local records are retained.
   profiles_vs_personas:
     profile: >-
-      A profile is a preset of a service's operating defaults (e.g. Say
-      generation settings). Exactly one profile is active at a time; it fills
-      in any setting a request leaves out. New users pick a profile when they
-      want named, repeatable defaults ("studio quality", "fast draft").
+      A profile is a portable document of named presets: a `shared` section
+      plus one compartment per module (`modules.<module-id>`), stored locally
+      by each service. At most one profile is active per service at a time —
+      a local runtime/configuration selection, not part of the portable
+      payload; an empty local catalog is legal. The active profile's shared
+      values and the service's own compartment fill in any setting a request
+      leaves out. See `x-opal-profiles`.
     persona: >-
       A persona is an identity — who the user interacts with — that can carry
       service-specific bindings (a Say voice, Think model/instructions). New
@@ -117,9 +127,9 @@ x-opal-persona:
     difference: >-
       Profiles change what a service does by default; personas change who the
       service is for the user. They compose: the persona's bindings sit
-      between the active profile and explicit request fields in resolution.
+      between the selected profile and explicit request fields in resolution.
   resolution:
-    order: explicit request field > persona binding > profile > service default
+    order: explicit request field > persona binding > selected profile's module override > selected profile's shared value > service default
     per_field: true
   bindings:
     voice_id: OPAL Say validates resolvability; other services treat it as an opaque nullable reference.
@@ -151,6 +161,64 @@ x-opal-persona:
       enabled: true
       origin: owner
       description_of_example: Think model + instructions plus a Say voice, synced from the owner.
+x-opal-profiles:
+  version: '1.0'
+  description: >-
+    Portable namespaced OPAL profile contract. A profile is one document
+    carrying a `shared` object plus a `modules` map of module-owned
+    compartments keyed by canonical module identity. Each service stores its
+    own local profile records, reads only `shared` and its own compartment,
+    and preserves all other compartments verbatim. Namespace schemas and the
+    compartment catalog live in `openapi/shared/opal_profiles.yaml`.
+  storage:
+    locality: >-
+      Profiles are per-service local configuration. A portable document may
+      hold compartments for many modules; copying or loading it transfers an
+      explicit snapshot into the receiving service's local record. Edits
+      affect only the receiving service's copy - propagating an updated
+      compartment to another service requires explicitly transferring the
+      configuration (config save on the source, config load on the target).
+    activation: >-
+      Active selection is local runtime/configuration state: at most one
+      profile is active per service, and an empty local catalog is legal.
+      `is_active` on responses is a read projection of that local selection,
+      not portable payload; it is stored so config save/load restores the
+      selection coherently. On select, the service applies `shared` plus its
+      own compartment; missing compartments mean no profile overrides (the
+      existing defaults apply).
+    lifecycle: >-
+      Profile edits apply to new work admitted after the edit; work already
+      admitted keeps the resolved values it was admitted under, consistent
+      with each service's existing lifecycle guarantees.
+  patch_semantics: >-
+    Ordinary partial edits may change `name`, `description`, `is_active`,
+    `shared` and the receiving module's own compartment only. Omitted
+    properties stay unchanged; a supplied compartment merges field-wise so
+    sibling fields and all other compartments are preserved; arrays replace
+    as whole values; explicit JSON `null` on a compartment field removes that
+    override and restores inheritance (distinct from stored `null` values a
+    field declares as meaningful, e.g. `sample_rate`). Attempting to change
+    another module's compartment is rejected with 422 and its stored contents
+    are preserved. Patches and validation failures are atomic: nothing
+    partial is persisted.
+  validation: >-
+    `shared` and every declared compartment are validated structurally
+    against `opal_profiles.yaml` schemas (closed objects). The receiving
+    module additionally validates its own compartment's local resource
+    references semantically (e.g. opal-say checks `voice_id` resolvability);
+    foreign voice/model/pipeline references are portable references and are
+    not resolved by non-owning services. Well-formed compartments for
+    unrecognized module ids are preserved verbatim and reported as
+    unverified where a reporting surface exists.
+  creation: >-
+    Creation and config load may ingest a full portable document with
+    compartments for multiple modules, subject to normal authorization and
+    validation. Omitted `shared`/`modules` normalize to empty objects; a
+    stored complete record always carries both as objects.
+  migration: >-
+    v3.0.0 replaces the v2 flat profile union. The old-field-to-new-path
+    table, runtime persistence obligations and affected consumers are
+    recorded in docs/PROFILE_MIGRATION.md.
 components:
   headers:
     OpalSessionIdHeader:
@@ -823,8 +891,10 @@ components:
           additionalProperties: true
           description: 'Module-owned declarative configuration sections (e.g. profiles, personas, engine
             configurations, voices, wakewords, intents, slots, rules, actions, device definitions, peers,
-            groups, sharing policies, orchestrator service definitions). Each module declares its sections
-            via `x-opal-snapshot.resources`; unknown sections are
+            groups, sharing policies, orchestrator service definitions). `profiles` carries complete
+            namespaced profile documents - every stored module compartment and the local `is_active`
+            selection - and foreign compartments are preserved verbatim through save/load. Each module
+            declares its sections via `x-opal-snapshot.resources`; unknown sections are
             rejected explicitly.'
       required:
       - format_version
@@ -940,6 +1010,7 @@ components:
         id:
           type: string
           minLength: 1
+          readOnly: true
           description: Opaque profile identifier.
         name:
           type: string
@@ -949,79 +1020,53 @@ components:
           - type: 'null'
         is_active:
           type: boolean
-        voice_id:
-          type: string
-        speed:
-          type: number
-          format: float
-        volume:
-          type: number
-          format: float
-        output_format:
-          type: string
-          description: Audio output format; values are service-defined (e.g. 'wav', 'pcm').
-        sample_rate:
-          anyOf:
-          - type: integer
-          - type: 'null'
-        engine_options:
-          type: object
-          additionalProperties: true
-          description: Service-defined section.
+          description: 'Local projection of this service''s active-profile selection, not portable
+            payload. At most one profile reports true in a service''s local catalog; config save/load
+            stores and restores it so the local selection survives transfer.'
+        shared:
+          $ref: './opal_profiles.yaml#/components/schemas/OpalProfileShared'
+        modules:
+          $ref: './opal_profiles.yaml#/components/schemas/OpalProfileModules'
         created_at:
           type: string
           format: date-time
+          readOnly: true
         updated_at:
           type: string
           format: date-time
-        wakeword_names:
-          items:
-            type: string
-          type: array
-          title: Wakeword Names
-        confidence_thresholds:
-          additionalProperties: true
-          type: object
-          title: Confidence Thresholds
-        vad_settings:
-          additionalProperties: true
-          type: object
-          title: Vad Settings
-        enabled_intents:
-          items:
-            type: string
-          type: array
-          title: Enabled Intents
-        enabled_slots:
-          items:
-            type: string
-          type: array
-          title: Enabled Slots
-        model_paths:
-          additionalProperties:
-            type: string
-          type: object
-          title: Model Paths
-        pipeline_id:
-          type: string
-          minLength: 1
-          maxLength: 128
-        inference:
-          type: object
-          additionalProperties: true
-          description: Service-defined section.
-        retention:
-          type: object
-          additionalProperties: true
-          description: Service-defined section.
+          readOnly: true
       required:
       - id
       - is_active
       - name
-      additionalProperties: true
-      description: A reusable named generation/processing profile. `id`, `name` and `is_active` are suite-standard;
-        all other fields are service-defined; each service declares the fields it honors via its top-level
-        `x-opal-profile-fields` extension. Exactly one profile may be active at a time.
+      - shared
+      - modules
+      additionalProperties: false
+      description: 'A complete local profile record: identity, display metadata, a `shared` section and
+        a `modules` map of module-owned compartments (catalog in `opal_profiles.yaml`). `shared` and
+        `modules` are required and always objects - empty objects and missing module compartments are
+        valid. The envelope is closed: undeclared fields are rejected. Exactly one active profile per
+        service is the local ceiling; zero is legal. Lifecycle semantics are defined by
+        `x-opal-profiles`.'
+      example:
+        id: studio
+        name: Studio defaults
+        description: Reusable defaults across OPAL modules
+        is_active: true
+        shared: {}
+        modules:
+          opal-say:
+            voice_id: en-us-lessac-medium
+            speed: 1.1
+            sample_rate: null
+          opal-listen:
+            wakeword_names:
+            - hey_opal
+            enabled_intents:
+            - lights_on
+          opal-look: {}
+        created_at: '2026-01-01T00:00:00Z'
+        updated_at: '2026-01-02T00:00:00Z'
     OpalProfileCreate:
       type: object
       properties:
@@ -1030,7 +1075,7 @@ components:
           minLength: 1
           maxLength: 100
           description: Unique or human-distinguishable profile name.
-          example: default
+          example: Studio defaults
         description:
           anyOf:
           - type: string
@@ -1039,97 +1084,34 @@ components:
         is_active:
           type: boolean
           default: false
-          description: If true, activate this profile and deactivate all others.
-        voice_id:
-          type: string
-          minLength: 1
-          description: Registered voice used by default for this profile.
-          example: en-us-lessac-medium
-        speed:
-          type: number
-          format: float
-          minimum: 0.25
-          maximum: 4.0
-          default: 1.0
-        volume:
-          type: number
-          format: float
-          minimum: 0.0
-          maximum: 2.0
-          default: 1.0
-        output_format:
-          allOf:
-          - type: string
-            description: Audio output format; values are service-defined (e.g. 'wav', 'pcm').
-          default: wav
-          description: Default format for completed `/generate` requests using this profile.
-        sample_rate:
-          anyOf:
-          - type: integer
-            minimum: 8000
-            maximum: 192000
-          - type: 'null'
-          default: null
-          description: Optional default output sample rate. Null lets the service choose.
-        engine_options:
-          type: object
-          additionalProperties: true
-          description: Service-defined section.
-        wakeword_names:
-          items:
-            type: string
-          type: array
-          title: Wakeword Names
-          default: []
-        confidence_thresholds:
-          additionalProperties: true
-          type: object
-          title: Confidence Thresholds
-          default: {}
-        vad_settings:
-          additionalProperties: true
-          type: object
-          title: Vad Settings
-          default: {}
-        enabled_intents:
-          items:
-            type: string
-          type: array
-          title: Enabled Intents
-          default: []
-        enabled_slots:
-          items:
-            type: string
-          type: array
-          title: Enabled Slots
-          default: []
-        model_paths:
-          additionalProperties:
-            type: string
-          type: object
-          title: Model Paths
-          default: {}
+          description: If true, activate this profile locally and deactivate all others.
+        shared:
+          $ref: './opal_profiles.yaml#/components/schemas/OpalProfileShared'
+        modules:
+          $ref: './opal_profiles.yaml#/components/schemas/OpalProfileModules'
         id:
           type: string
           minLength: 1
           description: Client-supplied profile identifier where supported.
-        pipeline_id:
-          type: string
-          minLength: 1
-          maxLength: 128
-        inference:
-          type: object
-          additionalProperties: true
-          description: Service-defined section.
-        retention:
-          type: object
-          additionalProperties: true
-          description: Service-defined section.
       required:
       - name
-      additionalProperties: true
-      description: 'Profile creation request. `name` is required; `is_active: true` activates the new profile and
-        deactivates all others.'
+      additionalProperties: false
+      description: 'Profile creation request: a portable document that may carry compartments for
+        multiple modules, which the receiving service stores verbatim while honoring only `shared` and
+        its own compartment. `name` is required; omitted `shared` and `modules` normalize to empty
+        objects, so a created record always carries both. `is_active: true` activates the new profile
+        and deactivates all others. Closed envelope.'
+      example:
+        name: Studio defaults
+        description: Reusable defaults across OPAL modules
+        is_active: true
+        modules:
+          opal-say:
+            voice_id: en-us-lessac-medium
+            speed: 1.1
+          opal-listen:
+            enabled_slots:
+            - city
     OpalProfilePatch:
       type: object
       minProperties: 1
@@ -1145,88 +1127,27 @@ components:
           - type: 'null'
         is_active:
           type: boolean
-          description: Setting true activates this profile and deactivates all others.
-        voice_id:
-          type: string
-          minLength: 1
-        speed:
-          type: number
-          format: float
-          minimum: 0.25
-          maximum: 4.0
-        volume:
-          type: number
-          format: float
-          minimum: 0.0
-          maximum: 2.0
-        output_format:
-          type: string
-          description: Audio output format; values are service-defined (e.g. 'wav', 'pcm').
-        sample_rate:
-          anyOf:
-          - type: integer
-            minimum: 8000
-            maximum: 192000
-          - type: 'null'
-        engine_options:
-          type: object
-          additionalProperties: true
-          description: Service-defined section.
-        wakeword_names:
-          anyOf:
-          - items:
-              type: string
-            type: array
-          - type: 'null'
-          title: Wakeword Names
-        confidence_thresholds:
-          anyOf:
-          - additionalProperties: true
-            type: object
-          - type: 'null'
-          title: Confidence Thresholds
-        vad_settings:
-          anyOf:
-          - additionalProperties: true
-            type: object
-          - type: 'null'
-          title: Vad Settings
-        enabled_intents:
-          anyOf:
-          - items:
-              type: string
-            type: array
-          - type: 'null'
-          title: Enabled Intents
-        enabled_slots:
-          anyOf:
-          - items:
-              type: string
-            type: array
-          - type: 'null'
-          title: Enabled Slots
-        model_paths:
-          anyOf:
-          - additionalProperties:
-              type: string
-            type: object
-          - type: 'null'
-          title: Model Paths
-        pipeline_id:
-          type: string
-          minLength: 1
-          maxLength: 128
-        inference:
-          type: object
-          additionalProperties: true
-          description: Service-defined section.
-        retention:
-          type: object
-          additionalProperties: true
-          description: Service-defined section.
-      required: []
-      additionalProperties: true
-      description: Partial profile update; only supplied fields change.
+          description: 'Setting true activates this profile locally and deactivates all others. Setting
+            false leaves the local selection unchanged; it never produces a no-active-profile state by
+            itself.'
+        shared:
+          $ref: './opal_profiles.yaml#/components/schemas/OpalProfileShared'
+        modules:
+          $ref: './opal_profiles.yaml#/components/schemas/OpalProfileModulesPatch'
+      additionalProperties: false
+      description: 'Partial profile update: only supplied fields change; omitted properties stay
+        unchanged. A supplied compartment merges field-wise over the stored compartment - sibling
+        fields and every other compartment are preserved. Arrays replace as whole values. Explicit
+        JSON `null` on a compartment field removes that override and restores inheritance; `null` is
+        rejected where a field is not nullable and compartments themselves must remain objects.
+        `modules` may contain only the receiving service''s own compartment key - edits to another
+        module''s compartment are rejected with 422 and preserved untouched. Patches are atomic.
+        Closed envelope.'
+      example:
+        modules:
+          opal-say:
+            speed: 1.25
+            voice_id: null
     OpalEngine:
       type: object
       properties:
@@ -1990,8 +1911,10 @@ components:
         - profiles
         summary: List profiles
         operationId: opal_profile_list
-        description: Return the complete bounded profile collection; pagination is not supported. An implementation
-          may reject catalog sizes over an advertised deployment cap rather than silently truncate.
+        description: 'Return the complete bounded collection of this service''s local profile records;
+          pagination is not supported. Records are the full portable documents including preserved
+          foreign compartments; `is_active` is the local selection projection. An implementation may
+          reject catalog sizes over an advertised deployment cap rather than silently truncate.'
         responses:
           '200':
             description: Configured profiles.
@@ -2023,8 +1946,12 @@ components:
         - profiles
         summary: Create profile
         operationId: opal_profile_create
-        description: Create a reusable named profile. If `is_active` is true, the new profile becomes the only active
-          profile. Strong If-Match on the current collection revision is mandatory.
+        description: 'Create a reusable named profile. The body is a portable document that may carry
+          compartments for multiple modules: the service stores the complete record verbatim, honors
+          only `shared` and its own compartment, and preserves foreign compartments for later transfer.
+          Omitted `shared`/`modules` normalize to empty objects. If `is_active` is true, the new profile
+          becomes the only locally active profile. Strong If-Match on the current collection revision
+          is mandatory.'
         parameters:
         - $ref: '#/components/parameters/IfMatch'
         requestBody:
@@ -2077,7 +2004,8 @@ components:
         - profiles
         summary: Get profile
         operationId: opal_profile_get
-        description: Return one profile.
+        description: Return one local profile record, including all stored module compartments and the
+          local `is_active` projection.
         responses:
           '200':
             description: Profile.
@@ -2109,7 +2037,10 @@ components:
         - profiles
         summary: Update profile
         operationId: opal_profile_patch
-        description: Partially update one profile. Strong If-Match is mandatory.
+        description: 'Partially update one local profile record under the `OpalProfilePatch` rules:
+          field-wise merge inside the receiving module''s own compartment, untouched foreign
+          compartments, null-removal for nullable overrides, atomic application. Strong If-Match is
+          mandatory.'
         parameters:
         - $ref: '#/components/parameters/IfMatch'
         requestBody:
@@ -2155,7 +2086,9 @@ components:
         - profiles
         summary: Delete profile
         operationId: opal_profile_delete
-        description: Delete one profile. The active profile cannot be deleted. Strong If-Match is mandatory.
+        description: 'Delete this service''s local copy of one profile record, including all stored
+          compartments; other services'' copies are unaffected. The active profile cannot be deleted.
+          Strong If-Match is mandatory.'
         parameters:
         - $ref: '#/components/parameters/IfMatch'
         responses:
@@ -2196,7 +2129,9 @@ components:
         - profiles
         summary: Activate profile
         operationId: opal_profile_activate
-        description: Make this profile the only active profile. Strong If-Match is mandatory.
+        description: 'Make this profile the only locally active profile. Activation is local
+          runtime/configuration state: the service resolves defaults from `shared` plus its own
+          compartment; missing compartments contribute no overrides. Strong If-Match is mandatory.'
         parameters:
         - $ref: '#/components/parameters/IfMatch'
         responses:

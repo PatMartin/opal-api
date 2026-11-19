@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OPAL Think API
-  version: 2.0.0
+  version: 3.0.0
   description: |
     OPAL-THINK is a model-neutral, guarded reasoning service. The OpenAPI contract is authoritative; CLI and SPA only call REST.
 
@@ -55,7 +55,9 @@ tags:
 - name: service
   description: Service process lifecycle (start, stop, log tail).
 - name: profiles
-  description: Reusable configuration profiles.
+  description: 'Reusable namespaced configuration profiles; at most one is locally active.
+    Think declares no compartment fields today (`modules.opal-think` is an explicit empty
+    schema), but profile records, selection and portability behave suite-wide.'
 security:
 - BearerAuth: []
 paths:
@@ -556,6 +558,42 @@ paths:
       post:
         group: profile
         command: add
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: body
+            parse: yaml_or_json_file
+          description: Whole portable profile document; exclusive with --name/--shared/--module.
+        - flag: --name
+          value: NAME
+          binds:
+            kind: body
+            target: name
+        - flag: --description
+          value: TEXT
+          binds:
+            kind: body
+            target: description
+        - flag: --is-active/--no-is-active
+          binds:
+            kind: body
+            target: is_active
+        - flag: --shared
+          value: FILE
+          binds:
+            kind: local_in
+            target: shared
+            parse: yaml_or_json_file
+          description: Shared-values object merged into the submitted document.
+        - flag: --module
+          value: FILE
+          binds:
+            kind: local_in
+            target: modules.opal-think
+            parse: yaml_or_json_file
+          description: This service's own compartment (currently an empty closed schema).
   /api/v1/profile/{profile_id}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_item'
     x-opal-cli:
@@ -565,6 +603,42 @@ paths:
       patch:
         group: profile
         command: update
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: body
+            parse: yaml_or_json_file
+          description: Patch document; exclusive with --name/--shared/--module.
+        - flag: --name
+          value: NAME
+          binds:
+            kind: body
+            target: name
+        - flag: --description
+          value: TEXT
+          binds:
+            kind: body
+            target: description
+        - flag: --is-active/--no-is-active
+          binds:
+            kind: body
+            target: is_active
+        - flag: --shared
+          value: FILE
+          binds:
+            kind: local_in
+            target: shared
+            parse: yaml_or_json_file
+        - flag: --module
+          value: FILE
+          binds:
+            kind: local_in
+            target: modules.opal-think
+            parse: yaml_or_json_file
+          description: Partial own-compartment document; supplied fields merge field-wise,
+            unmentioned compartments are preserved.
       delete:
         group: profile
         command: remove
@@ -1094,7 +1168,8 @@ components:
         selects a registered OPAL persona: its service-local bindings
         (persona.<id>.model_id / .instructions / .generation) supply per-field
         defaults below any explicit request fields (kernel precedence: request >
-        persona binding > profile > service default), and override the session's
+        persona binding > selected profile's module override > selected profile's
+        shared value > service default), and override the session's
         default persona. Referencing an unknown persona returns 422
         invalid_persona; a disabled persona returns 422 persona_disabled.
     TaskStep:
@@ -1471,7 +1546,15 @@ x-opal-event-integration:
     receipt stays retrievable. THINK-side action permission additionally
     requires the action id to appear in `event.action_allowlist`.
 x-opal-authorization: {$ref: './shared/opal_kernel.yaml#/x-opal-authorization'}
-x-opal-profile-fields: []
+x-opal-profile-namespace:
+  compartment: opal-think
+  schema: './shared/opal_profiles.yaml#/components/schemas/OpalThinkProfileNamespace'
+  patch_schema: './shared/opal_profiles.yaml#/components/schemas/OpalThinkProfileNamespacePatch'
+  description: >-
+    Declares this module's compartment key in namespaced profiles and the
+    schemas that validate it. Think declares no profile-specific defaults; the
+    compartment is an explicit empty closed schema that preserves the
+    registered namespace for future fields. See docs/PROFILE_MIGRATION.md.
 x-opal-context-standard:
   version: '2.0.0'
   headers:

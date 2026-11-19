@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OPAL Look — MVP Plus Visual Observation API
-  version: 2.0.0
+  version: 3.0.0
   description: |
     Clean-cut replacement contract for OPAL Look. Video-only RTSP streams work
     with no AI engine installed; YOLO, RF-DETR, RT-DETR and D-FINE are optional
@@ -45,7 +45,9 @@ tags:
 - name: streams
   description: Ephemeral RTSP video-only or inference sessions with SSE metadata, MJPEG viewing, snapshots and metrics.
 - name: profiles
-  description: Reusable configuration profiles; exactly one may be active.
+  description: 'Reusable namespaced configuration profiles; at most one is locally active.
+    Look declares no compartment fields today (`modules.opal-look` is an explicit empty
+    schema), but profile records, selection and portability behave suite-wide.'
 - name: config
   description: Save, load, validate, and inspect portable module configuration.
 - name: info
@@ -983,6 +985,42 @@ paths:
       post:
         group: profile
         command: add
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: body
+            parse: yaml_or_json_file
+          description: Whole portable profile document; exclusive with --name/--shared/--module.
+        - flag: --name
+          value: NAME
+          binds:
+            kind: body
+            target: name
+        - flag: --description
+          value: TEXT
+          binds:
+            kind: body
+            target: description
+        - flag: --is-active/--no-is-active
+          binds:
+            kind: body
+            target: is_active
+        - flag: --shared
+          value: FILE
+          binds:
+            kind: local_in
+            target: shared
+            parse: yaml_or_json_file
+          description: Shared-values object merged into the submitted document.
+        - flag: --module
+          value: FILE
+          binds:
+            kind: local_in
+            target: modules.opal-look
+            parse: yaml_or_json_file
+          description: This service's own compartment (currently an empty closed schema).
   /api/v1/profile/{profile_id}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profile_item'
     x-opal-cli:
@@ -992,6 +1030,42 @@ paths:
       patch:
         group: profile
         command: update
+        options:
+        - flag: --in
+          value: FILE
+          binds:
+            kind: local_in
+            target: body
+            parse: yaml_or_json_file
+          description: Patch document; exclusive with --name/--shared/--module.
+        - flag: --name
+          value: NAME
+          binds:
+            kind: body
+            target: name
+        - flag: --description
+          value: TEXT
+          binds:
+            kind: body
+            target: description
+        - flag: --is-active/--no-is-active
+          binds:
+            kind: body
+            target: is_active
+        - flag: --shared
+          value: FILE
+          binds:
+            kind: local_in
+            target: shared
+            parse: yaml_or_json_file
+        - flag: --module
+          value: FILE
+          binds:
+            kind: local_in
+            target: modules.opal-look
+            parse: yaml_or_json_file
+          description: Partial own-compartment document; supplied fields merge field-wise,
+            unmentioned compartments are preserved.
       delete:
         group: profile
         command: remove
@@ -1476,7 +1550,15 @@ components:
           format: date-time
 x-opal-authorization:
   $ref: './shared/opal_kernel.yaml#/x-opal-authorization'
-x-opal-profile-fields: []
+x-opal-profile-namespace:
+  compartment: opal-look
+  schema: './shared/opal_profiles.yaml#/components/schemas/OpalLookProfileNamespace'
+  patch_schema: './shared/opal_profiles.yaml#/components/schemas/OpalLookProfileNamespacePatch'
+  description: >-
+    Declares this module's compartment key in namespaced profiles and the
+    schemas that validate it. Look declares no profile-specific defaults; the
+    compartment is an explicit empty closed schema that preserves the
+    registered namespace for future fields. See docs/PROFILE_MIGRATION.md.
 x-opal-context-standard:
   version: '2.0.0'
   headers:
