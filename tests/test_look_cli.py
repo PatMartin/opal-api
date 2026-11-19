@@ -64,9 +64,13 @@ def main():
     dupes = []
     verbs = set()
     missing = []
+    # Machine-only probe routes intentionally have no CLI binding.
+    http_only = {"/api/v1/health/live", "/api/v1/health/ready"}
     for p, item in paths.items():
         for m, o in item.items():
             if m not in METHODS or not isinstance(o, dict):
+                continue
+            if p in http_only:
                 continue
             cli = o.get("x-opal-cli", {})
             if not (cli.get("group") and cli.get("command")):
@@ -84,8 +88,6 @@ def main():
 
     # Kernel-mounted standard surface is present.
     for m, p in (
-        ("get", "/api/v1/info/"),
-        ("get", "/api/v1/info/ping"),
         ("get", "/api/v1/health/"),
         ("get", "/api/v1/health/live"),
         ("get", "/api/v1/health/ready"),

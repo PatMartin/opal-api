@@ -160,11 +160,7 @@ opal say
 | `opal say config setting show` | `--name NAME` | Get setting. `GET /api/v1/setting/{key}` |
 | `opal say config setting set` | `--name NAME`, `--value VALUE` | Set setting override. `PUT /api/v1/setting/{key}` |
 | `opal say config setting remove` | `--name NAME` | Remove setting override. `DELETE /api/v1/setting/{key}` |
-| `opal say info health` † | — | Service health report. `GET /api/v1/health/` |
-| `opal say info version` † | — | Service Info. `GET /api/v1/info/` |
-| `opal say info ping` † | — | Ping. `GET /api/v1/info/ping` |
-| `opal say info live` † | — | Liveness probe. `GET /api/v1/health/live` |
-| `opal say info ready` † | — | Readiness probe. `GET /api/v1/health/ready` |
+| `opal say info health` † | — | Service health report (name, version, api_version, status, live, ready, details). `GET /api/v1/health/` |
 | `opal say service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
 | `opal say service stop` | — | Stop service. `POST /api/v1/service/stop` |
 | `opal say service log` | `--lines INT` | Tail service log. `GET /api/v1/service/log` |
@@ -197,7 +193,7 @@ opal listen
 │   └── failed-utterance  list | add | show | update | remove | promote
 ├── regression            list | add | run | show | update | remove
 ├── performance           last | summary | history
-├── info                  health | audio-devices | version | ping | live | ready
+├── info                  health
 └── service               start | stop | log
 ```
 
@@ -240,11 +236,8 @@ opal listen
 │   ├── /summary                            GET
 │   └── /history                            GET
 ├── /health/                                GET
-│   ├── /audio_devices                      GET
 │   ├── /live                               GET
 │   └── /ready                              GET
-├── /info/                                  GET
-│   └── /ping                               GET
 ├── /config
 │   ├── /save                               POST
 │   ├── /load                               POST
@@ -320,12 +313,7 @@ opal listen
 | `opal listen performance last` † | — | Get Last Performance. `GET /api/v1/performance/last` |
 | `opal listen performance summary` † | `--limit INT` | Get Performance Summary. `GET /api/v1/performance/summary` |
 | `opal listen performance history` † | `--limit INT` | Get Performance History. `GET /api/v1/performance/history` |
-| `opal listen info health` † | — | Service health report. `GET /api/v1/health/` |
-| `opal listen info audio-devices` † | — | List host audio input devices. `GET /api/v1/health/audio_devices` |
-| `opal listen info version` † | — | Service Info. `GET /api/v1/info/` |
-| `opal listen info ping` † | — | Ping. `GET /api/v1/info/ping` |
-| `opal listen info live` † | — | Liveness probe. `GET /api/v1/health/live` |
-| `opal listen info ready` † | — | Readiness probe. `GET /api/v1/health/ready` |
+| `opal listen info health` † | — | Service health report; host audio input devices under `details.audio_devices`. `GET /api/v1/health/` |
 | `opal listen service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
 | `opal listen service stop` | — | Stop service. `POST /api/v1/service/stop` |
 | `opal listen service log` | `--lines INT` | Tail service log. `GET /api/v1/service/log` |
@@ -440,11 +428,7 @@ opal look
 | `opal look profile update` | `<profile_id>`, `--if-match ETAG`, `--in FILE`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--shared FILE`, `--module FILE` | Update profile. `PATCH /api/v1/profile/{profile_id}` |
 | `opal look profile remove` | `<profile_id>`, `--if-match ETAG` | Delete profile. `DELETE /api/v1/profile/{profile_id}` |
 | `opal look profile activate` | `<profile_id>`, `--if-match ETAG` | Activate profile. `POST /api/v1/profile/{profile_id}/activate` |
-| `opal look info version` | — | Service Info. `GET /api/v1/info/` |
-| `opal look info ping` | — | Ping. `GET /api/v1/info/ping` |
-| `opal look info health` | — | Service health report. `GET /api/v1/health/` |
-| `opal look info live` | — | Liveness probe. `GET /api/v1/health/live` |
-| `opal look info ready` | — | Readiness probe. `GET /api/v1/health/ready` |
+| `opal look info health` | — | Service health report (name, version, api_version, status, live, ready, details). `GET /api/v1/health/` |
 | `opal look service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
 | `opal look service stop` | — | Stop service. `POST /api/v1/service/stop` |
 | `opal look service log` | `--lines INT` | Tail service log. `GET /api/v1/service/log` |
@@ -536,11 +520,7 @@ opal think
 | `opal think config setting show` | `--name NAME` | Get setting. `GET /api/v1/setting/{key}` |
 | `opal think config setting set` | `--name NAME`, `--value VALUE` | Set setting override. `PUT /api/v1/setting/{key}` |
 | `opal think config setting remove` | `--name NAME` | Remove setting override. `DELETE /api/v1/setting/{key}` |
-| `opal think info health` | — | Service health report. `GET /api/v1/health/` |
-| `opal think info version` | — | Service Info. `GET /api/v1/info/` |
-| `opal think info ping` | — | Ping. `GET /api/v1/info/ping` |
-| `opal think info live` | — | Liveness probe. `GET /api/v1/health/live` |
-| `opal think info ready` | — | Readiness probe. `GET /api/v1/health/ready` |
+| `opal think info health` | — | Service health report (name, version, api_version, status, live, ready, details). `GET /api/v1/health/` |
 | `opal think service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
 | `opal think service stop` | — | Stop service. `POST /api/v1/service/stop` |
 | `opal think service log` | `--lines INT` | Tail service log. `GET /api/v1/service/log` |
@@ -640,8 +620,7 @@ opal event
 | `opal event action execute` † | `<action_id>`, `--event JSON`, `--wait` | Execute registered action manually. `POST /api/v1/action/{action_id}/execute` |
 | `opal event data execution list` † | `--status TEXT`, `--rule-id ID`, `--action-id ID`, `--event-id ID`, `--limit INT` | List executions. `GET /api/v1/execution/` |
 | `opal event data execution show` † | `<execution_id>` | Get execution result. `GET /api/v1/execution/{execution_id}` |
-| `opal event info health` † | — | Service health report. `GET /api/v1/health/` |
-| `opal event info stats` † | — | Get event and execution counters. `GET /api/v1/stats/` |
+| `opal event info health` † | — | Service health report; event and execution counters under `details.stats`. `GET /api/v1/health/` |
 | `opal event profile list` † | — | List profiles. `GET /api/v1/profile/` |
 | `opal event profile add` † | `--if-match ETAG`, `--in FILE`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--shared FILE`, `--module FILE` | Create profile. `POST /api/v1/profile/` |
 | `opal event profile show` † | `<profile_id>` | Get profile. `GET /api/v1/profile/{profile_id}` |
@@ -655,10 +634,6 @@ opal event
 | `opal event config setting show` | `--name NAME` | Get setting. `GET /api/v1/setting/{key}` |
 | `opal event config setting set` | `--name NAME`, `--value VALUE` | Set setting override. `PUT /api/v1/setting/{key}` |
 | `opal event config setting remove` | `--name NAME` | Remove setting override. `DELETE /api/v1/setting/{key}` |
-| `opal event info version` † | — | Service Info. `GET /api/v1/info/` |
-| `opal event info ping` † | — | Ping. `GET /api/v1/info/ping` |
-| `opal event info live` † | — | Liveness probe. `GET /api/v1/health/live` |
-| `opal event info ready` † | — | Readiness probe. `GET /api/v1/health/ready` |
 | `opal event service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
 | `opal event service stop` | — | Stop service. `POST /api/v1/service/stop` |
 | `opal event service log` | `--lines INT` | Tail service log. `GET /api/v1/service/log` |
@@ -815,7 +790,7 @@ opal say config save --out say-config.yaml
 **1. Find the microphone before accusing the software of deafness.**
 
 ```bash
-opal listen info audio-devices
+opal listen info health  # host audio input devices under .details.audio_devices
 ```
 
 **2. Register a wakeword with a stricter threshold.**
@@ -1259,7 +1234,7 @@ opal event action update notify-webhook --timeout-seconds 5
 **17. Read the event and execution counters.**
 
 ```bash
-opal event info stats
+opal event info health  # event and execution counters under .details.stats
 ```
 
 **18. Clear the stored event history.**
@@ -1777,11 +1752,12 @@ opal event data execution show exe-41 | opal think ask "This is a failed action 
 *say + listen + look + think + event.* Five probes, then a spoken all-clear.
 
 ```bash
-opal say info ready
-opal listen info ready
-opal look info ready
-opal think info ready
-opal event info ready
+opal say info health    # .ready is true
+opal listen info health
+opal look info health
+opal think info health
+opal event info health
+# machine callers should poll GET /api/v1/health/ready instead
 opal say generate "All five services report ready. Suspiciously ready." --play
 ```
 

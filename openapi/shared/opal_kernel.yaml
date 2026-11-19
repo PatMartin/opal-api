@@ -4,7 +4,7 @@
 openapi: 3.1.0
 info:
   title: OPAL Suite Kernel
-  version: 3.0.0
+  version: 4.0.0
   description: 'Shared contract kernel for the OPAL suite (SUITE STANDARD v3.0.0).
 
 
@@ -631,40 +631,57 @@ components:
     OpalHealthReport:
       type: object
       properties:
+        name:
+          type: string
+          description: Service implementation name.
+          example: opal-say-svc
+        version:
+          type: string
+          description: Service implementation (package) version.
+          example: 1.0.0
+        api_version:
+          type: string
+          description: OPAL API contract version.
+          example: v1
         status:
           type: string
           enum:
           - ok
           - degraded
           - error
-          - warning
-          - healthy
-          - unhealthy
-          - unavailable
-          description: Overall state. Canonical values are ok/degraded/error; other values are accepted for backward
-            compatibility with per-service vocabularies.
-        version:
-          type: string
-          example: 1.0.0
+          description: Overall state using the canonical vocabulary. `degraded` and `error` reports still
+            return HTTP 200 whenever the report itself can be produced.
+        live:
+          type: boolean
+          description: True while the service process is alive. Carries the information the retired
+            `GET /api/v1/info/ping` route and `info ping`/`info live` commands used to report.
+        ready:
+          type: boolean
+          description: True when the service can perform useful work. May be false while `live` stays
+            true; the report still returns HTTP 200 whenever it is available.
+        details:
+          type: object
+          additionalProperties: true
+          description: 'Module-defined diagnostics, always present (empty object when a module reports no
+            extra diagnostics). Each module declares its known members via its `x-opal-health-details`
+            extension: `stats` carries opal-event''s event and execution counters; `audio_devices` carries
+            opal-listen''s host input device list. Diagnostics that older revisions returned at the top
+            level (`engines`, `checks`, `components`, `metrics`, `models_available`, `broker_running`,
+            `database_ready`, `event`, `active_tasks`) now live under this object with their existing
+            meaning and access requirements.'
         active_profile_id:
           anyOf:
           - type: string
             minLength: 1
           - type: 'null'
-        engines:
-          type: array
-          items:
-            type: object
-            additionalProperties: true
-            description: Service-defined section.
-        details:
-          type: object
-          additionalProperties: true
-          description: Optional non-portable diagnostic information.
-        broker_running:
-          type: boolean
-        database_ready:
-          type: boolean
+          description: Locally active profile id, or null when no profile is active.
+        checked_at:
+          type: string
+          format: date-time
+          description: Time this report was assembled.
+        uptime_seconds:
+          type: number
+          minimum: 0
         pending_restart:
           anyOf:
           - type: boolean
@@ -673,61 +690,22 @@ components:
               type: string
           description: Restart-pending indicator (boolean) or list of pending fields (array); `pending_restart_fields`
             is the canonical list form.
-        checks:
-          items:
-            type: object
-            additionalProperties: true
-            description: Service-defined section.
-          type: array
-          title: Checks
-        checked_at:
-          type: string
-          format: date-time
-          title: Checked At
-        ready:
-          type: boolean
-          description: True when the service can perform useful work; probes use it as readiness.
-        uptime_seconds:
-          type: number
-          minimum: 0
-        components:
-          type: object
-          additionalProperties:
-            type: object
-            properties:
-              state:
-                type: string
-              detail:
-                type: string
-            additionalProperties: false
-            required:
-            - state
-        metrics:
-          type: object
-          additionalProperties:
-            type: number
-        models_available:
-          type: integer
-          minimum: 0
-        event:
-          type: string
-          enum:
-          - available
-          - degraded
-          - unavailable
-          - not_configured
-        active_tasks:
-          type: integer
-          minimum: 0
         pending_restart_fields:
           type: array
           items:
             type: string
       required:
+      - name
+      - version
+      - api_version
       - status
+      - live
+      - ready
+      - details
       additionalProperties: true
-      description: Aggregate service health report. `status` is the only required field; all other sections are
-        service-defined.
+      description: Aggregate service health report - the single source for service identity, liveness,
+        readiness and diagnostics. Replaces the retired `GET /api/v1/info/` and `GET /api/v1/info/ping`
+        reports; module-defined diagnostics live under `details`.
     SettingRead:
       type: object
       properties:
@@ -1507,37 +1485,6 @@ components:
       required: []
       additionalProperties: true
       description: Partial engine configuration update; only supplied fields change.
-    ServiceInfo:
-      type: object
-      required:
-      - name
-      - version
-      - api_version
-      properties:
-        name:
-          type: string
-          description: Service implementation name.
-          example: opal-say-svc
-        version:
-          type: string
-          description: Package version.
-          example: 1.0.0
-        api_version:
-          type: string
-          description: OPAL API contract version.
-          example: v1
-        description:
-          type: string
-    LivenessRead:
-      type: object
-      required:
-      - status
-      properties:
-        status:
-          type: string
-          enum:
-          - ok
-          example: ok
     OpalServiceStartOptions:
       type: object
       properties:
@@ -1721,8 +1668,11 @@ components:
         - health
         summary: Service health report
         operationId: opal_health_get
-        description: Aggregate health report for the service and its dependencies. The only suite-standard member
-          is `status`; all other sections are service-defined.
+        description: 'Aggregate health report for the service: identity (`name`, `version`, `api_version`),
+          overall `status`, `live`/`ready` flags and module-defined `details`. This is the single service
+          information surface - it replaces the retired `GET /api/v1/info/` and `GET /api/v1/info/ping`
+          reports. Returns HTTP 200 whenever the report is available, including when `ready` is false;
+          503 is used only when the report itself cannot be produced.'
         responses:
           '200':
             description: Service health report.
@@ -1739,6 +1689,85 @@ components:
               application/json:
                 schema:
                   $ref: '#/components/schemas/OpalHealthReport'
+                examples:
+                  healthy:
+                    summary: Healthy module with module-defined details
+                    value:
+                      name: opal-say-svc
+                      version: 1.4.2
+                      api_version: v1
+                      status: ok
+                      live: true
+                      ready: true
+                      details:
+                        engines:
+                        - name: local-piper
+                          available: true
+                      checked_at: '2026-01-15T09:30:00Z'
+                      uptime_seconds: 8421.5
+                  live_not_ready:
+                    summary: Live but unready module (still HTTP 200)
+                    value:
+                      name: opal-think-svc
+                      version: 2.1.0
+                      api_version: v1
+                      status: degraded
+                      live: true
+                      ready: false
+                      details:
+                        components:
+                          model_registry:
+                            state: initializing
+                      checked_at: '2026-01-15T09:31:12Z'
+                      uptime_seconds: 41.0
+                  event_counters:
+                    summary: OPAL Event counter diagnostics under details.stats
+                    value:
+                      name: opal-event-svc
+                      version: 1.9.0
+                      api_version: v1
+                      status: ok
+                      live: true
+                      ready: true
+                      details:
+                        stats:
+                          observed_events: 120445
+                          matched_events: 8871
+                          executions_completed: 8650
+                          executions_failed: 3
+                          queue_depth: 0
+                          active_workers: 4
+                      checked_at: '2026-01-15T09:32:00Z'
+                      uptime_seconds: 51033.2
+                  listen_audio_devices:
+                    summary: OPAL Listen device diagnostics under details.audio_devices
+                    value:
+                      name: opal-listen-svc
+                      version: 1.7.1
+                      api_version: v1
+                      status: ok
+                      live: true
+                      ready: true
+                      details:
+                        audio_devices:
+                        - id: default
+                          name: Built-in Microphone
+                          channels: 1
+                          sample_rate: 16000
+                      checked_at: '2026-01-15T09:32:44Z'
+                      uptime_seconds: 30012.0
+                  minimal:
+                    summary: Module without extra diagnostics
+                    value:
+                      name: opal-look-yolo-svc
+                      version: 1.0.0
+                      api_version: v1
+                      status: ok
+                      live: true
+                      ready: true
+                      details: {}
+                      checked_at: '2026-01-15T09:33:10Z'
+                      uptime_seconds: 12.4
           '401':
             $ref: '#/components/responses/Unauthorized'
           '403':
@@ -1747,6 +1776,9 @@ components:
             $ref: '#/components/responses/UnprocessableEntity'
           '503':
             $ref: '#/components/responses/ServiceUnavailable'
+        x-opal-cli:
+          group: info
+          command: health
     health_live:
       parameters:
       - $ref: '#/components/parameters/OpalSessionIdParameter'
@@ -1758,7 +1790,9 @@ components:
         - health
         summary: Liveness probe
         operationId: opal_health_live_get
-        description: 'Cheap liveness check: the process is up and its minimal runtime is reachable.'
+        description: 'Cheap liveness check for machine callers: the process is up and its minimal runtime
+          is reachable. This is the supported machine probe - it replaces the retired `GET /api/v1/info/ping`
+          for supervisors and load balancers. No CLI binding; use `info health` for the human-readable report.'
         responses:
           '200':
             description: Health probe.
@@ -1807,8 +1841,9 @@ components:
         - health
         summary: Readiness probe
         operationId: opal_health_ready_get
-        description: 'Readiness check: the service can accept traffic because every required dependency is initialized
-          and reachable.'
+        description: 'Readiness check for machine callers: the service can accept traffic because every
+          required dependency is initialized and reachable. No CLI binding; use `info health` for the
+          human-readable report.'
         responses:
           '200':
             description: Health probe.
@@ -2634,74 +2669,6 @@ components:
             $ref: '#/components/responses/UnprocessableEntity'
           '428':
             $ref: '#/components/responses/PreconditionRequired'
-    info:
-      parameters:
-      - $ref: '#/components/parameters/OpalSessionIdParameter'
-      - $ref: '#/components/parameters/OpalTransactionIdParameter'
-      - $ref: '#/components/parameters/OpalRequestIdParameter'
-      - $ref: '#/components/parameters/OpalCausationIdParameter'
-      get:
-        tags:
-        - info
-        summary: Service Info
-        description: 'Service identity: name, package version and API version.'
-        operationId: opal_info_get
-        responses:
-          '200':
-            description: Service identity.
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/ServiceInfo'
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
-    info_ping:
-      parameters:
-      - $ref: '#/components/parameters/OpalSessionIdParameter'
-      - $ref: '#/components/parameters/OpalTransactionIdParameter'
-      - $ref: '#/components/parameters/OpalRequestIdParameter'
-      - $ref: '#/components/parameters/OpalCausationIdParameter'
-      get:
-        tags:
-        - info
-        summary: Ping
-        description: Lightweight liveness probe for process supervisors.
-        operationId: opal_info_ping
-        responses:
-          '200':
-            description: Service process is alive.
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/LivenessRead'
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
     service_start:
       parameters:
       - $ref: '#/components/parameters/OpalSessionIdParameter'

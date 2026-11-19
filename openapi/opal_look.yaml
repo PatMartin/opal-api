@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OPAL Look — MVP Plus Visual Observation API
-  version: 3.0.0
+  version: 4.0.0
   description: |
     Clean-cut replacement contract for OPAL Look. Video-only RTSP streams work
     with no AI engine installed; YOLO, RF-DETR, RT-DETR and D-FINE are optional
@@ -50,8 +50,6 @@ tags:
     schema), but profile records, selection and portability behave suite-wide.'
 - name: config
   description: Save, load, validate, and inspect portable module configuration.
-- name: info
-  description: Service identity, version and liveness probes.
 - name: health
   description: Service readiness and health information.
 - name: service
@@ -999,34 +997,10 @@ paths:
         command: activate
   /api/v1/health/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health'
-    x-opal-cli:
-      get:
-        group: info
-        command: health
-  /api/v1/info/:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/info'
-    x-opal-cli:
-      get:
-        group: info
-        command: version
-  /api/v1/info/ping:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/info_ping'
-    x-opal-cli:
-      get:
-        group: info
-        command: ping
   /api/v1/health/live:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health_live'
-    x-opal-cli:
-      get:
-        group: info
-        command: live
   /api/v1/health/ready:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health_ready'
-    x-opal-cli:
-      get:
-        group: info
-        command: ready
   /api/v1/service/start:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/service_start'
     x-opal-cli:
@@ -1547,11 +1521,7 @@ x-opal-cli-commands:
   - set
   - remove
   info:
-  - version
-  - ping
   - health
-  - live
-  - ready
   service:
   - start
   - stop
@@ -1565,6 +1535,13 @@ x-opal-mvp-rules:
   decoding: Decode a source once per stream and fan frames out to consumers; viewing must not establish a new RTSP connection.
   bounded_resources: Bound frame queues and stream admission; stopping releases resources; stale replays fail explicitly.
   scope: No opal-devices, recording, pipelines, tracking, jobs, personas, event bus, training, or model downloads in MVP Plus.
+x-opal-health-details:
+  version: '1.0'
+  description: >-
+    Module-defined members of OpalHealthReport.details. Look declares no
+    health-specific diagnostics today; `details` may still carry
+    implementation-defined members that consumers must treat as optional.
+  members: {}
 x-opal-snapshot:
   version: '1.0'
   module: opal-look

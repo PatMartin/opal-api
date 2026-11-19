@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Opal Event API
-  version: 3.0.0
+  version: 4.0.0
   description: 'REST management and HTTP event ingress for opal-event-svc. API-first contract, release v1.
 
 
@@ -107,8 +107,6 @@ tags:
   description: Save, load, validate, and inspect portable module configuration.
 - name: persona
   description: Manage named persona identities adopting the shared OPAL persona identifiers introduced by OPAL Say v1.6.0.
-- name: info
-  description: Service identity, version and liveness probes.
 - name: service
   description: Service process lifecycle (start, stop, log tail).
 - name: health
@@ -1190,48 +1188,6 @@ paths:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
   /api/v1/health/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health'
-  /api/v1/stats/:
-    get:
-      tags:
-      - Operations
-      operationId: show_stats
-      summary: Get event and execution counters
-      description: ''
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Stats'
-          headers:
-            X-Opal-Session-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
-        '400':
-          $ref: './shared/opal_kernel.yaml#/components/responses/BadRequest'
-        '401':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
-        '403':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
-        '404':
-          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
-        '409':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Conflict'
-        '422':
-          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-        '500':
-          $ref: './shared/opal_kernel.yaml#/components/responses/OperationFailed'
-    parameters:
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
   /api/v1/profile/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/profiles_collection'
     x-opal-cli:
@@ -1341,10 +1297,6 @@ paths:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/config_load'
   /api/v1/config/validate:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/config_validate'
-  /api/v1/info/:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/info'
-  /api/v1/info/ping:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/info_ping'
   /api/v1/health/live:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health_live'
   /api/v1/health/ready:
@@ -2650,6 +2602,15 @@ x-opal-profile-namespace:
     schemas that validate it. Event declares no profile-specific defaults; the
     compartment is an explicit empty closed schema that preserves the
     registered namespace for future fields. See docs/PROFILE_MIGRATION.md.
+x-opal-health-details:
+  version: '1.0'
+  description: >-
+    Module-defined members of OpalHealthReport.details. Event reports its
+    event and execution counters under `stats` - the payload formerly
+    served by the retired /api/v1/stats/ route.
+  members:
+    stats:
+      $ref: '#/components/schemas/Stats'
 x-opal-snapshot:
   version: '1.0'
   module: opal-event

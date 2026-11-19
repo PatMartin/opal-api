@@ -31,7 +31,7 @@ def param_names(op):
 def main():
     spec = spec_util.load(SPEC)
 
-    check(spec["info"]["version"] == "3.0.0", "info.version is 3.0.0 (namespaced profile migration)")
+    check(spec["info"]["version"] == "4.0.0", "info.version is 4.0.0 (info surface consolidation)")
 
     sk = spec["paths"]["/api/v1/setting/{key}"]
     check(set(sk) & {"get", "put", "delete"} == {"get", "put", "delete"},

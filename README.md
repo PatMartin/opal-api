@@ -251,8 +251,7 @@ Routes use `/api/v1`, singular resource names, and trailing slashes on collectio
 
 | Family | Contract surface |
 | --- | --- |
-| Identity | `GET /api/v1/info/`, `GET /api/v1/info/ping` |
-| Health | `GET /api/v1/health/`, `/api/v1/health/live`, `/api/v1/health/ready` |
+| Health | `GET /api/v1/health/` — unified report (`info health`): name, version, api_version, status, live, ready, details; `GET /api/v1/health/live`, `GET /api/v1/health/ready` — HTTP-only machine probes |
 | Configuration | `POST /api/v1/config/save`, `POST /api/v1/config/load`, `POST /api/v1/config/validate` — save/load/validate a portable configuration snapshot (managed store or client file) |
 | Settings | `GET /api/v1/setting/`; `GET`/`PUT`/`DELETE /api/v1/setting/{key}` |
 | Profiles | Collection and item CRUD (create, read, update, delete), plus activation |

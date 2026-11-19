@@ -2,7 +2,7 @@ openapi: 3.1.0
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 info:
   title: OPAL YOLO — Simplified Inference Adapter API
-  version: 3.0.0-mvp-plus
+  version: 4.0.0-mvp-plus
   description: Standalone Ultralytics YOLO engine adapter for the OPAL Look MVP Plus. This engine owns YOLO model
     discovery, loading, local compute-device discovery, and image/frame inference. OPAL Look owns RTSP decoding,
     stream lifecycle, SSE, MJPEG rendering, snapshots and stream metrics. No opal-devices dependency. Native YOLO
@@ -15,7 +15,6 @@ servers:
 security:
 - BearerAuth: []
 tags:
-- name: info
 - name: health
 - name: engines
 - name: models
@@ -29,76 +28,8 @@ tags:
 - name: config
   description: Save, load, validate, and inspect portable module configuration.
 paths:
-  /api/v1/info/:
-    get:
-      tags:
-      - info
-      operationId: yolo_info_show
-      summary: Show adapter information
-      x-opal-cli:
-        group: info
-        command: show
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Adapter information
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceInfo'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/SessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/TransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/RequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/CausationIdHeader'
-      parameters:
-      - $ref: '#/components/parameters/SessionIdParameter'
-      - $ref: '#/components/parameters/TransactionIdParameter'
-      - $ref: '#/components/parameters/RequestIdParameter'
-      - $ref: '#/components/parameters/CausationIdParameter'
   /api/v1/health/:
-    get:
-      tags:
-      - health
-      operationId: yolo_info_health
-      summary: Check adapter health (no model must be loaded)
-      x-opal-cli:
-        group: info
-        command: health
-      responses:
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '200':
-          description: Healthy adapter
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HealthStatus'
-          headers:
-            X-Opal-Session-Id:
-              $ref: '#/components/headers/SessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: '#/components/headers/TransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: '#/components/headers/RequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: '#/components/headers/CausationIdHeader'
-        '503':
-          $ref: '#/components/responses/ServiceUnavailable'
-      parameters:
-      - $ref: '#/components/parameters/SessionIdParameter'
-      - $ref: '#/components/parameters/TransactionIdParameter'
-      - $ref: '#/components/parameters/RequestIdParameter'
-      - $ref: '#/components/parameters/CausationIdParameter'
+    $ref: '../shared/opal_kernel.yaml#/components/pathItems/health'
   /api/v1/engine/:
     get:
       tags:
@@ -778,36 +709,6 @@ components:
         maxLength: 128
       description: Opaque correlation context, not authentication
   schemas:
-    ServiceInfo:
-      type: object
-      required:
-      - name
-      - version
-      - engine_id
-      properties:
-        name:
-          type: string
-          const: opal-yolo
-        version:
-          type: string
-        engine_id:
-          type: string
-          const: yolo
-    HealthStatus:
-      type: object
-      required:
-      - status
-      - engine_available
-      properties:
-        status:
-          type: string
-          enum:
-          - ok
-          - degraded
-        engine_available:
-          type: boolean
-        detail:
-          type: string
     Engine:
       type: object
       required:
@@ -1280,6 +1181,16 @@ x-opal-profile-namespace:
     defaults; the compartment is an explicit empty closed schema that
     preserves the registered namespace for future fields. See
     docs/PROFILE_MIGRATION.md.
+x-opal-health-details:
+  version: '1.0'
+  description: >-
+    Module-defined members of OpalHealthReport.details. The adapter reports
+    `engine_available`, the diagnostic its retired inline health payload
+    carried, under this member.
+  members:
+    engine_available:
+      type: boolean
+      description: Whether the YOLO engine can currently initialize and infer.
 x-opal-snapshot:
   version: '1.0'
   module: opal-look-yolo

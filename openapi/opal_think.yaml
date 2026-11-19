@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OPAL Think API
-  version: 3.0.0
+  version: 4.0.0
   description: |
     OPAL-THINK is a model-neutral, guarded reasoning service. The OpenAPI contract is authoritative; CLI and SPA only call REST.
 
@@ -50,8 +50,6 @@ tags:
   description: Health, liveness, and readiness.
 - name: persona
   description: Manage named persona identities adopting the shared OPAL persona identifiers introduced by OPAL Say v1.6.0.
-- name: info
-  description: Service identity, version and liveness probes.
 - name: service
   description: Service process lifecycle (start, stop, log tail).
 - name: profiles
@@ -660,34 +658,10 @@ paths:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/config_validate'
   /api/v1/health/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health'
-    x-opal-cli:
-      get:
-        group: info
-        command: health
-  /api/v1/info/:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/info'
-    x-opal-cli:
-      get:
-        group: info
-        command: version
-  /api/v1/info/ping:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/info_ping'
-    x-opal-cli:
-      get:
-        group: info
-        command: ping
   /api/v1/health/live:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health_live'
-    x-opal-cli:
-      get:
-        group: info
-        command: live
   /api/v1/health/ready:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health_ready'
-    x-opal-cli:
-      get:
-        group: info
-        command: ready
   /api/v1/service/start:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/service_start'
     x-opal-cli:
@@ -1431,11 +1405,7 @@ x-opal-cli-commands:
   - remove
   - validate
   info:
-  - version
-  - ping
   - health
-  - live
-  - ready
   service:
   - start
   - stop
@@ -1502,6 +1472,13 @@ x-opal-context-standard:
     stale_status: 412
   streaming: Include HTTP context headers before bytes; after headers are sent, failures are represented
     by transport-specific terminal events or stream termination; no invented resumability.
+x-opal-health-details:
+  version: '1.0'
+  description: >-
+    Module-defined members of OpalHealthReport.details. Think declares no
+    health-specific diagnostics today; `details` may still carry
+    implementation-defined members that consumers must treat as optional.
+  members: {}
 x-opal-snapshot:
   version: '1.0'
   module: opal-think

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OPAL Say API
-  version: 3.0.0
+  version: 4.0.0
   description: "Implementation-neutral text-to-speech (TTS) service for the OPAL suite.\n\nOPAL Say provides\
     \ a stable REST contract over one or more host-installed TTS\nengine such as Piper or Kokoro. Clients\
     \ interact with OPAL concepts—engine,\nvoice, profile, generation setting, and audio output—without\
@@ -81,8 +81,6 @@ tags:
     SSML is not supported by version 1 of this contract.
 
     '
-- name: info
-  description: Service identity, version and liveness probes.
 - name: health
   description: Service readiness and health information. Playback devices are out of scope.
 - name: config
@@ -1150,10 +1148,6 @@ paths:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/config_validate'
   /api/v1/health/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health'
-  /api/v1/info/:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/info'
-  /api/v1/info/ping:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/info_ping'
   /api/v1/health/live:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health_live'
   /api/v1/health/ready:
@@ -1732,6 +1726,13 @@ x-opal-profile-namespace:
     schemas that validate it. Profile defaults migrated from the v2 flat
     fields voice_id, speed, volume, output_format, sample_rate,
     engine_options; see docs/PROFILE_MIGRATION.md.
+x-opal-health-details:
+  version: '1.0'
+  description: >-
+    Module-defined members of OpalHealthReport.details. Say declares no
+    health-specific diagnostics today; `details` may still carry
+    implementation-defined members that consumers must treat as optional.
+  members: {}
 x-opal-snapshot:
   version: '1.0'
   module: opal-say
