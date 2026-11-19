@@ -62,7 +62,8 @@ x-opal-cli-format:
     command `opal <service> [parent] [group] <command>`; `aliases` names alternate complete spellings that dispatch
     to the same operation (e.g. Think's `ask`/`chat`/`create` invoke `task add`). Kernel Path Items carry
     per-operation descriptors directly and are the single source of truth for shared-operation bindings,
-    including all `config`/`config setting` commands. Readers hoist a path-level per-method map onto each
+    including all `config`/`config setting`, `info`, and `service` commands. Readers hoist a path-level
+    per-method map onto each
     operation for module-declared mounts; both forms carry the same descriptor shape.
   descriptor:
     command: required - canonical verb, kebab-case (`list`, `add`, `show`, `update`, `remove`, `save`,
@@ -2715,6 +2716,15 @@ components:
             $ref: '#/components/responses/UnprocessableEntity'
           '500':
             $ref: '#/components/responses/OperationFailed'
+        x-opal-cli:
+          group: service
+          command: start
+          options:
+          - flag: --append
+            description: Append to the existing service log instead of truncating it.
+            binds:
+              kind: body
+              target: append
     service_stop:
       parameters:
       - $ref: '#/components/parameters/OpalSessionIdParameter'
@@ -2752,6 +2762,9 @@ components:
             $ref: '#/components/responses/UnprocessableEntity'
           '500':
             $ref: '#/components/responses/OperationFailed'
+        x-opal-cli:
+          group: service
+          command: stop
     service_log:
       parameters:
       - $ref: '#/components/parameters/OpalSessionIdParameter'
@@ -2791,3 +2804,13 @@ components:
             $ref: '#/components/responses/NotFound'
           '422':
             $ref: '#/components/responses/UnprocessableEntity'
+        x-opal-cli:
+          group: service
+          command: log
+          options:
+          - flag: --lines
+            value: N
+            description: Number of trailing log lines to return (1-1000, default 10).
+            binds:
+              kind: query
+              target: lines

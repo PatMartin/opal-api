@@ -25,6 +25,7 @@ tags:
     This adapter declares no compartment fields today (`modules.opal-look-yolo` is an
     explicit empty schema), but profile records, selection and portability behave
     suite-wide like every other runtime module.'
+- name: service
 - name: config
   description: Save, load, validate, and inspect portable module configuration.
 paths:
@@ -643,6 +644,12 @@ paths:
       post:
         group: profile
         command: activate
+  /api/v1/service/start:
+    $ref: '../shared/opal_kernel.yaml#/components/pathItems/service_start'
+  /api/v1/service/stop:
+    $ref: '../shared/opal_kernel.yaml#/components/pathItems/service_stop'
+  /api/v1/service/log:
+    $ref: '../shared/opal_kernel.yaml#/components/pathItems/service_log'
 components:
   securitySchemes:
     BearerAuth:
