@@ -235,7 +235,7 @@ x-opal-cli:
   - chat
 ```
 
-Descriptors have a required `command` and optional `parent`, `group`, and `aliases`. Kernel-mounted paths attach a per-method map beside their `$ref`; the test helper hoists that map onto operations for assertions.
+Descriptors have a required `command` and optional `parent`, `group`, and `aliases`. Kernel Path Items carry per-operation descriptors directly, making the kernel the single source of truth for shared-operation bindings — including all seven `config`/`config setting` operations mounted by every module. Module-declared bindings on `$ref` mounts may instead use a path-level per-method map; the test helper hoists that map onto operations for assertions.
 
 Look and Think currently annotate all their operations. Event, Listen, and Say have partial annotation coverage. The general Spectral rules validate descriptor shape where annotations exist, while the Look parity test explicitly checks operation coverage and command uniqueness.
 

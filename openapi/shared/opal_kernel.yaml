@@ -60,8 +60,10 @@ x-opal-cli-format:
   version: '1.0'
   description: Canonical CLI binding for OPAL operations. Every annotated operation maps to one canonical
     command `opal <service> [parent] [group] <command>`; `aliases` names alternate complete spellings that dispatch
-    to the same operation (e.g. Think's `ask`/`chat`/`create` invoke `task add`). Readers hoist a path-level per-method
-    map onto each operation; both forms carry the same descriptor shape.
+    to the same operation (e.g. Think's `ask`/`chat`/`create` invoke `task add`). Kernel Path Items carry
+    per-operation descriptors directly and are the single source of truth for shared-operation bindings,
+    including all `config`/`config setting` commands. Readers hoist a path-level per-method map onto each
+    operation for module-declared mounts; both forms carry the same descriptor shape.
   descriptor:
     command: required - canonical verb, kebab-case (`list`, `add`, `show`, `update`, `remove`, `save`,
       `load`, `validate`, ...)
@@ -74,8 +76,9 @@ x-opal-cli-format:
       `query` | `body` | `header` | `local_in` | `local_out`.
   placement:
     operation: '`x-opal-cli: <descriptor>`'
-    path_item: '`x-opal-cli: {<method>: <descriptor>}` - required for kernel-mounted paths (extensions cannot
-      inject into `$ref`ed operations)'
+    path_item: '`x-opal-cli: {<method>: <descriptor>}` - for module-declared bindings on a `$ref`-mounted
+      path item (an extension beside `$ref` cannot inject into operations defined in another document).
+      Kernel-owned Path Items use the operation form instead.'
   local_file_options:
     local_in: The CLI reads and parses a client-local file, then submits the parsed object in the request
       body at `target`. The service never sees the client filename. For snapshot operations, `.yaml`/`.yml`
@@ -1609,6 +1612,10 @@ components:
             $ref: '#/components/responses/Forbidden'
           '422':
             $ref: '#/components/responses/UnprocessableEntity'
+        x-opal-cli:
+          parent: config
+          group: setting
+          command: list
     settings_key:
       parameters:
       - $ref: '#/components/parameters/OpalSessionIdParameter'
@@ -1649,6 +1656,17 @@ components:
             $ref: '#/components/responses/NotFound'
           '422':
             $ref: '#/components/responses/UnprocessableEntity'
+        x-opal-cli:
+          parent: config
+          group: setting
+          command: show
+          options:
+          - flag: --name
+            value: NAME
+            required: true
+            binds:
+              kind: path
+              target: key
       put:
         tags:
         - config
@@ -1698,6 +1716,24 @@ components:
             $ref: '#/components/responses/UnprocessableEntity'
           '428':
             $ref: '#/components/responses/PreconditionRequired'
+        x-opal-cli:
+          parent: config
+          group: setting
+          command: set
+          options:
+          - flag: --name
+            value: NAME
+            required: true
+            binds:
+              kind: path
+              target: key
+          - flag: --value
+            value: VALUE
+            required: true
+            binds:
+              kind: body
+              target: value
+              parse: json_or_string
       delete:
         tags:
         - config
@@ -1736,6 +1772,17 @@ components:
             $ref: '#/components/responses/UnprocessableEntity'
           '428':
             $ref: '#/components/responses/PreconditionRequired'
+        x-opal-cli:
+          parent: config
+          group: setting
+          command: remove
+          options:
+          - flag: --name
+            value: NAME
+            required: true
+            binds:
+              kind: path
+              target: key
     config_save:
       parameters:
       - $ref: '#/components/parameters/OpalSessionIdParameter'
@@ -1787,6 +1834,15 @@ components:
             $ref: '#/components/responses/UnprocessableEntity'
           '500':
             $ref: '#/components/responses/OperationFailed'
+        x-opal-cli:
+          group: config
+          command: save
+          options:
+          - flag: --out
+            value: FILE
+            binds:
+              kind: local_out
+              target: snapshot
     config_load:
       parameters:
       - $ref: '#/components/parameters/OpalSessionIdParameter'
@@ -1854,6 +1910,16 @@ components:
             $ref: '#/components/responses/PreconditionRequired'
           '500':
             $ref: '#/components/responses/OperationFailed'
+        x-opal-cli:
+          group: config
+          command: load
+          options:
+          - flag: --in
+            value: FILE
+            binds:
+              kind: local_in
+              target: snapshot
+              parse: yaml_or_json_file
     config_validate:
       parameters:
       - $ref: '#/components/parameters/OpalSessionIdParameter'
@@ -1900,6 +1966,16 @@ components:
             $ref: '#/components/responses/Forbidden'
           '422':
             $ref: '#/components/responses/UnprocessableEntity'
+        x-opal-cli:
+          group: config
+          command: validate
+          options:
+          - flag: --in
+            value: FILE
+            binds:
+              kind: local_in
+              target: snapshot
+              parse: yaml_or_json_file
     profiles_collection:
       parameters:
       - $ref: '#/components/parameters/OpalSessionIdParameter'

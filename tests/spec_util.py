@@ -77,10 +77,12 @@ _METHODS = ("get", "post", "put", "patch", "delete")
 
 
 def _hoist_cli(spec):
-    """Mounted shared Path Items carry per-op x-opal-cli metadata as a
-    path-level {method: value} map (extensions cannot inject into referenced
-    operations). For the resolved view, copy each entry onto the operation it
-    describes."""
+    """Module-declared bindings on mounted Path Items may carry per-op
+    x-opal-cli metadata as a path-level {method: value} map (an extension
+    beside $ref cannot inject into operations defined in another document).
+    Kernel-owned Path Items carry per-operation descriptors natively and need
+    no hoisting. For the resolved view, copy each map entry onto the operation
+    it describes."""
     for item in (spec.get("paths") or {}).values():
         if not isinstance(item, dict):
             continue

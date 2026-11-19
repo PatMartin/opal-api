@@ -1140,92 +1140,14 @@ paths:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
   /api/v1/setting/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_collection'
-    x-opal-cli:
-      get:
-        parent: config
-        group: setting
-        command: list
   /api/v1/setting/{key}:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/settings_key'
-    x-opal-cli:
-      get:
-        parent: config
-        group: setting
-        command: show
-        options:
-        - flag: --name
-          value: NAME
-          required: true
-          binds:
-            kind: path
-            target: key
-      put:
-        parent: config
-        group: setting
-        command: set
-        options:
-        - flag: --name
-          value: NAME
-          required: true
-          binds:
-            kind: path
-            target: key
-        - flag: --value
-          value: VALUE
-          required: true
-          binds:
-            kind: body
-            target: value
-            parse: json_or_string
-      delete:
-        parent: config
-        group: setting
-        command: remove
-        options:
-        - flag: --name
-          value: NAME
-          required: true
-          binds:
-            kind: path
-            target: key
   /api/v1/config/save:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/config_save'
-    x-opal-cli:
-      post:
-        group: config
-        command: save
-        options:
-        - flag: --out
-          value: FILE
-          binds:
-            kind: local_out
-            target: snapshot
   /api/v1/config/load:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/config_load'
-    x-opal-cli:
-      post:
-        group: config
-        command: load
-        options:
-        - flag: --in
-          value: FILE
-          binds:
-            kind: local_in
-            target: snapshot
-            parse: yaml_or_json_file
   /api/v1/config/validate:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/config_validate'
-    x-opal-cli:
-      post:
-        group: config
-        command: validate
-        options:
-        - flag: --in
-          value: FILE
-          binds:
-            kind: local_in
-            target: snapshot
-            parse: yaml_or_json_file
   /api/v1/health/:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/health'
   /api/v1/info/:

@@ -1,8 +1,8 @@
 """CLI <-> REST parity tests for the published openapi/opal_look.yaml.
 
 Contract-level only: verifies every operation has an unambiguous CLI mapping
-(x-opal-cli, including path-level maps hoisted onto kernel-mounted Path
-Items), that the MVP Plus stream/predict surface is declared correctly, and
+(x-opal-cli: per-operation descriptors on kernel Path Items, plus path-level
+maps hoisted onto module-declared mounts), that the MVP Plus stream/predict surface is declared correctly, and
 that the standard kernel-mounted routes are present. No service or CLI is
 implemented here.
 """
@@ -56,8 +56,9 @@ def main():
     d = spec_util.load(SPEC)
     paths = d["paths"]
 
-    # Every resolved operation (including kernel-mounted Path Items, whose
-    # path-level per-method x-opal-cli maps are hoisted by spec_util.load)
+    # Every resolved operation (kernel Path Items carry per-operation
+    # x-opal-cli natively; module-declared mounts use path-level per-method
+    # maps hoisted by spec_util.load)
     # has an unambiguous CLI binding and no two ops share (group, command).
     seen = {}
     dupes = []

@@ -11,15 +11,24 @@ excluding the shared kernel):
 * the exact CLI subtree `config save|load|validate` + `config setting
   list|show --name|set --name --value|remove --name` with required flags and
   no configuration aliases
+* authoring files: each module mounts the five config paths as bare external
+  $refs to the kernel Path Items - no local methods, no CLI overrides - and
+  the kernel Path Items carry the seven per-operation x-opal-cli descriptors
+  as the single source of truth for the bindings
+* generated bundles in dist/ expose the same seven operations with canonical
+  operationIds, CLI bindings and security
 * no retired surfaces: no /api/v1/backup/*, no settings-collection PATCH, no
   backup/restore/export/import command groups or operationIds
 * the closed snapshot envelope and x-opal-snapshot metadata
-* a negative discovery proof: a doctored nonconforming module fails the same
-  checks
+* negative discovery proofs: a doctored nonconforming module fails the same
+  checks, and an inline copy of a kernel operation in place of a $ref fails
+  the source-level mount check even though the resolved API looks identical
 """
 import copy
 import os
 import sys
+
+import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import spec_util  # noqa: E402
@@ -54,6 +63,23 @@ CLI = {
 RETIRED_OPIDS = {"opal_setting_patch", "opal_backup_validate_stored"}
 LEGACY_VERBS = {"backup", "restore", "export", "import", "download"}
 
+MOUNTS = {
+    "/api/v1/config/save":     "config_save",
+    "/api/v1/config/load":     "config_load",
+    "/api/v1/config/validate": "config_validate",
+    "/api/v1/setting/":        "settings_collection",
+    "/api/v1/setting/{key}":   "settings_key",
+}
+EXPECTED_CLI = {
+    ("post",   "/api/v1/config/save"):     ("config", "save"),
+    ("post",   "/api/v1/config/load"):     ("config", "load"),
+    ("post",   "/api/v1/config/validate"): ("config", "validate"),
+    ("get",    "/api/v1/setting/"):        ("setting", "list"),
+    ("get",    "/api/v1/setting/{key}"):   ("setting", "show"),
+    ("put",    "/api/v1/setting/{key}"):   ("setting", "set"),
+    ("delete", "/api/v1/setting/{key}"):   ("setting", "remove"),
+}
+
 
 def param_names(op):
     return {p.get("name") for p in (op.get("parameters") or []) if isinstance(p, dict)}
@@ -69,6 +95,89 @@ def cli_of(op):
 
 def opt_flags(cli):
     return {o.get("flag"): o for o in cli.get("options") or []}
+
+
+def _opt_binds(cli, flag):
+    return (opt_flags(cli).get(flag) or {}).get("binds") or {}
+
+
+def cli_canonical(op, method, path):
+    """True when the operation's x-opal-cli descriptor is exactly the
+    canonical binding (group/verb/parent, flags, binds, no aliases)."""
+    grp, cmd = EXPECTED_CLI[(method, path)]
+    cli = cli_of(op)
+    if cli.get("group") != grp or cli.get("command") != cmd or cli.get("aliases"):
+        return False
+    if path.startswith("/api/v1/setting"):
+        if cli.get("parent") != "config":
+            return False
+        if path == "/api/v1/setting/{key}":
+            nm = opt_flags(cli).get("--name") or {}
+            if not (nm.get("required") is True
+                    and _opt_binds(cli, "--name") == {"kind": "path", "target": "key"}):
+                return False
+            if method != "put":
+                return True
+            vl = opt_flags(cli).get("--value") or {}
+            return (vl.get("required") is True and _opt_binds(cli, "--value") ==
+                    {"kind": "body", "target": "value", "parse": "json_or_string"})
+        return True
+    if cli.get("parent") is not None:
+        return False
+    if path == "/api/v1/config/save":
+        return _opt_binds(cli, "--out") == {"kind": "local_out", "target": "snapshot"}
+    return _opt_binds(cli, "--in") == {"kind": "local_in", "target": "snapshot",
+                                       "parse": "yaml_or_json_file"}
+
+
+def kernel_ref(spec_path, item):
+    rel = os.path.relpath(spec_util.KERNEL_PATH,
+                          os.path.dirname(os.path.abspath(spec_path)))
+    return rel.replace(os.sep, "/") + "#/components/pathItems/" + item
+
+
+def check_source_mounts(src, spec_path, name, quiet=False):
+    """Assert the authoring file mounts each config path as a bare external
+    $ref to the correct kernel Path Item - no local methods, no CLI
+    overrides, no duplicate mounts. Returns (count_ok, failures)."""
+    local = []
+
+    def c(cond, msg):
+        if not cond:
+            local.append(msg)
+        if not quiet:
+            check(cond, f"{name}: {msg}")
+
+    paths = src.get("paths", {})
+    ok = 0
+    for pth, item in MOUNTS.items():
+        entry = paths.get(pth) or {}
+        ref = (entry.get("$ref") or "").replace("\\", "/")
+        want = kernel_ref(spec_path, item)
+        good = (set(entry.keys()) == {"$ref"}
+                and ref in (want, "./" + want))
+        c(good, f"{pth} is a bare $ref to kernel pathItem {item}")
+        ok += 1 if good else 0
+    dupes = sorted(p for p, e in paths.items()
+                   if p not in MOUNTS and isinstance(e, dict)
+                   and any(str(e.get("$ref", "")).endswith(
+                           "/components/pathItems/" + i) for i in MOUNTS.values()))
+    c(not dupes, f"no duplicate mounts of config Path Items ({dupes})")
+    return ok, local
+
+
+def check_kernel_source():
+    """The kernel Path Items carry the seven canonical per-operation
+    x-opal-cli descriptors - the single source of truth for the bindings."""
+    kd = yaml.safe_load(open(spec_util.KERNEL_PATH, encoding="utf-8"))
+    pi = kd.get("components", {}).get("pathItems", {})
+    for pth, item_name in MOUNTS.items():
+        for m, op in (pi.get(item_name) or {}).items():
+            if m == "parameters" or not isinstance(op, dict):
+                continue
+            grp, cmd = EXPECTED_CLI[(m, pth)]
+            check(cli_canonical(op, m, pth),
+                  f"kernel: {item_name}.{m} carries canonical x-opal-cli ({grp} {cmd})")
 
 
 def check_module(d, name, quiet=False):
@@ -243,18 +352,58 @@ def main():
           f"all known runtime modules have contracts (missing: {sorted(expected - names)})")
 
     docs = {}
+    sources = {}
+    spec_paths = {}
     for path in specs:
         name = os.path.splitext(os.path.basename(path))[0]
+        spec_paths[name] = path
+        sources[name] = yaml.safe_load(open(path, encoding="utf-8"))
+        mounts_ok, _ = check_source_mounts(sources[name], path, name)
+        check(mounts_ok == len(MOUNTS),
+              f"{name}: {mounts_ok}/{len(MOUNTS)} config mounts are canonical kernel $refs")
         docs[name] = spec_util.load(path)
         check_module(docs[name], name)
+        n_cli = sum(1 for m, p, _ in OPS
+                    if cli_canonical(docs[name]["paths"].get(p, {}).get(m) or {}, m, p))
+        check(n_cli == len(OPS),
+              f"{name}: {n_cli}/{len(OPS)} config operations expose canonical CLI bindings")
 
-    # -- negative discovery proof -------------------------------------------
+    check_kernel_source()
+
+    # -- generated bundles ---------------------------------------------------
+    for name, path in spec_paths.items():
+        bpath = os.path.join(spec_util.ROOT, "dist", name + ".yaml")
+        if not os.path.exists(bpath):
+            check(True, f"{name}: bundle check skipped (run npm run bundle first)")
+            continue
+        bd = yaml.safe_load(open(bpath, encoding="utf-8"))
+        n_ops = sum(1 for m, p, opid in OPS
+                    if (bd.get("paths", {}).get(p, {}).get(m) or {})
+                    .get("operationId") == opid)
+        check(n_ops == len(OPS),
+              f"{name} bundle: {n_ops}/{len(OPS)} canonical operations present")
+        n_cli = sum(1 for m, p, _ in OPS
+                    if cli_canonical(bd["paths"].get(p, {}).get(m) or {}, m, p))
+        check(n_cli == len(OPS),
+              f"{name} bundle: {n_cli}/{len(OPS)} operations carry canonical CLI bindings")
+        check(bool(bd.get("security")), f"{name} bundle: security scheme present")
+
+    # -- negative discovery proofs -------------------------------------------
     victim = copy.deepcopy(docs["opal_event"])
     victim["paths"].pop("/api/v1/config/save", None)
     victim["paths"]["/api/v1/backup/import"] = {"post": {"operationId": "opal_backup_import"}}
     found = check_module(victim, "nonconforming-probe", quiet=True)
     check(any("config/save" in m or "backup" in m for m in found),
           "negative discovery: doctored nonconforming module is caught")
+
+    victim_src = copy.deepcopy(sources["opal_event"])
+    mount = docs["opal_event"]["paths"]["/api/v1/config/save"]
+    victim_src["paths"]["/api/v1/config/save"] = {
+        k: v for k, v in mount.items() if k != "x-opal-cli"}
+    bad, src_found = check_source_mounts(
+        victim_src, spec_paths["opal_event"], "nonconforming-source", quiet=True)
+    check(bad < len(MOUNTS) and any("config/save" in m for m in src_found),
+          "negative discovery: inline copy of a kernel operation fails the source check")
 
     sys.exit(1 if failures else 0)
 

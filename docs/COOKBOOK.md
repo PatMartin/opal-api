@@ -27,7 +27,7 @@ The kernel's `x-opal-cli-format` extension defines the shape of every command:
 opal <service> [parent] [group] <command>
 ```
 
-Look and Think annotate every operation with `x-opal-cli`, so their command names come straight from the contracts. Event, Listen, and Say annotate only their `config`, `config setting`, and `service` commands. For the rest, this cookbook proposes names that follow the same kernel format and the Look/Think vocabulary (`list`, `add`, `show`, `update`, `remove`, plus explicit verbs for operations). Proposed names are marked with **†** in the command tables.
+Look and Think annotate every operation with `x-opal-cli`, so their command names come straight from the contracts. Event, Listen, and Say annotate only their `config`, `config setting`, and `service` commands; the shared kernel owns the `config`/`config setting` bindings for every module, mounted through `$ref`ed Path Items. For the rest, this cookbook proposes names that follow the same kernel format and the Look/Think vocabulary (`list`, `add`, `show`, `update`, `remove`, plus explicit verbs for operations). Proposed names are marked with **†** in the command tables.
 
 ### How options are named
 
