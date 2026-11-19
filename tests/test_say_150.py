@@ -31,7 +31,7 @@ def param_names(op):
 def main():
     spec = spec_util.load(SPEC)
 
-    check(spec["info"]["version"] == "5.0.0", "info.version is 5.0.0 (persona consolidation)")
+    check(spec["info"]["version"] == "0.1.0", "info.version is 0.1.0")
 
     op = spec["paths"]["/api/v1/config/load"]["post"]
     names = param_names(op)
