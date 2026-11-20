@@ -95,7 +95,7 @@ def main():
     spec = load(SPEC)
 
     # --- version and metadata ---------------------------------------------------
-    check(spec["info"]["version"] == "0.1.0", "info.version is 0.1.0")
+    check(spec["info"]["version"] == "0.4.0", "info.version is 0.4.0")
     check(spec["openapi"].startswith("3.1"), "openapi 3.1 declared")
     schemas = spec["components"]["schemas"]
 
