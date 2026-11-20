@@ -31,7 +31,7 @@ def param_names(op):
 def main():
     spec = spec_util.load(SPEC)
 
-    check(spec["info"]["version"] == "0.1.0", "info.version is 0.1.0")
+    check(spec["info"]["version"] == "0.4.0", "info.version is 0.4.0")
 
     sk = spec["paths"]["/api/v1/setting/{key}"]
     check(set(sk) & {"get", "put", "delete"} == {"get", "put", "delete"},
