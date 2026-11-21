@@ -1145,8 +1145,8 @@ paths:
       summary: List Aliases
       operationId: list_aliases
       x-opal-cli:
-        parent: slot value
-        group: alias
+        parent: slot
+        group: value-alias
         command: list
       responses:
         '401':
@@ -1187,8 +1187,8 @@ paths:
       summary: Add Alias
       operationId: add_alias
       x-opal-cli:
-        parent: slot value
-        group: alias
+        parent: slot
+        group: value-alias
         command: add
         options:
         - flag: --alias
@@ -1260,8 +1260,8 @@ paths:
       summary: Delete Alias
       operationId: remove_alias
       x-opal-cli:
-        parent: slot value
-        group: alias
+        parent: slot
+        group: value-alias
         command: remove
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
@@ -2530,7 +2530,6 @@ paths:
               description: URL of the created association.
               schema:
                 type: string
-          headers:
             X-Opal-Session-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
@@ -2695,6 +2694,8 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
         '412':
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
         '428':
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
   /api/v1/wakeword/engine/{association_id}/validate:
@@ -2891,7 +2892,6 @@ paths:
               description: URL of the created association.
               schema:
                 type: string
-          headers:
             X-Opal-Session-Id:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
             X-Opal-Transaction-Id:
@@ -3056,6 +3056,8 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
         '412':
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
         '428':
           $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
   /api/v1/transcription/engine/{association_id}/validate:
