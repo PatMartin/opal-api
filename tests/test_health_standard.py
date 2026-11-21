@@ -6,8 +6,8 @@ excluding the shared kernel):
 
 * GET /api/v1/health/ mounted as a bare external $ref to the kernel `health`
   Path Item - the single service information surface (opal_health_get)
-* the kernel Path Item carries the canonical `info health` x-opal-cli
-  binding - the only `info` command exposed by any module
+* the kernel Path Item carries the canonical `service health` x-opal-cli
+  binding
 * retired routes are gone everywhere: /api/v1/info/, /api/v1/info/ping,
   /api/v1/stats/, /api/v1/health/audio_devices (source, resolved, bundle)
 * normalized OpalHealthReport: name/version/api_version/status/live/ready/
@@ -92,8 +92,8 @@ def cli_of(op):
 
 
 def check_resolved(d, name, quiet=False):
-    """Resolved/bundled view: exactly one `info` CLI command (info health on
-    opal_health_get), probes unbound with 200/503 probe bodies, retired
+    """Resolved/bundled view: exactly one health CLI command (service health
+    on opal_health_get), probes unbound with 200/503 probe bodies, retired
     routes absent, report schema normalized."""
     local = []
 
@@ -104,15 +104,15 @@ def check_resolved(d, name, quiet=False):
             check(cond, f"{name}: {msg}")
 
     paths = d.get("paths", {})
-    info_cmds = []
+    health_cmds = []
     for p, item in paths.items():
         for m, op in item.items():
             if m in ("get", "post", "put", "patch", "delete") and isinstance(op, dict):
                 cli = cli_of(op)
-                if cli.get("group") == "info":
-                    info_cmds.append((cli.get("command"), m.upper(), p))
-    c(info_cmds == [("health", "GET", HEALTH)],
-      f"exactly one info command: 'info health' ({info_cmds})")
+                if cli.get("command") == "health" or cli.get("group") == "info":
+                    health_cmds.append((cli.get("group"), cli.get("command"), m.upper(), p))
+    c(health_cmds == [("service", "health", "GET", HEALTH)],
+      f"exactly one health command: 'service health' ({health_cmds})")
 
     op = paths.get(HEALTH, {}).get("get") or {}
     c(op.get("operationId") == "opal_health_get", "health GET operationId is opal_health_get")
@@ -192,8 +192,8 @@ def main():
     kd = yaml.safe_load(open(spec_util.KERNEL_PATH, encoding="utf-8"))
     kop = kd["components"]["pathItems"]["health"]["get"]
     kcli = kop.get("x-opal-cli") or {}
-    check(kcli.get("group") == "info" and kcli.get("command") == "health",
-          "kernel health Path Item carries the canonical info health binding")
+    check(kcli.get("group") == "service" and kcli.get("command") == "health",
+          "kernel health Path Item carries the canonical service health binding")
     check("info" not in kd["components"]["pathItems"]
           and "info_ping" not in kd["components"]["pathItems"],
           "kernel: retired info/info_ping Path Items removed")
@@ -234,7 +234,7 @@ def main():
     victim["paths"]["/api/v1/health/live"]["get"]["x-opal-cli"] = {
         "group": "info", "command": "live"}
     found = check_resolved(victim, "nonconforming-probe", quiet=True)
-    check(any("info command" in m or "no CLI binding" in m for m in found),
+    check(any("health command" in m or "no CLI binding" in m for m in found),
           "negative discovery: reintroduced legacy 'info live' command is caught")
 
     victim_src = copy.deepcopy(sources["opal_event"])

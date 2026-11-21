@@ -27,7 +27,7 @@ The kernel's `x-opal-cli-format` extension defines the shape of every command:
 opal <service> [parent] [group] <command>
 ```
 
-Look and Think annotate every operation with `x-opal-cli`, so their command names come straight from the contracts. The shared kernel owns the `config`/`config setting`, `info health`, `service`, `profile`, and `persona` bindings for every module, mounted through `$ref`ed Path Items. For the rest, this cookbook proposes names that follow the same kernel format and the Look/Think vocabulary (`list`, `add`, `show`, `update`, `remove`, plus explicit verbs for operations). Proposed names are marked with **†** in the command tables.
+Look and Think annotate every operation with `x-opal-cli`, so their command names come straight from the contracts. The shared kernel owns the `config`/`config setting`, `service health`, `service`, `profile`, and `persona` bindings for every module, mounted through `$ref`ed Path Items. For the rest, this cookbook proposes names that follow the same kernel format and the Look/Think vocabulary (`list`, `add`, `show`, `update`, `remove`, plus explicit verbs for operations). Proposed names are marked with **†** in the command tables.
 
 ### How options are named
 
@@ -84,8 +84,7 @@ opal say
 │   ├── load                [--in FILE]
 │   ├── validate            [--in FILE]
 │   └── setting             list | show | set | remove
-├── info                  health
-└── service               start | stop | log
+└── service               start | stop | health | log
 ```
 
 #### REST tree
@@ -163,7 +162,7 @@ opal say
 | `opal say config setting show` | `--name NAME` | Get setting. `GET /api/v1/setting/{key}` |
 | `opal say config setting set` | `--name NAME`, `--value VALUE` | Set setting override. `PUT /api/v1/setting/{key}` |
 | `opal say config setting remove` | `--name NAME` | Remove setting override. `DELETE /api/v1/setting/{key}` |
-| `opal say info health` † | — | Service health report (name, version, api_version, status, live, ready, details). `GET /api/v1/health/` |
+| `opal say service health` † | — | Service health report (name, version, api_version, status, live, ready, details). `GET /api/v1/health/` |
 | `opal say service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
 | `opal say service stop` | — | Stop service. `POST /api/v1/service/stop` |
 | `opal say service log` | `--lines INT` | Tail service log. `GET /api/v1/service/log` |
@@ -172,7 +171,7 @@ opal say
 
 ### opal-listen
 
-Wakewords, speech-to-text, intent recognition, and slot extraction, plus a regression harness for people tired of saying "turn on the kitchen lights" at 2 AM.
+Wakewords, speech-to-text, intent recognition, and slot extraction for people tired of saying "turn on the kitchen lights" at 2 AM.
 
 #### Typer command tree
 
@@ -194,10 +193,8 @@ opal listen
 ├── recognition           test-text | test-audio | start | stop | status | stream
 ├── data
 │   └── failed-utterance  list | add | show | update | remove | promote
-├── regression            list | add | run | show | update | remove
 ├── performance           last | summary | history
-├── info                  health
-└── service               start | stop | log
+└── service               start | stop | health | log
 ```
 
 #### REST tree
@@ -231,9 +228,6 @@ opal listen
 ├── /failed_utterance/                      GET, POST
 │   └── /{failed_utterance_id}                            GET, PATCH, DELETE
 │       └── /promote                        POST
-├── /regression/                            GET, POST
-│   ├── /run                                POST
-│   └── /{test_id}                          GET, PATCH, DELETE
 ├── /performance
 │   ├── /last                               GET
 │   ├── /summary                            GET
@@ -306,17 +300,11 @@ opal listen
 | `opal listen data failed-utterance show` † | `<failed_utterance_id>` | Get Failed Utterance. `GET /api/v1/failed_utterance/{failed_utterance_id}` |
 | `opal listen data failed-utterance update` † | `<failed_utterance_id>`, `--expected-intent TEXT`, `--notes TEXT`, `--reviewed/--no-reviewed`, `--promoted-to-phrase/--no-promoted-to-phrase` | Update Failed Utterance. `PATCH /api/v1/failed_utterance/{failed_utterance_id}` |
 | `opal listen data failed-utterance remove` † | `<failed_utterance_id>` | Delete Failed Utterance. `DELETE /api/v1/failed_utterance/{failed_utterance_id}` |
-| `opal listen data failed-utterance promote` † | `<failed_utterance_id>`, `--intent-id ID`, `--create-regression/--no-create-regression`, `--if-match ETAG` | Promote To Phrase. `POST /api/v1/failed_utterance/{failed_utterance_id}/promote` |
-| `opal listen regression list` † | — | List Regression Tests. `GET /api/v1/regression/` |
-| `opal listen regression add` † | `--if-match ETAG`, `--name TEXT`, `--phrase TEXT`, `--expected-intent TEXT`, `--enabled/--no-enabled`, `--expected-slots JSON` | Create Regression Test. `POST /api/v1/regression/` |
-| `opal listen regression run` † | `--enabled-only/--no-enabled-only` | Run Regression Tests. `POST /api/v1/regression/run` |
-| `opal listen regression show` † | `<test_id>` | Get Regression Test. `GET /api/v1/regression/{test_id}` |
-| `opal listen regression update` † | `<test_id>`, `--if-match ETAG`, `--name TEXT`, `--phrase TEXT`, `--expected-intent TEXT`, `--expected-slots JSON`, `--enabled/--no-enabled` | Update Regression Test. `PATCH /api/v1/regression/{test_id}` |
-| `opal listen regression remove` † | `<test_id>`, `--if-match ETAG` | Delete Regression Test. `DELETE /api/v1/regression/{test_id}` |
+| `opal listen data failed-utterance promote` † | `<failed_utterance_id>`, `--intent-id ID`, `--if-match ETAG` | Promote To Phrase. `POST /api/v1/failed_utterance/{failed_utterance_id}/promote` |
 | `opal listen performance last` † | — | Get Last Performance. `GET /api/v1/performance/last` |
 | `opal listen performance summary` † | `--limit INT` | Get Performance Summary. `GET /api/v1/performance/summary` |
 | `opal listen performance history` † | `--limit INT` | Get Performance History. `GET /api/v1/performance/history` |
-| `opal listen info health` † | — | Service health report; host audio input devices under `details.audio_devices`. `GET /api/v1/health/` |
+| `opal listen service health` † | — | Service health report; host audio input devices under `details.audio_devices`. `GET /api/v1/health/` |
 | `opal listen service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
 | `opal listen service stop` | — | Stop service. `POST /api/v1/service/stop` |
 | `opal listen service log` | `--lines INT` | Tail service log. `GET /api/v1/service/log` |
@@ -337,7 +325,6 @@ Visual observation: optional engine discovery, engine-owned models, single-image
 
 ```text
 opal look
-├── info                  health
 ├── engine                list | show | discover | capabilities | update
 ├── model                 list | show | load | unload
 ├── predict               image
@@ -350,7 +337,7 @@ opal look
 │   ├── load                [--in FILE]
 │   ├── validate            [--in FILE]
 │   └── setting             list | show | set | remove
-└── service               start | stop | log
+└── service               start | stop | health | log
 ```
 
 #### REST tree
@@ -438,7 +425,7 @@ opal look
 | `opal look persona show` | `<persona_id>` | Get persona. `GET /api/v1/persona/{persona_id}` |
 | `opal look persona update` | `<persona_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Update persona. `PATCH /api/v1/persona/{persona_id}` |
 | `opal look persona remove` | `<persona_id>`, `--if-match ETAG` | Delete persona. `DELETE /api/v1/persona/{persona_id}` |
-| `opal look info health` | — | Service health report (name, version, api_version, status, live, ready, details). `GET /api/v1/health/` |
+| `opal look service health` | — | Service health report (name, version, api_version, status, live, ready, details). `GET /api/v1/health/` |
 | `opal look service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
 | `opal look service stop` | — | Stop service. `POST /api/v1/service/stop` |
 | `opal look service log` | `--lines INT` | Tail service log. `GET /api/v1/service/log` |
@@ -463,8 +450,7 @@ opal think
 │   ├── load                [--in FILE]
 │   ├── validate            [--in FILE]
 │   └── setting             list | show | set | remove
-├── info                  health
-└── service               start | stop | log
+└── service               start | stop | health | log
 ```
 
 #### REST tree
@@ -530,7 +516,7 @@ opal think
 | `opal think config setting show` | `--name NAME` | Get setting. `GET /api/v1/setting/{key}` |
 | `opal think config setting set` | `--name NAME`, `--value VALUE` | Set setting override. `PUT /api/v1/setting/{key}` |
 | `opal think config setting remove` | `--name NAME` | Remove setting override. `DELETE /api/v1/setting/{key}` |
-| `opal think info health` | — | Service health report (name, version, api_version, status, live, ready, details). `GET /api/v1/health/` |
+| `opal think service health` | — | Service health report (name, version, api_version, status, live, ready, details). `GET /api/v1/health/` |
 | `opal think service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
 | `opal think service stop` | — | Stop service. `POST /api/v1/service/stop` |
 | `opal think service log` | `--lines INT` | Tail service log. `GET /api/v1/service/log` |
@@ -562,8 +548,7 @@ opal event
 │   ├── load                [--in FILE]
 │   ├── validate            [--in FILE]
 │   └── setting             list | show | set | remove
-├── info                  health
-└── service               start | stop | log
+└── service               start | stop | health | log
 ```
 
 #### REST tree
@@ -629,7 +614,7 @@ opal event
 | `opal event action execute` † | `<action_id>`, `--event JSON`, `--wait` | Execute registered action manually. `POST /api/v1/action/{action_id}/execute` |
 | `opal event data execution list` † | `--status TEXT`, `--rule-id ID`, `--action-id ID`, `--event-id ID`, `--limit INT` | List executions. `GET /api/v1/execution/` |
 | `opal event data execution show` † | `<execution_id>` | Get execution result. `GET /api/v1/execution/{execution_id}` |
-| `opal event info health` † | — | Service health report; event and execution counters under `details.stats`. `GET /api/v1/health/` |
+| `opal event service health` † | — | Service health report; event and execution counters under `details.stats`. `GET /api/v1/health/` |
 | `opal event profile list` † | — | List profiles. `GET /api/v1/profile/` |
 | `opal event profile add` † | `--if-match ETAG`, `--in FILE`, `--name TEXT`, `--description TEXT`, `--is-active/--no-is-active`, `--shared FILE`, `--module FILE` | Create profile. `POST /api/v1/profile/` |
 | `opal event profile show` † | `<profile_id>` | Get profile. `GET /api/v1/profile/{profile_id}` |
@@ -799,7 +784,7 @@ opal say config save --out say-config.yaml
 **1. Find the microphone before accusing the software of deafness.**
 
 ```bash
-opal listen info health  # host audio input devices under .details.audio_devices
+opal listen service health  # host audio input devices under .details.audio_devices
 ```
 
 **2. Register a wakeword with a stricter threshold.**
@@ -880,31 +865,19 @@ opal listen recognition status
 opal listen data failed-utterance list --no-reviewed --limit 10
 ```
 
-**15. Turn a miss into a training phrase and a regression case in one move.**
+**15. Turn a miss into a training phrase.**
 
 ```bash
-opal listen data failed-utterance promote 7 --intent-id lights.turn_on --create-regression
+opal listen data failed-utterance promote 7 --intent-id lights.turn_on
 ```
 
-**16. Pin down expected behavior with a regression case.**
-
-```bash
-opal listen regression add --name "galley lights" --phrase "turn on the lights in the galley" --expected-intent lights.turn_on --expected-slots '{"room":"kitchen"}'
-```
-
-**17. Run the regression suite before you ship that "small tweak".**
-
-```bash
-opal listen regression run
-```
-
-**18. See where the milliseconds go.**
+**16. See where the milliseconds go.**
 
 ```bash
 opal listen performance summary --limit 50
 ```
 
-**19. Create a night profile that only understands light switches.**
+**17. Create a night profile that only understands light switches.**
 
 ```bash
 cat > night-compartment.yaml <<'EOF'
@@ -914,7 +887,7 @@ EOF
 opal listen profile add --name night-mode --module night-compartment.yaml
 ```
 
-**20. Allow live microphone matches to be published as events.**
+**18. Allow live microphone matches to be published as events.**
 
 ```bash
 opal listen config setting set --name event_publication_enabled --value true
@@ -1243,7 +1216,7 @@ opal event action update notify-webhook --timeout-seconds 5
 **17. Read the event and execution counters.**
 
 ```bash
-opal event info health  # event and execution counters under .details.stats
+opal event service health  # event and execution counters under .details.stats
 ```
 
 **18. Clear the stored event history.**
@@ -1360,18 +1333,10 @@ opal listen recognition test-audio tricky.wav
 
 ```bash
 opal listen data failed-utterance show 7 | opal think ask "This utterance matched no intent. My intents are lights.turn_on, lights.turn_off, and timer.set. Which one did the speaker most likely mean? Reply with the intent name only." --context -
-opal listen data failed-utterance promote 7 --intent-id lights.turn_on --create-regression
+opal listen data failed-utterance promote 7 --intent-id lights.turn_on
 ```
 
-#### 6. Spoken regression report
-
-*listen + think + say.* Run the regression suite and have the result read to you while you get coffee.
-
-```bash
-opal listen regression run | opal think ask "Summarize this regression run in one sentence. Mention the pass rate and name any failing case." --context - | opal say generate - --play
-```
-
-#### 7. One persona, two services
+#### 6. One persona, two services
 
 *think + say.* Think owns the authoritative persona registry; Say binds the voice. Register the same `persona_id` in both, validate the binding, and use it.
 
@@ -1761,11 +1726,11 @@ opal event data execution show exe-41 | opal think ask "This is a failed action 
 *say + listen + look + think + event.* Five probes, then a spoken all-clear.
 
 ```bash
-opal say info health    # .ready is true
-opal listen info health
-opal look info health
-opal think info health
-opal event info health
+opal say service health    # .ready is true
+opal listen service health
+opal look service health
+opal think service health
+opal event service health
 # machine callers should poll GET /api/v1/health/ready instead
 opal say generate "All five services report ready. Suspiciously ready." --play
 ```
