@@ -64,6 +64,9 @@ paths:
       - wakewords
       summary: List Wakewords
       operationId: list_wakewords
+      x-opal-cli:
+        group: wakeword
+        command: list
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -99,6 +102,29 @@ paths:
       - wakewords
       summary: Create Wakeword
       operationId: create_wakeword
+      x-opal-cli:
+        group: wakeword
+        command: add
+        options:
+        - flag: --name
+          value: NAME
+          required: true
+          binds:
+            kind: body
+            target: name
+        - flag: --threshold
+          value: NUMBER
+          binds:
+            kind: body
+            target: confidence_threshold
+        - flag: --enabled
+          binds:
+            kind: body
+            target: enabled
+        - flag: --no-enabled
+          binds:
+            kind: body
+            target: enabled
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -151,6 +177,9 @@ paths:
       - wakewords
       summary: Get Wakeword
       operationId: show_wakeword
+      x-opal-cli:
+        group: wakeword
+        command: show
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -185,6 +214,28 @@ paths:
       - wakewords
       summary: Update Wakeword
       operationId: update_wakeword
+      x-opal-cli:
+        group: wakeword
+        command: update
+        options:
+        - flag: --name
+          value: NAME
+          binds:
+            kind: body
+            target: name
+        - flag: --threshold
+          value: NUMBER
+          binds:
+            kind: body
+            target: confidence_threshold
+        - flag: --enabled
+          binds:
+            kind: body
+            target: enabled
+        - flag: --no-enabled
+          binds:
+            kind: body
+            target: enabled
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -228,6 +279,9 @@ paths:
       - wakewords
       summary: Delete Wakeword
       operationId: remove_wakeword
+      x-opal-cli:
+        group: wakeword
+        command: remove
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
@@ -265,6 +319,9 @@ paths:
       - intents
       summary: List Intents
       operationId: list_intents
+      x-opal-cli:
+        group: intent
+        command: list
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -300,6 +357,39 @@ paths:
       - intents
       summary: Create Intent
       operationId: create_intent
+      x-opal-cli:
+        group: intent
+        command: add
+        options:
+        - flag: --name
+          value: NAME
+          required: true
+          binds:
+            kind: body
+            target: name
+        - flag: --description
+          value: TEXT
+          binds:
+            kind: body
+            target: description
+        - flag: --threshold
+          value: NUMBER
+          binds:
+            kind: body
+            target: confidence_threshold
+        - flag: --enabled
+          binds:
+            kind: body
+            target: enabled
+        - flag: --no-enabled
+          binds:
+            kind: body
+            target: enabled
+        - flag: --phrase
+          value: TEXT
+          binds:
+            kind: body
+            target: phrases
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -352,6 +442,9 @@ paths:
       - intents
       summary: Get Intent
       operationId: show_intent
+      x-opal-cli:
+        group: intent
+        command: show
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -386,6 +479,33 @@ paths:
       - intents
       summary: Update Intent
       operationId: update_intent
+      x-opal-cli:
+        group: intent
+        command: update
+        options:
+        - flag: --name
+          value: NAME
+          binds:
+            kind: body
+            target: name
+        - flag: --description
+          value: TEXT
+          binds:
+            kind: body
+            target: description
+        - flag: --threshold
+          value: NUMBER
+          binds:
+            kind: body
+            target: confidence_threshold
+        - flag: --enabled
+          binds:
+            kind: body
+            target: enabled
+        - flag: --no-enabled
+          binds:
+            kind: body
+            target: enabled
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -429,6 +549,9 @@ paths:
       - intents
       summary: Delete Intent
       operationId: remove_intent
+      x-opal-cli:
+        group: intent
+        command: remove
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
@@ -467,6 +590,10 @@ paths:
       - intents
       summary: List Phrases
       operationId: list_phrases
+      x-opal-cli:
+        parent: intent
+        group: phrase
+        command: list
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -504,6 +631,17 @@ paths:
       - intents
       summary: Add Phrase
       operationId: add_phrase
+      x-opal-cli:
+        parent: intent
+        group: phrase
+        command: add
+        options:
+        - flag: --phrase
+          value: TEXT
+          required: true
+          binds:
+            kind: body
+            target: phrase
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -565,6 +703,10 @@ paths:
       - intents
       summary: Delete Phrase
       operationId: remove_phrase
+      x-opal-cli:
+        parent: intent
+        group: phrase
+        command: remove
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
@@ -602,6 +744,9 @@ paths:
       - slots
       summary: List Slots
       operationId: list_slots
+      x-opal-cli:
+        group: slot
+        command: list
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -637,6 +782,26 @@ paths:
       - slots
       summary: Create Slot
       operationId: create_slot
+      x-opal-cli:
+        group: slot
+        command: add
+        options:
+        - flag: --name
+          value: NAME
+          required: true
+          binds:
+            kind: body
+            target: name
+        - flag: --type
+          value: TYPE
+          binds:
+            kind: body
+            target: slot_type
+        - flag: --description
+          value: TEXT
+          binds:
+            kind: body
+            target: description
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -689,6 +854,9 @@ paths:
       - slots
       summary: Get Slot
       operationId: show_slot
+      x-opal-cli:
+        group: slot
+        command: show
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -723,6 +891,25 @@ paths:
       - slots
       summary: Update Slot
       operationId: update_slot
+      x-opal-cli:
+        group: slot
+        command: update
+        options:
+        - flag: --name
+          value: NAME
+          binds:
+            kind: body
+            target: name
+        - flag: --type
+          value: TYPE
+          binds:
+            kind: body
+            target: slot_type
+        - flag: --description
+          value: TEXT
+          binds:
+            kind: body
+            target: description
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -766,6 +953,9 @@ paths:
       - slots
       summary: Delete Slot
       operationId: remove_slot
+      x-opal-cli:
+        group: slot
+        command: remove
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
@@ -804,6 +994,10 @@ paths:
       - slots
       summary: List Slot Values
       operationId: list_slot_values
+      x-opal-cli:
+        parent: slot
+        group: value
+        command: list
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -841,6 +1035,17 @@ paths:
       - slots
       summary: Add Slot Value
       operationId: add_slot_value
+      x-opal-cli:
+        parent: slot
+        group: value
+        command: add
+        options:
+        - flag: --value
+          value: VALUE
+          required: true
+          binds:
+            kind: body
+            target: value
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -896,6 +1101,10 @@ paths:
       - slots
       summary: Delete Slot Value
       operationId: remove_slot_value
+      x-opal-cli:
+        parent: slot
+        group: value
+        command: remove
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
@@ -935,6 +1144,10 @@ paths:
       - slots
       summary: List Aliases
       operationId: list_aliases
+      x-opal-cli:
+        parent: slot
+        group: value-alias
+        command: list
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -973,6 +1186,17 @@ paths:
       - slots
       summary: Add Alias
       operationId: add_alias
+      x-opal-cli:
+        parent: slot
+        group: value-alias
+        command: add
+        options:
+        - flag: --alias
+          value: ALIAS
+          required: true
+          binds:
+            kind: body
+            target: alias
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       requestBody:
@@ -1035,6 +1259,10 @@ paths:
       - slots
       summary: Delete Alias
       operationId: remove_alias
+      x-opal-cli:
+        parent: slot
+        group: value-alias
+        command: remove
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
       responses:
@@ -1088,6 +1316,16 @@ paths:
       - recognition
       summary: Test Text
       operationId: test_recognition_text
+      x-opal-cli:
+        group: recognition
+        command: test-text
+        options:
+        - flag: --text
+          value: TEXT
+          required: true
+          binds:
+            kind: body
+            target: text
       parameters:
       - name: save_log
         in: query
@@ -1138,6 +1376,16 @@ paths:
       summary: Test Audio
       description: Test a .wav file through the full STT + intent pipeline.
       operationId: test_recognition_audio
+      x-opal-cli:
+        group: recognition
+        command: test-audio
+        options:
+        - flag: --file
+          value: FILE
+          required: true
+          binds:
+            kind: body
+            target: file
       parameters:
       - name: save_log
         in: query
@@ -1196,6 +1444,9 @@ paths:
       - recognition
       summary: Start Pipeline
       operationId: start_recognition
+      x-opal-cli:
+        group: recognition
+        command: start
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1232,6 +1483,9 @@ paths:
       - recognition
       summary: Stop Pipeline
       operationId: stop_recognition
+      x-opal-cli:
+        group: recognition
+        command: stop
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1268,6 +1522,9 @@ paths:
       - recognition
       summary: Get Status
       operationId: show_recognition_status
+      x-opal-cli:
+        group: recognition
+        command: status
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1351,6 +1608,14 @@ paths:
         reconnecting client receives a fresh `status` snapshot followed only by new
         events.'
       operationId: stream_recognition
+      x-opal-cli:
+        group: recognition
+        command: stream
+        options:
+        - flag: --debug
+          binds:
+            kind: query
+            target: debug
       parameters:
       - name: debug
         in: query
@@ -1395,6 +1660,26 @@ paths:
       - failed_utterances
       summary: List Failed Utterances
       operationId: list_failed_utterances
+      x-opal-cli:
+        group: failed-utterance
+        command: list
+        options:
+        - flag: --reviewed
+          binds:
+            kind: query
+            target: reviewed
+        - flag: --no-reviewed
+          binds:
+            kind: query
+            target: reviewed
+        - flag: --promoted
+          binds:
+            kind: query
+            target: promoted
+        - flag: --no-promoted
+          binds:
+            kind: query
+            target: promoted
       parameters:
       - name: reviewed
         in: query
@@ -1443,6 +1728,31 @@ paths:
       - failed_utterances
       summary: Create Failed Utterance
       operationId: create_failed_utterance
+      x-opal-cli:
+        group: failed-utterance
+        command: add
+        options:
+        - flag: --transcript
+          value: TEXT
+          required: true
+          binds:
+            kind: body
+            target: transcript
+        - flag: --expected-intent
+          value: NAME
+          binds:
+            kind: body
+            target: expected_intent
+        - flag: --notes
+          value: TEXT
+          binds:
+            kind: body
+            target: notes
+        - flag: --log-id
+          value: ID
+          binds:
+            kind: body
+            target: recognition_log_id
       requestBody:
         required: true
         content:
@@ -1487,6 +1797,9 @@ paths:
       - failed_utterances
       summary: Get Failed Utterance
       operationId: show_failed_utterance
+      x-opal-cli:
+        group: failed-utterance
+        command: show
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1516,6 +1829,28 @@ paths:
       - failed_utterances
       summary: Update Failed Utterance
       operationId: update_failed_utterance
+      x-opal-cli:
+        group: failed-utterance
+        command: update
+        options:
+        - flag: --expected-intent
+          value: NAME
+          binds:
+            kind: body
+            target: expected_intent
+        - flag: --notes
+          value: TEXT
+          binds:
+            kind: body
+            target: notes
+        - flag: --reviewed
+          binds:
+            kind: body
+            target: reviewed
+        - flag: --no-reviewed
+          binds:
+            kind: body
+            target: reviewed
       requestBody:
         required: true
         content:
@@ -1551,6 +1886,9 @@ paths:
       - failed_utterances
       summary: Delete Failed Utterance
       operationId: remove_failed_utterance
+      x-opal-cli:
+        group: failed-utterance
+        command: remove
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1569,284 +1907,6 @@ paths:
               $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
         '404':
           $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
-        '422':
-          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/failed_utterance/{failed_utterance_id}/promote:
-    parameters:
-    - $ref: '#/components/parameters/FailedUtteranceId'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
-    post:
-      tags:
-      - failed_utterances
-      summary: Promote To Phrase
-      description: Promote a failed utterance as a training phrase for the given intent.
-      operationId: promote_failed_utterance
-      parameters:
-      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FailedUtterancePromoteRequest'
-      responses:
-        '401':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
-        '403':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PromoteResult'
-          headers:
-            X-Opal-Session-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
-        '404':
-          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
-        '412':
-          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
-        '428':
-          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
-        '422':
-          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/regression/:
-    parameters:
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
-    get:
-      tags:
-      - regression
-      summary: List Regression Tests
-      operationId: list_regression_tests
-      responses:
-        '401':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
-        '403':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                items:
-                  $ref: '#/components/schemas/RegressionTestRead'
-                type: array
-                title: Response List Regression Tests Api V1 Regression  Get
-          headers:
-            X-Opal-Session-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
-        '422':
-          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-    post:
-      tags:
-      - regression
-      summary: Create Regression Test
-      operationId: create_regression_test
-      parameters:
-      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RegressionTestCreate'
-        required: true
-      responses:
-        '401':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
-        '403':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
-        '201':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RegressionTestRead'
-          headers:
-            Location:
-              description: Resource URL
-              schema:
-                type: string
-            X-Opal-Session-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
-        '412':
-          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
-        '428':
-          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
-        '422':
-          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/regression/run:
-    parameters:
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
-    post:
-      tags:
-      - regression
-      summary: Run Regression Tests
-      description: Run all (enabled) regression tests against the current intent model.
-      operationId: run_regression_tests
-      parameters:
-      - name: enabled_only
-        in: query
-        required: false
-        schema:
-          type: boolean
-          default: true
-          title: Enabled Only
-      responses:
-        '401':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
-        '403':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RegressionRunResult'
-          headers:
-            X-Opal-Session-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
-        '422':
-          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/regression/{test_id}:
-    parameters:
-    - $ref: '#/components/parameters/TestId'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
-    get:
-      tags:
-      - regression
-      summary: Get Regression Test
-      operationId: show_regression_test
-      responses:
-        '401':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
-        '403':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RegressionTestRead'
-          headers:
-            X-Opal-Session-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
-        '404':
-          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
-        '422':
-          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-    patch:
-      tags:
-      - regression
-      summary: Update Regression Test
-      operationId: update_regression_test
-      parameters:
-      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RegressionTestUpdate'
-      responses:
-        '401':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
-        '403':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RegressionTestRead'
-          headers:
-            X-Opal-Session-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
-        '404':
-          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
-        '412':
-          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
-        '428':
-          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
-        '422':
-          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-    delete:
-      tags:
-      - regression
-      summary: Delete Regression Test
-      operationId: remove_regression_test
-      parameters:
-      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
-      responses:
-        '401':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
-        '403':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
-        '204':
-          description: Successful Response
-          headers:
-            X-Opal-Session-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
-        '404':
-          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
-        '412':
-          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
-        '428':
-          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
   /api/v1/performance/last:
@@ -1861,6 +1921,9 @@ paths:
       summary: Get Last Performance
       description: Return the most recent performance result.
       operationId: get_performance_last
+      x-opal-cli:
+        group: performance
+        command: last
       responses:
         '401':
           $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
@@ -1898,6 +1961,9 @@ paths:
       summary: Get Performance Summary
       description: Aggregate stats over the last N results.
       operationId: get_performance_summary
+      x-opal-cli:
+        group: performance
+        command: summary
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/Limit'
       responses:
@@ -1934,6 +2000,9 @@ paths:
       summary: Get Performance History
       description: Bounded list in stable descending time-plus-ID order; `limit` caps the returned items.
       operationId: get_performance_history
+      x-opal-cli:
+        group: performance
+        command: history
       parameters:
       - $ref: './shared/opal_kernel.yaml#/components/parameters/Limit'
       responses:
@@ -1970,16 +2039,741 @@ paths:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/service_stop'
   /api/v1/service/log:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/service_log'
-  /api/v1/persona/:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/persona_collection'
-  /api/v1/persona/{persona_id}/validate:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/persona_validate'
-  /api/v1/persona/{persona_id}:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/persona_item'
+  /api/v1/wakeword/engine/:
+    parameters:
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
+    get:
+      tags:
+      - wakewords
+      summary: List Wakeword Engine Associations
+      operationId: list_wakeword_engine_associations
+      x-opal-cli:
+        parent: wakeword
+        group: engine
+        command: list
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/WakewordEngineAssociationRead'
+                type: array
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+            ETag:
+              description: Strong revision of the portable logical configuration.
+              schema:
+                type: string
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+    post:
+      tags:
+      - wakewords
+      summary: Create Wakeword Engine Association
+      operationId: create_wakeword_engine_association
+      x-opal-cli:
+        parent: wakeword
+        group: engine
+        command: add
+        options:
+        - flag: --engine
+          value: NAME
+          required: true
+          binds:
+            kind: body
+            target: engine
+        - flag: --wakeword
+          value: NAME
+          required: true
+          binds:
+            kind: body
+            target: wakeword
+        - flag: --enabled
+          binds:
+            kind: body
+            target: enabled
+        - flag: --no-enabled
+          binds:
+            kind: body
+            target: enabled
+        - flag: --config
+          value: JSON
+          binds:
+            kind: body
+            target: config
+            parse: json_or_string
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WakewordEngineAssociationCreate'
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '201':
+          description: Successful Response
+          headers:
+            Location:
+              description: URL of the created association.
+              schema:
+                type: string
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WakewordEngineAssociationRead'
+        '409':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Conflict'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+  /api/v1/wakeword/engine/{association_id}:
+    parameters:
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
+    get:
+      tags:
+      - wakewords
+      summary: Show Wakeword Engine Association
+      operationId: show_wakeword_engine_association
+      x-opal-cli:
+        parent: wakeword
+        group: engine
+        command: show
+      parameters:
+      - $ref: '#/components/parameters/AssociationId'
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WakewordEngineAssociationRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+    patch:
+      tags:
+      - wakewords
+      summary: Update Wakeword Engine Association
+      operationId: update_wakeword_engine_association
+      x-opal-cli:
+        parent: wakeword
+        group: engine
+        command: update
+        options:
+        - flag: --engine
+          value: NAME
+          binds:
+            kind: body
+            target: engine
+        - flag: --wakeword
+          value: NAME
+          binds:
+            kind: body
+            target: wakeword
+        - flag: --enabled
+          binds:
+            kind: body
+            target: enabled
+        - flag: --no-enabled
+          binds:
+            kind: body
+            target: enabled
+        - flag: --config
+          value: JSON
+          binds:
+            kind: body
+            target: config
+            parse: json_or_string
+      parameters:
+      - $ref: '#/components/parameters/AssociationId'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WakewordEngineAssociationUpdate'
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WakewordEngineAssociationRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
+    delete:
+      tags:
+      - wakewords
+      summary: Remove Wakeword Engine Association
+      operationId: remove_wakeword_engine_association
+      x-opal-cli:
+        parent: wakeword
+        group: engine
+        command: remove
+      parameters:
+      - $ref: '#/components/parameters/AssociationId'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '204':
+          description: Successful Response
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
+  /api/v1/wakeword/engine/{association_id}/validate:
+    parameters:
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
+    post:
+      tags:
+      - wakewords
+      summary: Validate Wakeword Engine Association
+      operationId: validate_wakeword_engine_association
+      x-opal-cli:
+        parent: wakeword
+        group: engine
+        command: validate
+      parameters:
+      - $ref: '#/components/parameters/AssociationId'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EngineValidationResult'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '409':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Conflict'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+  /api/v1/wakeword/engine/{association_id}/activate:
+    parameters:
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
+    post:
+      tags:
+      - wakewords
+      summary: Activate Wakeword Engine Association
+      operationId: activate_wakeword_engine_association
+      x-opal-cli:
+        parent: wakeword
+        group: engine
+        command: activate
+      parameters:
+      - $ref: '#/components/parameters/AssociationId'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WakewordEngineAssociationRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '409':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Conflict'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+  /api/v1/transcription/engine/:
+    parameters:
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
+    get:
+      tags:
+      - transcription
+      summary: List Transcription Engine Associations
+      operationId: list_transcription_engine_associations
+      x-opal-cli:
+        parent: transcription
+        group: engine
+        command: list
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TranscriptionEngineAssociationRead'
+                type: array
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+            ETag:
+              description: Strong revision of the portable logical configuration.
+              schema:
+                type: string
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+    post:
+      tags:
+      - transcription
+      summary: Create Transcription Engine Association
+      operationId: create_transcription_engine_association
+      x-opal-cli:
+        parent: transcription
+        group: engine
+        command: add
+        options:
+        - flag: --engine
+          value: NAME
+          required: true
+          binds:
+            kind: body
+            target: engine
+        - flag: --model
+          value: NAME
+          binds:
+            kind: body
+            target: model
+        - flag: --enabled
+          binds:
+            kind: body
+            target: enabled
+        - flag: --no-enabled
+          binds:
+            kind: body
+            target: enabled
+        - flag: --config
+          value: JSON
+          binds:
+            kind: body
+            target: config
+            parse: json_or_string
+      parameters:
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranscriptionEngineAssociationCreate'
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '201':
+          description: Successful Response
+          headers:
+            Location:
+              description: URL of the created association.
+              schema:
+                type: string
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranscriptionEngineAssociationRead'
+        '409':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Conflict'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+  /api/v1/transcription/engine/{association_id}:
+    parameters:
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
+    get:
+      tags:
+      - transcription
+      summary: Show Transcription Engine Association
+      operationId: show_transcription_engine_association
+      x-opal-cli:
+        parent: transcription
+        group: engine
+        command: show
+      parameters:
+      - $ref: '#/components/parameters/AssociationId'
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranscriptionEngineAssociationRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+    patch:
+      tags:
+      - transcription
+      summary: Update Transcription Engine Association
+      operationId: update_transcription_engine_association
+      x-opal-cli:
+        parent: transcription
+        group: engine
+        command: update
+        options:
+        - flag: --engine
+          value: NAME
+          binds:
+            kind: body
+            target: engine
+        - flag: --model
+          value: NAME
+          binds:
+            kind: body
+            target: model
+        - flag: --enabled
+          binds:
+            kind: body
+            target: enabled
+        - flag: --no-enabled
+          binds:
+            kind: body
+            target: enabled
+        - flag: --config
+          value: JSON
+          binds:
+            kind: body
+            target: config
+            parse: json_or_string
+      parameters:
+      - $ref: '#/components/parameters/AssociationId'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranscriptionEngineAssociationUpdate'
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranscriptionEngineAssociationRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
+    delete:
+      tags:
+      - transcription
+      summary: Remove Transcription Engine Association
+      operationId: remove_transcription_engine_association
+      x-opal-cli:
+        parent: transcription
+        group: engine
+        command: remove
+      parameters:
+      - $ref: '#/components/parameters/AssociationId'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '204':
+          description: Successful Response
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
+  /api/v1/transcription/engine/{association_id}/validate:
+    parameters:
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
+    post:
+      tags:
+      - transcription
+      summary: Validate Transcription Engine Association
+      operationId: validate_transcription_engine_association
+      x-opal-cli:
+        parent: transcription
+        group: engine
+        command: validate
+      parameters:
+      - $ref: '#/components/parameters/AssociationId'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EngineValidationResult'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '409':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Conflict'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
+  /api/v1/transcription/engine/{association_id}/activate:
+    parameters:
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
+    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
+    post:
+      tags:
+      - transcription
+      summary: Activate Transcription Engine Association
+      operationId: activate_transcription_engine_association
+      x-opal-cli:
+        parent: transcription
+        group: engine
+        command: activate
+      parameters:
+      - $ref: '#/components/parameters/AssociationId'
+      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
+      responses:
+        '401':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranscriptionEngineAssociationRead'
+          headers:
+            X-Opal-Session-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
+            X-Opal-Transaction-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
+            X-Opal-Request-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
+            X-Opal-Causation-Id:
+              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
+        '404':
+          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
+        '409':
+          $ref: './shared/opal_kernel.yaml#/components/responses/Conflict'
+        '412':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
+        '428':
+          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
+        '422':
+          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
 components:
   parameters:
-    PersonaId:
-      $ref: './shared/opal_kernel.yaml#/components/parameters/OpalPersonaIdParameter'
+    AssociationId:
+      name: association_id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        title: Association Id
     WakewordId:
       name: wakeword_id
       in: path
@@ -2020,14 +2814,6 @@ components:
         type: string
         minLength: 1
         title: Failed Utterance Id
-    TestId:
-      name: test_id
-      in: path
-      required: true
-      schema:
-        type: string
-        minLength: 1
-        title: Test Id
   securitySchemes:
     BearerAuth: {$ref: './shared/opal_kernel.yaml#/components/securitySchemes/BearerAuth'}
   schemas:
@@ -2066,6 +2852,21 @@ components:
       required:
       - file
       title: Body_test_audio_api_v1_recognition_test_audio_post
+    EngineValidationResult:
+      properties:
+        valid:
+          type: boolean
+          title: Valid
+        errors:
+          items:
+            type: string
+          type: array
+          title: Errors
+      type: object
+      required:
+      - valid
+      - errors
+      title: EngineValidationResult
     FailedUtteranceCreate:
       properties:
         transcript:
@@ -2163,23 +2964,6 @@ components:
       type: object
       minProperties: 1
       title: FailedUtteranceUpdate
-    FailedUtterancePromoteRequest:
-      type: object
-      additionalProperties: false
-      properties:
-        intent_id:
-          type: string
-          minLength: 1
-          description: Identifier of the intent this utterance becomes a training phrase for.
-          title: Intent Id
-        create_regression:
-          type: boolean
-          description: Also add a regression test for this utterance.
-          default: true
-          title: Create Regression
-      required:
-      - intent_id
-      title: FailedUtterancePromoteRequest
     IntentAlternative:
       properties:
         intent_name:
@@ -2620,21 +3404,6 @@ components:
       - last_result_at
       - last_error
       title: PipelineStatus
-    PromoteResult:
-      properties:
-        failed_utterance:
-          $ref: '#/components/schemas/FailedUtteranceRead'
-        phrase:
-          $ref: '#/components/schemas/IntentPhraseRead'
-        regression_test:
-          anyOf:
-          - $ref: '#/components/schemas/RegressionTestRead'
-          - type: 'null'
-      type: object
-      required:
-      - failed_utterance
-      - phrase
-      title: PromoteResult
     RecognitionResult:
       properties:
         session_id:
@@ -2762,194 +3531,6 @@ components:
       - created_at
       title: RecognitionResult
       description: Outcome of one pass through the pipeline (live, audio file or text).
-    RegressionCaseResult:
-      properties:
-        test_id:
-          type: string
-          title: Test Id
-        name:
-          type: string
-          title: Name
-        phrase:
-          type: string
-          title: Phrase
-        expected_intent:
-          type: string
-          title: Expected Intent
-        actual_intent:
-          type: string
-          title: Actual Intent
-        expected_slots:
-          additionalProperties: true
-          type: object
-          title: Expected Slots
-        actual_slots:
-          additionalProperties: true
-          type: object
-          title: Actual Slots
-        intent_confidence:
-          anyOf:
-          - type: number
-          - type: 'null'
-          title: Intent Confidence
-        passed:
-          type: boolean
-          title: Passed
-        failure_reason:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Failure Reason
-      type: object
-      required:
-      - test_id
-      - name
-      - phrase
-      - expected_intent
-      - actual_intent
-      - expected_slots
-      - actual_slots
-      - intent_confidence
-      - passed
-      title: RegressionCaseResult
-    RegressionRunResult:
-      properties:
-        total:
-          type: integer
-          title: Total
-        passed:
-          type: integer
-          title: Passed
-        failed:
-          type: integer
-          title: Failed
-        pass_rate:
-          type: number
-          title: Pass Rate
-        results:
-          items:
-            $ref: '#/components/schemas/RegressionCaseResult'
-          type: array
-          title: Results
-      type: object
-      required:
-      - total
-      - passed
-      - failed
-      - pass_rate
-      - results
-      title: RegressionRunResult
-    RegressionTestCreate:
-      properties:
-        name:
-          type: string
-          maxLength: 200
-          title: Name
-        phrase:
-          type: string
-          maxLength: 500
-          title: Phrase
-        expected_intent:
-          type: string
-          maxLength: 100
-          title: Expected Intent
-        enabled:
-          type: boolean
-          title: Enabled
-          default: true
-        expected_slots:
-          additionalProperties: true
-          type: object
-          title: Expected Slots
-          default: {}
-      type: object
-      required:
-      - name
-      - phrase
-      - expected_intent
-      title: RegressionTestCreate
-    RegressionTestRead:
-      properties:
-        name:
-          type: string
-          maxLength: 200
-          title: Name
-        phrase:
-          type: string
-          maxLength: 500
-          title: Phrase
-        expected_intent:
-          type: string
-          maxLength: 100
-          title: Expected Intent
-        enabled:
-          type: boolean
-          title: Enabled
-          default: true
-        id:
-          type: string
-          title: Id
-        expected_slots:
-          additionalProperties: true
-          type: object
-          title: Expected Slots
-        last_result:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Last Result
-        last_run_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-          title: Last Run At
-        created_at:
-          type: string
-          format: date-time
-          title: Created At
-      type: object
-      required:
-      - name
-      - phrase
-      - expected_intent
-      - id
-      - expected_slots
-      - last_result
-      - last_run_at
-      - created_at
-      title: RegressionTestRead
-    RegressionTestUpdate:
-      properties:
-        name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Name
-        phrase:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Phrase
-        expected_intent:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Expected Intent
-        expected_slots:
-          anyOf:
-          - additionalProperties: true
-            type: object
-          - type: 'null'
-          title: Expected Slots
-        enabled:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Enabled
-      type: object
-      minProperties: 1
-      title: RegressionTestUpdate
     SlotAliasCreate:
       properties:
         alias:
@@ -3172,6 +3753,94 @@ components:
       required:
       - text
       title: TextTestRequest
+    TranscriptionEngineAssociationCreate:
+      properties:
+        engine:
+          type: string
+          maxLength: 100
+          title: Engine
+          description: Transcription engine provider name (e.g. an opal_listener.transcription_engines entry point).
+        model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Model
+          description: Engine-specific model identifier.
+        enabled:
+          type: boolean
+          title: Enabled
+          default: true
+        config:
+          type: object
+          title: Config
+          description: Engine-specific configuration map.
+      type: object
+      required:
+      - engine
+      title: TranscriptionEngineAssociationCreate
+    TranscriptionEngineAssociationRead:
+      properties:
+        engine:
+          type: string
+          title: Engine
+        model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Model
+        enabled:
+          type: boolean
+          title: Enabled
+        config:
+          type: object
+          title: Config
+        active:
+          type: boolean
+          title: Active
+        id:
+          type: string
+          title: Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - engine
+      - id
+      - active
+      - created_at
+      - updated_at
+      title: TranscriptionEngineAssociationRead
+    TranscriptionEngineAssociationUpdate:
+      properties:
+        engine:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Engine
+        model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Model
+        enabled:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Enabled
+        config:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Config
+      type: object
+      minProperties: 1
+      title: TranscriptionEngineAssociationUpdate
     WakewordCreate:
       properties:
         name:
@@ -3248,6 +3917,93 @@ components:
       type: object
       minProperties: 1
       title: WakewordUpdate
+    WakewordEngineAssociationCreate:
+      properties:
+        engine:
+          type: string
+          maxLength: 100
+          title: Engine
+          description: Wakeword engine provider name (e.g. an opal_listener.wakeword_engines entry point).
+        wakeword:
+          type: string
+          maxLength: 100
+          title: Wakeword
+          description: Name of the wakeword this association applies to.
+        enabled:
+          type: boolean
+          title: Enabled
+          default: true
+        config:
+          type: object
+          title: Config
+          description: Engine-specific configuration map.
+      type: object
+      required:
+      - engine
+      - wakeword
+      title: WakewordEngineAssociationCreate
+    WakewordEngineAssociationRead:
+      properties:
+        engine:
+          type: string
+          title: Engine
+        wakeword:
+          type: string
+          title: Wakeword
+        enabled:
+          type: boolean
+          title: Enabled
+        config:
+          type: object
+          title: Config
+        active:
+          type: boolean
+          title: Active
+        id:
+          type: string
+          title: Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - engine
+      - wakeword
+      - id
+      - active
+      - created_at
+      - updated_at
+      title: WakewordEngineAssociationRead
+    WakewordEngineAssociationUpdate:
+      properties:
+        engine:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Engine
+        wakeword:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Wakeword
+        enabled:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Enabled
+        config:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Config
+      type: object
+      minProperties: 1
+      title: WakewordEngineAssociationUpdate
 tags:
 - name: config
   description: Save, load, validate, and inspect portable module configuration.
@@ -3260,10 +4016,10 @@ tags:
 - name: intents
 - name: logs
 - name: performance
-- name: persona
 - name: recognition
-- name: regression
 - name: slots
+- name: transcription
+  description: Transcription (STT) engine associations — provider/engine bindings with activate/validate lifecycle.
 - name: wakewords
 - name: service
 servers:
@@ -3326,15 +4082,13 @@ x-opal-snapshot:
   - '1.0.0'
   resources:
   - profiles
-  - personas
   - wakewords
   - intents
   - slots
-  - regression_tests
   description: >-
     Declares the canonical module identity and resource sections carried in this module's
     configuration snapshots. `config load`/`config validate` validate `snapshot` against the shared
     `OpalConfigSnapshot` envelope and the declared `module` identity and resource
     sections; wrong-module, unsupported-version, and unknown-section snapshots are
     rejected. Snapshots carry persistent desired configuration only:
-    profiles, personas, wakewords, intents, slots, regression_tests; never runtime history, sessions, streams, binaries, or secrets.
+    profiles,  wakewords, intents, slots; never runtime history, sessions, streams, binaries, or secrets.
