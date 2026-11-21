@@ -4,7 +4,7 @@
 openapi: 3.1.0
 info:
   title: OPAL Suite Kernel
-  version: '0.4.0'
+  version: '0.1.0'
   description: 'Shared contract kernel for the OPAL suite (SUITE STANDARD v3.0.0).
 
 
@@ -14,7 +14,7 @@ info:
 
     Conventions encoded here: the four X-Opal-* correlation headers on every request and response; strong ETag +
     mandatory If-Match on mutable configuration (428 missing, 412 stale); 204 for empty deletion; 201 + Location
-    for creation; the OpalError envelope for all 4xx/5xx JSON bodies; and the standard health/settings/config/profiles and capability-scoped engine-association
+    for creation; the OpalError envelope for all 4xx/5xx JSON bodies; and the standard health/settings/config/profiles/engines
     route families. If-Match concurrency covers portable logical configuration only: `config load`, `config
     setting set`, and `config setting remove` require it; runtime-data deletes (events, executions, failed
     utterances, sessions) are exempt by design; `config save` and `config validate` neither mutate live
@@ -31,75 +31,6 @@ info:
     their envelopes are closed, module-owned fields live only inside `shared` and per-module `modules`
     compartments declared in this document, and lifecycle semantics are defined by `x-opal-profiles`.'
 paths: {}
-x-opal-engines:
-  version: '0.4.0'
-  description: >-
-    OPAL modules manage capability-scoped associations to existing engines, not
-    engine installations, provider processes or runtime instances. An engine
-    reference may be associated with multiple capabilities (e.g. Vosk with
-    audio.wakeword and audio.transcription). The owning module exposes no
-    generic `engine` CLI root. Capability execution remains module-specific.
-  scope:
-    type: The owning module fixes the required interface for each route family; callers cannot set or override it.
-    examples:
-    - {module: opal-listen, group: wakeword, interface_id: audio.wakeword, route: /api/v1/wakeword/engine/}
-    - {module: opal-listen, group: transcription, interface_id: audio.transcription, route: /api/v1/transcription/engine/}
-    cli: 'opal <module> <capability> engine <add|remove|update|list|show|validate|activate>'
-    declaration: >-
-      Each module MUST declare the required interface for each capability-scoped
-      route family using x-opal-engine-interface on its Path Item mounts (or
-      an equivalent explicit, testable module contract binding). That interface
-      is determined by the route, never by a request field or engine name.
-  association:
-    identity: The association name is unique within its capability scope, not across the whole module.
-    reference: engine_ref is an opaque stable key; no network address, provider identity or installation metadata is required.
-    add: Creates one local named association only; never installs a provider, downloads a model or activates it.
-    update: Replaces the referenced key for that association only; does not update a provider's configuration.
-    remove: Deletes only this association. If it was active, the capability has no active selection; there is no implicit fallback.
-    activate: >-
-      Atomically selects one association per capability for new work (zero is
-      allowed). Failed activation preserves the previous selection. Existing
-      in-flight work retains its resolved runtime, or fails with its existing
-      service-specific lifecycle semantics; it must not be silently switched.
-    validation: >-
-      Non-mutating structural, resolution and capability-compatibility checks.
-      Known-incompatible references fail validation. Temporarily unavailable
-      registries/providers do not delete persisted associations or turn them
-      into another reference. Readiness for activation is checked separately.
-    config: >-
-      Associations and active selection are portable desired configuration
-      under module-owned snapshot resources; never include provider binaries,
-      credentials, runtime instances or observed registry caches.
-  resolution:
-    standalone: A local resolver is sufficient; a remote/federated registry is optional, never mandatory.
-    future_registry: Engine inventory and installation/lifecycle remain outside this contract and can move to OPAL-DEVICE.
-    reuse: >-
-      Equal engine_ref values may resolve to the same provider; safe model or
-      runtime reuse is an adapter optimization, not a public binding or
-      assumption that matching provider names imply compatible resources.
-    unsupported: A known engine lacking the required interface must not activate (422).
-    unreachable: An unavailable target or resolver must not replace an active selection (503).
-  templates:
-    path_items: engine_associations_collection, engine_association_item, engine_association_validate, engine_association_activate
-    reuse: >-
-      Templates intentionally omit operationId and x-opal-cli because a module
-      may mount them multiple times for distinct capabilities. The module must
-      provide the per-mount CLI bindings and must use unique operationIds if it
-      materializes or inlines the operations for code generation.
-    cli_mount: >-
-      For a wakeword scope, annotate each mounted Path Item with
-      x-opal-engine-interface: audio.wakeword and a path-level x-opal-cli
-      per-method map with parent: wakeword, group: engine and the verbs listed
-      above. A transcription scope uses parent: transcription instead.
-  legacy:
-    status: >-
-      The older engines_collection, engine_item, engine_discover,
-      engine_capabilities and engine_validate Path Items and OpalEngine* schemas
-      remain for existing module $refs during migration; they define no
-      canonical generic engine CLI in v0.4.0. New module contracts MUST use
-      capability-scoped engine-binding templates and not mount those legacy
-      management Path Items.
-    execution: No universal engine execute/request/result endpoint is defined.
 x-opal-authorization:
   version: '1.0'
   description: Suite REST authentication and authorization semantics. Loopback-only deployments may explicitly disable
@@ -136,8 +67,6 @@ x-opal-cli-format:
     a path-level
     per-method map onto each
     operation for module-declared mounts; both forms carry the same descriptor shape.
-    Typed engine association Path Items intentionally omit canonical CLI bindings; each module mount specifies
-    its own parent (wakeword, transcription, etc.) and group (engine). No generic module engine command is defined.
   descriptor:
     command: required - canonical verb, kebab-case (`list`, `add`, `show`, `update`, `remove`, `save`,
       `load`, `validate`, ...)
@@ -433,22 +362,11 @@ components:
       name: engine_id
       in: path
       required: true
-      description: Opaque identifier of a configured engine instance in this service; independent of the implementation and capability.
+      description: Stable implementation-defined identifier of an installed TTS engine.
       schema:
         type: string
         minLength: 1
       example: piper
-    EngineAssociationName:
-      name: name
-      in: path
-      required: true
-      description: Association name, unique within the module's capability scope.
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 128
-        pattern: '^[A-Za-z0-9][A-Za-z0-9._-]*$'
-      example: primary
     ServiceLogLines:
       name: lines
       in: query
@@ -1493,18 +1411,8 @@ components:
         engine_id:
           type: string
           minLength: 1
-          description: Opaque identifier of this configured engine instance, unique within the owning service.
-          example: vosk-local
-        implementation:
-          type: string
-          minLength: 1
-          description: Optional implementation family (e.g. vosk, piper, ollama); not a capability selector.
-          example: vosk
-        interfaces:
-          type: array
-          items:
-            $ref: '#/components/schemas/OpalEngineInterface'
-          description: Versioned capability interfaces implemented by this engine. Absent means unknown for legacy engines.
+          description: Stable engine identifier used by API requests and voice registrations.
+          example: piper
         name:
           type: string
           minLength: 1
@@ -1518,7 +1426,7 @@ components:
           example: Local neural text-to-speech engine
         enabled:
           type: boolean
-          description: Whether the owning service is administratively allowed to route work to this engine.
+          description: Whether OPAL Say is administratively allowed to route generation to this engine.
           example: true
         available:
           type: boolean
@@ -1566,11 +1474,8 @@ components:
       - engine_id
       - name
       additionalProperties: true
-      description: A configured engine known to the service. `engine_id`, `name` and `enabled` remain required;
-        `available` reports runtime usability, not the availability of every model or capability.
-        A single implementation instance may advertise multiple versioned interfaces. Engine
-        entries are not created or deleted through this API. Missing `interfaces` means unknown
-        during migration, not that the implementation supports nothing.
+      description: A host-installed engine known to the service. `engine_id`, `name` and `enabled` are suite-standard;
+        `available` reports live usability. Engines are not created or deleted through this API.
     OpalEnginePatch:
       type: object
       minProperties: 1
@@ -1584,138 +1489,7 @@ components:
           description: Engine-specific option values.
       required: []
       additionalProperties: true
-      description: Partial engine configuration update; only supplied fields change. `enabled` and `options`
-        are portable writable fields; other keys are reserved for service-defined backwards-compatible
-        configuration fields. Identity, implementation and advertised interfaces are never client-writable.
-    OpalEngineInterface:
-      type: object
-      required:
-      - id
-      - version
-      properties:
-        id:
-          type: string
-          minLength: 3
-          description: Stable capability interface identifier, e.g. audio.wakeword, audio.transcription,
-            vision.prediction, audio.synthesis or language.generation. Not tied to one engine implementation.
-          example: audio.transcription
-        version:
-          type: string
-          minLength: 1
-          description: Version of this capability interface contract, distinct from engine and kernel versions.
-          example: 1.0.0
-        features:
-          type: array
-          uniqueItems: true
-          items:
-            type: string
-            minLength: 1
-          description: Optional standardized feature identifiers. Missing features must not be assumed supported.
-          example: [streaming, partial_results, phrase_constraints]
-      additionalProperties: true
-      description: One independently versioned functional interface exposed by an engine.
-        Capability-specific contracts define inputs, outputs and feature semantics.
-    OpalEngineCapabilities:
-      type: object
-      required:
-      - engine_id
-      - interfaces
-      properties:
-        engine_id:
-          type: string
-          minLength: 1
-        interfaces:
-          type: array
-          items:
-            $ref: '#/components/schemas/OpalEngineInterface'
-          description: Advertised interfaces for this engine instance; never infer support from implementation alone.
-        options_schema:
-          type: object
-          additionalProperties: true
-          description: Optional JSON Schema describing engine-specific configuration options.
-      additionalProperties: true
-      description: Common engine capability response; service-specific details may extend it.
-    OpalEngineDiscovery:
-      type: object
-      required:
-      - engines
-      properties:
-        engines:
-          type: array
-          items:
-            $ref: '#/components/schemas/OpalEngine'
-          description: Complete bounded catalog after the discovery scan, including unavailable engines when known.
-        errors:
-          type: array
-          items:
-            anyOf:
-            - type: string
-            - $ref: '#/components/schemas/OpalValidationIssue'
-          description: Non-fatal scan errors; failures should not prevent reporting successfully discovered engines.
-      additionalProperties: true
-    OpalEngineValidateRequest:
-      type: object
-      properties:
-        options:
-          type: object
-          additionalProperties: true
-          description: Proposed engine configuration options. Omit to validate the current effective configuration.
-      additionalProperties: false
-      description: Optional non-mutating candidate configuration; absence of a request body validates current settings.
-    OpalEngineAssociation:
-      type: object
-      required: [name, engine_ref, is_active]
-      properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 128
-          pattern: '^[A-Za-z0-9][A-Za-z0-9._-]*$'
-          description: Stable name of this association, unique within the current capability scope.
-          example: primary
-        engine_ref:
-          type: string
-          minLength: 1
-          description: Opaque key identifying an existing engine via the configured resolver; not an installation request.
-          example: vosk-local
-        is_active:
-          type: boolean
-          readOnly: true
-          description: Whether this association is the selected engine for its bound capability.
-      additionalProperties: false
-      description: >-
-        One local typed association. Capability/interface is fixed by the
-        endpoint that owns it and must not be stored as a caller-controlled
-        property. There may be at most one active association per capability.
-    OpalEngineAssociationCreate:
-      type: object
-      required: [name, engine_ref]
-      properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 128
-          pattern: '^[A-Za-z0-9][A-Za-z0-9._-]*$'
-        engine_ref:
-          type: string
-          minLength: 1
-      additionalProperties: false
-      description: >-
-        Register an association to an existing engine key. Does not activate,
-        install, instantiate or configure an engine. No capability/type field is accepted.
-    OpalEngineAssociationPatch:
-      type: object
-      minProperties: 1
-      required: [engine_ref]
-      properties:
-        engine_ref:
-          type: string
-          minLength: 1
-      additionalProperties: false
-      description: >-
-        Atomically replace the association reference, not its name or bound
-        interface. If active, validate and switch only new work after success;
-        on failure leave configuration and active selection untouched.
+      description: Partial engine configuration update; only supplied fields change.
     OpalServiceStartOptions:
       type: object
       properties:
@@ -2997,415 +2771,6 @@ components:
             $ref: '#/components/responses/UnprocessableEntity'
           '428':
             $ref: '#/components/responses/PreconditionRequired'
-    engine_discover:
-      parameters:
-      - $ref: '#/components/parameters/OpalSessionIdParameter'
-      - $ref: '#/components/parameters/OpalTransactionIdParameter'
-      - $ref: '#/components/parameters/OpalRequestIdParameter'
-      - $ref: '#/components/parameters/OpalCausationIdParameter'
-      post:
-        tags:
-        - engines
-        summary: Discover engines
-        operationId: opal_engine_discover
-        description: Re-scan registered implementations and return the bounded known catalog. Never install,
-          download, remove, or implicitly enable engines; no desired configuration is changed.
-        responses:
-          '200':
-            description: Engine discovery results.
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/OpalEngineDiscovery'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
-    engine_capabilities:
-      parameters:
-      - $ref: '#/components/parameters/OpalSessionIdParameter'
-      - $ref: '#/components/parameters/OpalTransactionIdParameter'
-      - $ref: '#/components/parameters/OpalRequestIdParameter'
-      - $ref: '#/components/parameters/OpalCausationIdParameter'
-      - $ref: '#/components/parameters/EngineId'
-      get:
-        tags:
-        - engines
-        summary: Show engine capabilities
-        operationId: opal_engine_capabilities
-        description: Return this engine's advertised versioned capability interfaces and optional
-          service-specific details. An empty interfaces array means no capability is advertised;
-          it must not be inferred from the engine implementation name.
-        responses:
-          '200':
-            description: Engine capabilities.
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/OpalEngineCapabilities'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '404':
-            $ref: '#/components/responses/NotFound'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
-    engine_validate:
-      parameters:
-      - $ref: '#/components/parameters/OpalSessionIdParameter'
-      - $ref: '#/components/parameters/OpalTransactionIdParameter'
-      - $ref: '#/components/parameters/OpalRequestIdParameter'
-      - $ref: '#/components/parameters/OpalCausationIdParameter'
-      - $ref: '#/components/parameters/EngineId'
-      post:
-        tags:
-        - engines
-        summary: Validate engine
-        operationId: opal_engine_validate
-        description: Check current engine configuration, or proposed options if supplied, without
-          changing stored configuration or runtime state. The result reports validation failures
-          with valid=false; a missing engine returns 404. Does not use If-Match.
-        requestBody:
-          required: false
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalEngineValidateRequest'
-        responses:
-          '200':
-            description: Engine validation result, including configuration errors where applicable.
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/OpalValidationReport'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '404':
-            $ref: '#/components/responses/NotFound'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
-    engine_associations_collection:
-      parameters:
-      - $ref: '#/components/parameters/OpalSessionIdParameter'
-      - $ref: '#/components/parameters/OpalTransactionIdParameter'
-      - $ref: '#/components/parameters/OpalRequestIdParameter'
-      - $ref: '#/components/parameters/OpalCausationIdParameter'
-      get:
-        tags:
-        - engine-associations
-        summary: List engine associations for the bound capability
-        description: Return the complete bounded list of engine associations only in this capability scope. The
-          interface type is fixed by this route.
-        responses:
-          '200':
-            description: Capability-scoped engine associations.
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-              ETag:
-                $ref: '#/components/headers/ETag'
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/OpalEngineAssociation'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
-      post:
-        tags:
-        - engine-associations
-        summary: Add an engine association for the bound capability
-        description: Create a named local key association. Never install or start an engine, change active selection,
-          or accept a caller-provided type. A known incompatible target is rejected; a temporarily unavailable
-          resolver may leave a persisted but not activatable reference.
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalEngineAssociationCreate'
-        responses:
-          '201':
-            description: Association created; still inactive.
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-              ETag:
-                $ref: '#/components/headers/ETag'
-              Location:
-                $ref: '#/components/headers/Location'
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/OpalEngineAssociation'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '409':
-            $ref: '#/components/responses/Conflict'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
-    engine_association_item:
-      parameters:
-      - $ref: '#/components/parameters/OpalSessionIdParameter'
-      - $ref: '#/components/parameters/OpalTransactionIdParameter'
-      - $ref: '#/components/parameters/OpalRequestIdParameter'
-      - $ref: '#/components/parameters/OpalCausationIdParameter'
-      - $ref: '#/components/parameters/EngineAssociationName'
-      get:
-        tags:
-        - engine-associations
-        summary: Show one engine association
-        description: Return the association in this capability scope. Identical names in different scopes are independent.
-        responses:
-          '200':
-            description: Association.
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-              ETag:
-                $ref: '#/components/headers/ETag'
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/OpalEngineAssociation'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '404':
-            $ref: '#/components/responses/NotFound'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
-      patch:
-        tags:
-        - engine-associations
-        summary: Update one engine association
-        description: Change only the referenced engine key. A valid active association transitions only new work;
-          on validation/resolution failure the old selection and configuration remain in force. Requires a strong
-          If-Match.
-        parameters:
-        - $ref: '#/components/parameters/IfMatch'
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpalEngineAssociationPatch'
-        responses:
-          '200':
-            description: Updated association.
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-              ETag:
-                $ref: '#/components/headers/ETag'
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/OpalEngineAssociation'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '404':
-            $ref: '#/components/responses/NotFound'
-          '409':
-            $ref: '#/components/responses/Conflict'
-          '412':
-            $ref: '#/components/responses/PreconditionFailed'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
-          '428':
-            $ref: '#/components/responses/PreconditionRequired'
-          '503':
-            $ref: '#/components/responses/ServiceUnavailable'
-      delete:
-        tags:
-        - engine-associations
-        summary: Remove one engine association
-        description: Remove only this local association, not its target engine. If active, clear this capability
-          selection without automatic fallback. Requires a strong If-Match.
-        parameters:
-        - $ref: '#/components/parameters/IfMatch'
-        responses:
-          '204':
-            description: Association removed; no response body.
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-              ETag:
-                $ref: '#/components/headers/ETag'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '404':
-            $ref: '#/components/responses/NotFound'
-          '409':
-            $ref: '#/components/responses/Conflict'
-          '412':
-            $ref: '#/components/responses/PreconditionFailed'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
-          '428':
-            $ref: '#/components/responses/PreconditionRequired'
-    engine_association_validate:
-      parameters:
-      - $ref: '#/components/parameters/OpalSessionIdParameter'
-      - $ref: '#/components/parameters/OpalTransactionIdParameter'
-      - $ref: '#/components/parameters/OpalRequestIdParameter'
-      - $ref: '#/components/parameters/OpalCausationIdParameter'
-      - $ref: '#/components/parameters/EngineAssociationName'
-      post:
-        tags:
-        - engine-associations
-        summary: Validate a capability-scoped engine association
-        description: Check reference resolution and support for the capability bound by this endpoint, without
-          mutation. Unknown/unavailable targets report valid=false with diagnostics rather than silently changing
-          the association. Does not require If-Match.
-        responses:
-          '200':
-            description: Non-mutating validation result.
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/OpalValidationReport'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '404':
-            $ref: '#/components/responses/NotFound'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
-    engine_association_activate:
-      parameters:
-      - $ref: '#/components/parameters/OpalSessionIdParameter'
-      - $ref: '#/components/parameters/OpalTransactionIdParameter'
-      - $ref: '#/components/parameters/OpalRequestIdParameter'
-      - $ref: '#/components/parameters/OpalCausationIdParameter'
-      - $ref: '#/components/parameters/EngineAssociationName'
-      post:
-        tags:
-        - engine-associations
-        summary: Activate a capability-scoped engine association
-        description: Atomically select this known compatible, available association for subsequent work, replacing
-          any prior active selection in this capability scope only. A failed activation preserves prior selection.
-          Never installs or configures the engine. Requires a strong If-Match.
-        parameters:
-        - $ref: '#/components/parameters/IfMatch'
-        responses:
-          '200':
-            description: Selected association.
-            headers:
-              X-Opal-Session-Id:
-                $ref: '#/components/headers/OpalSessionIdHeader'
-              X-Opal-Transaction-Id:
-                $ref: '#/components/headers/OpalTransactionIdHeader'
-              X-Opal-Request-Id:
-                $ref: '#/components/headers/OpalRequestIdHeader'
-              X-Opal-Causation-Id:
-                $ref: '#/components/headers/OpalCausationIdHeader'
-              ETag:
-                $ref: '#/components/headers/ETag'
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/OpalEngineAssociation'
-          '401':
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '404':
-            $ref: '#/components/responses/NotFound'
-          '409':
-            $ref: '#/components/responses/Conflict'
-          '412':
-            $ref: '#/components/responses/PreconditionFailed'
-          '422':
-            $ref: '#/components/responses/UnprocessableEntity'
-          '428':
-            $ref: '#/components/responses/PreconditionRequired'
-          '503':
-            $ref: '#/components/responses/ServiceUnavailable'
     persona_collection:
       parameters:
       - $ref: '#/components/parameters/OpalSessionIdParameter'
