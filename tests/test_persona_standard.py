@@ -21,6 +21,10 @@ excluding the shared kernel):
   records round-trip through config save/load
 * negative discovery proofs: a missing mount, an inline copy, and a local
   CLI override are all caught
+
+opal_listen is exempt: it carries no persona REST surface (persona is a
+client-side `--persona` option there), so it is checked for absence
+instead.
 """
 import copy
 import os
@@ -70,6 +74,7 @@ VERBS = {
     ("delete", "/api/v1/persona/{persona_id}"):          "remove",
     ("post",   "/api/v1/persona/{persona_id}/validate"): "validate",
 }
+PERSONA_EXEMPT = {"opal_listen"}
 
 
 def kernel_ref(spec_path, item):
@@ -203,6 +208,13 @@ def main():
         name = os.path.splitext(os.path.basename(path))[0]
         spec_paths[name] = path
         sources[name] = yaml.safe_load(open(path, encoding="utf-8"))
+        if name in PERSONA_EXEMPT:
+            check(all("/persona" not in p for p in sources[name].get("paths", {})),
+                  f"{name}: no persona mounts (client-side --persona option)")
+            check("personas" not in ((sources[name].get("x-opal-snapshot") or {})
+                                   .get("resources") or []),
+                  f"{name}: snapshot resources exclude personas")
+            continue
         check_source(sources[name], path, name)
         docs[name] = spec_util.load(path)
         check_resolved(docs[name], name)
@@ -219,6 +231,8 @@ def main():
 
     # -- generated bundles -------------------------------------------------------
     for name in sorted(spec_paths):
+        if name in PERSONA_EXEMPT:
+            continue
         bpath = os.path.join(spec_util.ROOT, "dist", name + ".yaml")
         if not os.path.exists(bpath):
             check(True, f"{name}: bundle check skipped (run npm run bundle first)")

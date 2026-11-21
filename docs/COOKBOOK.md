@@ -184,7 +184,6 @@ opal listen
 ├── slot-value            list | add | remove
 ├── slot-alias            list | add | remove
 ├── profile               list | add | show | update | remove | activate
-├── persona               list | add | validate | show | update | remove
 ├── config
 │   ├── save                [--out FILE]
 │   ├── load                [--in FILE]
@@ -238,13 +237,10 @@ opal listen
 │   ├── /save                               POST
 │   ├── /load                               POST
 │   └── /validate                           POST
-├── /service
-│   ├── /start                              POST
-│   ├── /stop                               POST
-│   └── /log                                GET
-└── /persona/                               GET, POST
-    └── /{persona_id}                       GET, PATCH, DELETE
-        └── /validate                       POST
+└── /service
+    ├── /start                              POST
+    ├── /stop                               POST
+    └── /log                                GET
 ```
 
 #### Commands
@@ -306,12 +302,6 @@ opal listen
 | `opal listen service start` | `--append/--no-append` | Start service. `POST /api/v1/service/start` |
 | `opal listen service stop` | — | Stop service. `POST /api/v1/service/stop` |
 | `opal listen service log` | `--lines INT` | Tail service log. `GET /api/v1/service/log` |
-| `opal listen persona list` | `--enabled/--no-enabled` | List Personas. `GET /api/v1/persona/` |
-| `opal listen persona add` | `--if-match ETAG`, `--persona-id ID`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Create Persona. `POST /api/v1/persona/` |
-| `opal listen persona validate` | `<persona_id>` | Validate Persona. `POST /api/v1/persona/{persona_id}/validate` |
-| `opal listen persona show` | `<persona_id>` | Get Persona. `GET /api/v1/persona/{persona_id}` |
-| `opal listen persona update` | `<persona_id>`, `--if-match ETAG`, `--name TEXT`, `--description TEXT`, `--voice-id ID`, `--enabled/--no-enabled` | Update Persona. `PATCH /api/v1/persona/{persona_id}` |
-| `opal listen persona remove` | `<persona_id>`, `--if-match ETAG` | Delete Persona. `DELETE /api/v1/persona/{persona_id}` |
 
 † Proposed name; the operation has no `x-opal-cli` annotation yet.
 

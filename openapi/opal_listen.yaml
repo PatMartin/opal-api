@@ -2039,12 +2039,6 @@ paths:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/service_stop'
   /api/v1/service/log:
     $ref: './shared/opal_kernel.yaml#/components/pathItems/service_log'
-  /api/v1/persona/:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/persona_collection'
-  /api/v1/persona/{persona_id}/validate:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/persona_validate'
-  /api/v1/persona/{persona_id}:
-    $ref: './shared/opal_kernel.yaml#/components/pathItems/persona_item'
   /api/v1/wakeword/engine/:
     parameters:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
@@ -2780,8 +2774,6 @@ components:
         type: string
         minLength: 1
         title: Association Id
-    PersonaId:
-      $ref: './shared/opal_kernel.yaml#/components/parameters/OpalPersonaIdParameter'
     WakewordId:
       name: wakeword_id
       in: path
@@ -4024,7 +4016,6 @@ tags:
 - name: intents
 - name: logs
 - name: performance
-- name: persona
 - name: recognition
 - name: slots
 - name: transcription
@@ -4091,7 +4082,6 @@ x-opal-snapshot:
   - '1.0.0'
   resources:
   - profiles
-  - personas
   - wakewords
   - intents
   - slots
@@ -4101,4 +4091,4 @@ x-opal-snapshot:
     `OpalConfigSnapshot` envelope and the declared `module` identity and resource
     sections; wrong-module, unsupported-version, and unknown-section snapshots are
     rejected. Snapshots carry persistent desired configuration only:
-    profiles, personas, wakewords, intents, slots; never runtime history, sessions, streams, binaries, or secrets.
+    profiles,  wakewords, intents, slots; never runtime history, sessions, streams, binaries, or secrets.
