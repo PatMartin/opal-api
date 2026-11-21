@@ -192,7 +192,7 @@ opal listen
 │   └── setting             list | show | set | remove
 ├── recognition           test-text | test-audio | start | stop | status | stream
 ├── data
-│   └── failed-utterance  list | add | show | update | remove | promote
+│   └── failed-utterance  list | add | show | update | remove
 ├── performance           last | summary | history
 └── service               start | stop | health | log
 ```
@@ -227,7 +227,6 @@ opal listen
 │   └── /stream                             GET
 ├── /failed_utterance/                      GET, POST
 │   └── /{failed_utterance_id}                            GET, PATCH, DELETE
-│       └── /promote                        POST
 ├── /performance
 │   ├── /last                               GET
 │   ├── /summary                            GET
@@ -300,7 +299,6 @@ opal listen
 | `opal listen data failed-utterance show` † | `<failed_utterance_id>` | Get Failed Utterance. `GET /api/v1/failed_utterance/{failed_utterance_id}` |
 | `opal listen data failed-utterance update` † | `<failed_utterance_id>`, `--expected-intent TEXT`, `--notes TEXT`, `--reviewed/--no-reviewed`, `--promoted-to-phrase/--no-promoted-to-phrase` | Update Failed Utterance. `PATCH /api/v1/failed_utterance/{failed_utterance_id}` |
 | `opal listen data failed-utterance remove` † | `<failed_utterance_id>` | Delete Failed Utterance. `DELETE /api/v1/failed_utterance/{failed_utterance_id}` |
-| `opal listen data failed-utterance promote` † | `<failed_utterance_id>`, `--intent-id ID`, `--if-match ETAG` | Promote To Phrase. `POST /api/v1/failed_utterance/{failed_utterance_id}/promote` |
 | `opal listen performance last` † | — | Get Last Performance. `GET /api/v1/performance/last` |
 | `opal listen performance summary` † | `--limit INT` | Get Performance Summary. `GET /api/v1/performance/summary` |
 | `opal listen performance history` † | `--limit INT` | Get Performance History. `GET /api/v1/performance/history` |
@@ -865,19 +863,13 @@ opal listen recognition status
 opal listen data failed-utterance list --no-reviewed --limit 10
 ```
 
-**15. Turn a miss into a training phrase.**
-
-```bash
-opal listen data failed-utterance promote 7 --intent-id lights.turn_on
-```
-
-**16. See where the milliseconds go.**
+**15. See where the milliseconds go.**
 
 ```bash
 opal listen performance summary --limit 50
 ```
 
-**17. Create a night profile that only understands light switches.**
+**16. Create a night profile that only understands light switches.**
 
 ```bash
 cat > night-compartment.yaml <<'EOF'
@@ -887,7 +879,7 @@ EOF
 opal listen profile add --name night-mode --module night-compartment.yaml
 ```
 
-**18. Allow live microphone matches to be published as events.**
+**17. Allow live microphone matches to be published as events.**
 
 ```bash
 opal listen config setting set --name event_publication_enabled --value true
@@ -1333,7 +1325,6 @@ opal listen recognition test-audio tricky.wav
 
 ```bash
 opal listen data failed-utterance show 7 | opal think ask "This utterance matched no intent. My intents are lights.turn_on, lights.turn_off, and timer.set. Which one did the speaker most likely mean? Reply with the intent name only." --context -
-opal listen data failed-utterance promote 7 --intent-id lights.turn_on
 ```
 
 #### 6. One persona, two services

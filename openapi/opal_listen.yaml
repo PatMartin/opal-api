@@ -1909,65 +1909,6 @@ paths:
           $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
         '422':
           $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
-  /api/v1/failed_utterance/{failed_utterance_id}/promote:
-    parameters:
-    - $ref: '#/components/parameters/FailedUtteranceId'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalTransactionIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalRequestIdParameter'
-    - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalCausationIdParameter'
-    post:
-      tags:
-      - failed_utterances
-      summary: Promote To Phrase
-      description: Promote a failed utterance as a training phrase for the given intent.
-      operationId: promote_failed_utterance
-      x-opal-cli:
-        group: failed-utterance
-        command: promote
-        options:
-        - flag: --intent-id
-          value: ID
-          required: true
-          binds:
-            kind: body
-            target: intent_id
-      parameters:
-      - $ref: './shared/opal_kernel.yaml#/components/parameters/IfMatch'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FailedUtterancePromoteRequest'
-      responses:
-        '401':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Unauthorized'
-        '403':
-          $ref: './shared/opal_kernel.yaml#/components/responses/Forbidden'
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PromoteResult'
-          headers:
-            X-Opal-Session-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalSessionIdHeader'
-            X-Opal-Transaction-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalTransactionIdHeader'
-            X-Opal-Request-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalRequestIdHeader'
-            X-Opal-Causation-Id:
-              $ref: './shared/opal_kernel.yaml#/components/headers/OpalCausationIdHeader'
-        '404':
-          $ref: './shared/opal_kernel.yaml#/components/responses/NotFound'
-        '412':
-          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionFailed'
-        '428':
-          $ref: './shared/opal_kernel.yaml#/components/responses/PreconditionRequired'
-        '422':
-          $ref: './shared/opal_kernel.yaml#/components/responses/UnprocessableEntity'
   /api/v1/performance/last:
     parameters:
     - $ref: './shared/opal_kernel.yaml#/components/parameters/OpalSessionIdParameter'
@@ -3031,18 +2972,6 @@ components:
       type: object
       minProperties: 1
       title: FailedUtteranceUpdate
-    FailedUtterancePromoteRequest:
-      type: object
-      additionalProperties: false
-      properties:
-        intent_id:
-          type: string
-          minLength: 1
-          description: Identifier of the intent this utterance becomes a training phrase for.
-          title: Intent Id
-      required:
-      - intent_id
-      title: FailedUtterancePromoteRequest
     IntentAlternative:
       properties:
         intent_name:
@@ -3483,17 +3412,6 @@ components:
       - last_result_at
       - last_error
       title: PipelineStatus
-    PromoteResult:
-      properties:
-        failed_utterance:
-          $ref: '#/components/schemas/FailedUtteranceRead'
-        phrase:
-          $ref: '#/components/schemas/IntentPhraseRead'
-      type: object
-      required:
-      - failed_utterance
-      - phrase
-      title: PromoteResult
     RecognitionResult:
       properties:
         session_id:
